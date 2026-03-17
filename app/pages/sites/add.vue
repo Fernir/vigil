@@ -39,7 +39,7 @@ const handleSubmit = async () => {
 
   const result = await addSite(form);
   if (result) {
-    router.push("/dashboard");
+    router.push("/");
   }
 };
 </script>
@@ -112,6 +112,34 @@ const handleSubmit = async () => {
             <p class="mt-1 text-xs text-gray-500">
               How often to check this site (1-60 minutes)
             </p>
+          </div>
+
+          <!-- Тип проверки -->
+          <div>
+            <label class="block text-sm font-medium mb-2">Check Type</label>
+            <USelect
+              v-model="form.check_type"
+              :options="[
+                { label: 'HTTP Status', value: 'http' },
+                { label: 'Text on page', value: 'text' },
+              ]"
+            />
+          </div>
+
+          <!-- Поле для текста (появляется если выбран text) -->
+          <div v-if="form.check_type === 'text'">
+            <label class="block text-sm font-medium mb-2">Expected Text</label>
+            <UInput v-model="form.expected_text" placeholder="e.g. Welcome" />
+            <div class="mt-2">
+              <label class="inline-flex items-center">
+                <URadio v-model="form.text_condition" value="contains" />
+                <span class="ml-2">Page must contain this text</span>
+              </label>
+              <label class="inline-flex items-center ml-4">
+                <URadio v-model="form.text_condition" value="not_contains" />
+                <span class="ml-2">Page must NOT contain this text</span>
+              </label>
+            </div>
           </div>
 
           <!-- Actions -->

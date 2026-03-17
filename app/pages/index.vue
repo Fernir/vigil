@@ -10,6 +10,9 @@ const { sites, fetchSites, loading: sitesLoading, deleteSite } = useSites();
 
 onMounted(() => {
   connectToSSE();
+});
+
+watchEffect(() => {
   if (loggedIn.value) {
     fetchSites();
   }
@@ -18,6 +21,7 @@ onMounted(() => {
 const handleDelete = async (id: number) => {
   if (confirm("Are you sure you want to delete this site?")) {
     await deleteSite(id);
+    fetchSites();
   }
 };
 </script>
@@ -122,7 +126,7 @@ const handleDelete = async (id: number) => {
               type="submit"
               color="primary"
               :loading="sitesLoading"
-              to="/dashboard/sites/add"
+              to="/sites/add"
               icon="heroicons:plus-solid"
             >
               Add Site
@@ -162,7 +166,7 @@ const handleDelete = async (id: number) => {
             </h3>
             <p class="text-gray-500 dark:text-gray-400">
               <NuxtLink
-                to="/dashboard/sites/add"
+                to="/sites/add"
                 class="text-primary-600 hover:underline"
               >
                 Add your first site

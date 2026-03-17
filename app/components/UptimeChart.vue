@@ -30,22 +30,19 @@ const props = defineProps<{
 }>();
 
 const chartData = computed(() => ({
-  labels: props.data.map((d) =>
-    new Date(d.checkedAt).toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-      day: "2-digit",
-      month: "2-digit",
-    }),
-  ),
+  labels: props.data.map((d) => {
+    const date = new Date(d.checkedAt);
+    return `${date.getDate()}.${date.getMonth() + 1} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`; // краткий формат "ДД.ММ ЧЧ:ММ"
+  }),
   datasets: [
     {
       label: "Response Time (ms)",
       data: props.data.map((d) => d.responseTime),
-      borderColor: "rgb(59, 130, 246)",
-      backgroundColor: "rgba(59, 130, 246, 0.1)",
-      fill: true,
-      tension: 0.4,
+      borderColor: "rgb(14, 165, 233)", // primary-500
+      backgroundColor: "rgba(14, 165, 233, 0.05)",
+      borderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
       pointBackgroundColor: props.data.map((d) =>
         d.status === "down"
           ? "#ef4444"
@@ -53,9 +50,9 @@ const chartData = computed(() => ({
             ? "#f59e0b"
             : "#3b82f6",
       ),
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      borderWidth: 2,
+      pointBorderColor: "transparent",
+      tension: 0.3,
+      fill: true,
     },
   ],
 }));
@@ -64,18 +61,19 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: {
-      display: false,
-    },
+    legend: { display: false },
     tooltip: {
-      mode: "index",
-      intersect: false,
+      backgroundColor: "rgba(0,0,0,0.8)",
+      titleColor: "#fff",
+      bodyColor: "#ddd",
+      padding: 8,
+      cornerRadius: 4,
+      displayColors: false,
       callbacks: {
         label: (context) => {
-          const label = context.dataset.label || "";
           const value = context.raw as number;
           const status = props.data[context.dataIndex]?.status;
-          return [`${label}: ${value}ms`, `Status: ${status}`];
+          return [`${value} ms`, `Status: ${status}`];
         },
       },
     },
@@ -83,26 +81,25 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
   scales: {
     y: {
       beginAtZero: true,
-      grid: {
-        color: "rgba(0, 0, 0, 0.05)",
+      grid: { color: "rgba(0,0,0,0.05)" },
+      ticks: {
+        callback: (val) => `${val}ms`,
+        color: "#6b7280",
       },
-      title: {
-        display: true,
-        text: "Response Time (ms)",
-      },
+      title: { display: false },
     },
     x: {
-      grid: {
-        display: false,
-      },
+      grid: { display: false },
       ticks: {
-        maxRotation: 45,
-        minRotation: 45,
+        maxRotation: 30,
+        autoSkip: true,
+        maxTicksLimit: 8,
+        color: "#6b7280",
       },
     },
   },
   interaction: {
-    mode: "nearest",
+    mode: "index",
     axis: "x",
     intersect: false,
   },
@@ -112,7 +109,10 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
 <template>
   <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
     <Line v-if="data.length" :data="chartData" :options="chartOptions" />
-    <div v-else class="h-full flex items-center justify-center text-gray-500">
+    <div
+      v-else
+      class="h-full flex items-center justify-center text-gray-500 text-sm"
+    >
       No data available
     </div>
   </div>

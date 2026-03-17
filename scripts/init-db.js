@@ -47,7 +47,7 @@ db.serialize(() => {
   });
 
   // Таблица сайтов
-  db.run(`
+    db.run(`
     CREATE TABLE sites (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -55,6 +55,9 @@ db.serialize(() => {
       checkInterval INTEGER DEFAULT 5,
       isActive BOOLEAN DEFAULT 1,
       userId INTEGER,
+      check_type TEXT DEFAULT 'http',
+      expected_text TEXT,
+      text_condition TEXT DEFAULT 'contains',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
@@ -88,60 +91,47 @@ db.serialize(() => {
   
   console.log('✅ Indexes created');
 
-  // Создаем тестового пользователя
-  setTimeout(() => {
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync('admin123', salt);
 
-    db.run(
-      `INSERT INTO users (email, password, telegramChatId, createdAt, updatedAt) 
-       VALUES (?, ?, ?, datetime('now'), datetime('now'))`,
-      ['admin@example.com', hash, '123456789'],
-      function(err) {
-        if (err) {
-          console.log('⚠️ Error creating test user:', err);
-        } else {
-          console.log('✅ Test user created: admin@example.com / admin123');
-          const userId = this.lastID;
-          
-          // Добавляем тестовые сайты
-          db.run(
-            `INSERT INTO sites (name, url, checkInterval, isActive, userId, createdAt, updatedAt) 
-             VALUES 
-               ('Google', 'https://www.google.com', 5, 1, ?, datetime('now'), datetime('now')),
-               ('GitHub', 'https://www.github.com', 5, 1, ?, datetime('now'), datetime('now')),
-               ('Stack Overflow', 'https://stackoverflow.com', 5, 1, ?, datetime('now'), datetime('now'))`,
-            [userId, userId, userId],
-            function(err) {
-              if (err) {
-                console.error('❌ Error creating sites:', err);
-              } else {
-                console.log('✅ Test sites created');
-              }
-            }
-          );
-        }
-      }
-    );
-  }, 500); // Небольшая задержка для создания таблиц
+   // Таблица для SSL-проверок
+  db.run(`
+    CREATE TABLE ssl_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteId INTEGER NOT NULL,
+      valid BOOLEAN NOT NULL,
+      expired BOOLEAN NOT NULL,
+      daysLeft INTEGER NOT NULL,
+      validFrom DATETIME,
+      validTo DATETIME,
+      issuer TEXT,
+      error TEXT,
+      checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) console.error('❌ Error creating ssl_results table:', err);
+    else console.log('✅ SSL_results table created');
+  });
 
-  // Проверяем результат через 2 секунды
-  setTimeout(() => {
-    console.log('\n📊 Database summary:');
-    
-    db.all('SELECT COUNT(*) as count FROM users', (err, rows) => {
-      if (!err) console.log(`👥 Users: ${rows[0].count}`);
-    });
-    
-    db.all('SELECT COUNT(*) as count FROM sites', (err, rows) => {
-      if (!err) console.log(`🌐 Sites: ${rows[0].count}`);
-    });
-    
-    db.all('SELECT COUNT(*) as count FROM check_results', (err, rows) => {
-      if (!err) console.log(`📝 Check results: ${rows[0].count}`);
-      
-      console.log('\n🎉 Database initialization complete!');
-      db.close();
-    });
-  }, 2000);
+  // Таблица для результатов проверки скорости
+  db.run(`
+    CREATE TABLE speed_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteId INTEGER NOT NULL,
+      loadTime INTEGER,
+      ttfb INTEGER,
+      domContentLoaded INTEGER,
+      pageSize INTEGER,
+      requestCount INTEGER,
+      error TEXT,
+      checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) console.error('❌ Error creating speed_results table:', err);
+    else console.log('✅ Speed_results table created');
+  });
+
+  // Индексы для новых таблиц
+  db.run(`CREATE INDEX idx_ssl_results_siteId_checkedAt ON ssl_results(siteId, checkedAt DESC);`);
+  db.run(`CREATE INDEX idx_speed_results_siteId_checkedAt ON speed_results(siteId, checkedAt DESC);`);
 });

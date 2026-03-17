@@ -1,60 +1,55 @@
 /**
- * Безопасное форматирование даты
- * @param dateString - строка с датой или undefined
- * @param options - опции форматирования
+ * Безопасное форматирование даты и времени в фиксированном формате DD.MM.YYYY HH:MM:SS
+ * @param dateString - строка с датой или undefined/null
  * @returns отформатированная дата или 'Never'
  */
-export const formatDate = (
+export const formatDateTime = (
   dateString: string | undefined | null,
-  options: Intl.DateTimeFormatOptions = {},
 ): string => {
   if (!dateString) return "Never";
 
   try {
-    const date = new Date(dateString);
-    // Проверяем, что дата валидная
-    if (isNaN(date.getTime())) return "Invalid date";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Invalid date";
 
-    return date.toLocaleString(undefined, options);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const seconds = d.getSeconds().toString().padStart(2, "0");
+
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
   } catch {
     return "Invalid date";
   }
 };
 
-/**
- * Форматирование времени (часы:минуты)
- */
+// Если нужно только время
 export const formatTime = (dateString: string | undefined | null): string => {
-  return formatDate(dateString, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  if (!dateString) return "Never";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Invalid date";
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  } catch {
+    return "Invalid date";
+  }
 };
 
-/**
- * Форматирование даты и времени
- */
-export const formatDateTime = (
-  dateString: string | undefined | null,
-): string => {
-  return formatDate(dateString, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-/**
- * Форматирование только даты
- */
-export const formatOnlyDate = (
-  dateString: string | undefined | null,
-): string => {
-  return formatDate(dateString, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+// Если нужна только дата
+export const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return "Never";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Invalid date";
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  } catch {
+    return "Invalid date";
+  }
 };

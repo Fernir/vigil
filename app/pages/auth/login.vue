@@ -27,9 +27,7 @@ const handleSubmit = async () => {
 
   if (result.success) {
     // Даем время куке установиться
-    setTimeout(() => {
-      navigateTo("/dashboard");
-    }, 100);
+    setTimeout(() => navigateTo("/"));
   } else {
     error.value = result.error || "Login failed";
   }

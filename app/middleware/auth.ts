@@ -4,15 +4,30 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // На клиенте используем стейт (без jwt)
   if (process.client) {
-    const { loggedIn } = useUserSession();
+    const { loggedIn, sessionLoaded } = useUserSession();
+
+    // Ждём загрузки сессии
+    if (!sessionLoaded.value) {
+      await new Promise((resolve) => {
+        const unwatch = watch(sessionLoaded, (val) => {
+          if (val) {
+            unwatch();
+            resolve(true);
+          }
+        });
+      });
+    }
+
     if (!loggedIn.value) {
       return navigateTo("/auth/login");
     }
+
     return;
   }
 
   // На сервере проверяем куку
   const token = useCookie("auth_token").value;
+
   if (!token) {
     return navigateTo("/auth/login");
   }

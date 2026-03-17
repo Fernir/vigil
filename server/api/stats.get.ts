@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "../utils/db";
+import { useDB, dbAll, dbGet } from "../utils/db";
 
 export default defineEventHandler(async (event) => {
   const db = useDB();
@@ -54,10 +54,39 @@ export default defineEventHandler(async (event) => {
      )`,
   );
 
-  // Общий uptime (средний процент аптайма за последние 30 дней)
-  // Более сложный запрос, можно упростить или добавить позже.
-  // Пока можно вернуть 100 как заглушку, либо рассчитать на основе всех проверок.
-  const overallUptime = 100; // Заглушка, можно рассчитать позже
+  // ---- Расчёт среднего аптайма за 30 дней ----
+  let overallUptime = 100; // значение по умолчанию
+
+  // Получаем все активные сайты
+  const sites = await dbAll<any>(db, `SELECT id FROM sites WHERE isActive = 1`);
+
+  if (sites.length > 0) {
+    let totalUptimeSum = 0;
+    let sitesWithData = 0;
+
+    for (const site of sites) {
+      // Считаем количество проверок за последние 30 дней и количество up
+      const stats = await dbGet<{ total: number; up: number }>(
+        db,
+        `SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as up
+         FROM check_results
+         WHERE siteId = ? AND checkedAt >= datetime('now', '-30 days')`,
+        [site.id],
+      );
+
+      if (stats && stats.total > 0) {
+        const uptime = (stats.up / stats.total) * 100;
+        totalUptimeSum += uptime;
+        sitesWithData++;
+      }
+    }
+
+    if (sitesWithData > 0) {
+      overallUptime = Math.round(totalUptimeSum / sitesWithData);
+    }
+  }
 
   return {
     total: totalSites?.count || 0,

@@ -1,6 +1,5 @@
 import { logger } from "./logger";
 
-// Этот интерфейс только для результата проверки (без id и даты)
 export interface CheckResultData {
   status: "up" | "down" | "degraded";
   responseTime: number;
@@ -8,24 +7,27 @@ export interface CheckResultData {
   errorMessage?: string;
 }
 
-export async function checkSite(url: string): Promise<CheckResultData> {
+export async function checkSite(
+  url: string,
+  expectedText?: string | null,
+  condition: "contains" | "not_contains" = "contains",
+): Promise<CheckResultData> {
   const startTime = Date.now();
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(url, {
       method: "GET",
       signal: controller.signal,
-      headers: {
-        "User-Agent": "Vigil-Monitor/1.0",
-      },
+      headers: { "User-Agent": "Vigil-Monitor/1.0" },
     });
 
     clearTimeout(timeoutId);
     const responseTime = Date.now() - startTime;
 
+    // Базовая проверка HTTP статуса
     let status: "up" | "down" | "degraded" = "up";
     if (response.status >= 500) {
       status = "down";
@@ -33,14 +35,36 @@ export async function checkSite(url: string): Promise<CheckResultData> {
       status = "degraded";
     }
 
-    return {
-      status,
-      responseTime,
-      statusCode: response.status,
-    };
+    console.log("[DEBUG]", expectedText);
+    // Если задан ожидаемый текст, проверяем его
+    if (expectedText) {
+      const text = await response.text();
+
+      console.log(
+        `[DEBUG] Checking text: expected="${expectedText}", condition=${condition}`,
+      );
+      console.log(
+        `[DEBUG] Page text length: ${text.length}, includes? ${text.includes(expectedText)}`,
+      );
+
+      const textExists = text.includes(expectedText);
+      if (
+        (condition === "contains" && !textExists) ||
+        (condition === "not_contains" && textExists)
+      ) {
+        status = "degraded"; // или 'down' – можно обсуждать
+        return {
+          status,
+          responseTime,
+          statusCode: response.status,
+          errorMessage: `Text condition failed: expected ${condition} "${expectedText}"`,
+        };
+      }
+    }
+
+    return { status, responseTime, statusCode: response.status };
   } catch (error: any) {
     logger.error(`Error checking ${url}:`, error.message);
-
     return {
       status: "down",
       responseTime: Date.now() - startTime,

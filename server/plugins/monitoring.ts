@@ -18,14 +18,14 @@ export default defineNitroPlugin(() => {
       const sites = await dbAll<any>(
         db,
         `SELECT s.* 
-         FROM sites s
-         LEFT JOIN (
-           SELECT siteId, MAX(checkedAt) as lastCheck
-           FROM check_results
-           GROUP BY siteId
-         ) c ON s.id = c.siteId
-         WHERE s.isActive = 1
-         AND (c.lastCheck IS NULL OR datetime(c.lastCheck, '+' || s.checkInterval || ' minutes') <= datetime('now'))`,
+            FROM sites s
+            LEFT JOIN (
+                SELECT siteId, MAX(checkedAt) as lastCheck
+                FROM check_results
+                GROUP BY siteId
+            ) c ON s.id = c.siteId
+            WHERE s.isActive = 1
+            AND (c.lastCheck IS NULL OR datetime(c.lastCheck, '+' || s.checkInterval || ' minutes') <= datetime('now'))`,
       );
 
       if (sites.length === 0) {
@@ -34,7 +34,11 @@ export default defineNitroPlugin(() => {
       }
 
       for (const site of sites) {
-        const result = await checkSite(site.url);
+        const result = await checkSite(
+          site.url,
+          site.expected_text,
+          site.text_condition || "contains",
+        );
         const savedResult = await dbRun(
           db,
           `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checkedAt) 

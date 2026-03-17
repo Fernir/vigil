@@ -6,7 +6,7 @@ const userMenuItems = [
     {
       label: "Settings",
       icon: "heroicons:cog-20-solid",
-      to: "/dashboard/settings",
+      to: "/settings",
     },
   ],
   [

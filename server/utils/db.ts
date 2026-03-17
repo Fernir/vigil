@@ -19,6 +19,9 @@ export interface Site {
   checkInterval: number;
   isActive: boolean;
   userId?: number;
+  check_type?: "http" | "text";
+  expected_text?: string | null;
+  text_condition?: "contains" | "not_contains";
   createdAt: string;
   updatedAt: string;
 }

@@ -18,7 +18,6 @@ export default (event: any) => {
 
   const onCheckResult = (result: any) => {
     if (result && typeof result.siteId === "number") {
-      console.log("Broadcasting check result", result);
       event.node.res.write(
         `event: check-result\ndata: ${JSON.stringify(result)}\n\n`,
       );

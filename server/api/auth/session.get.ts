@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       decoded = jwt.verify(token, useRuntimeConfig().jwtSecret) as {
         userId: number;
       };
+      console.log("🔍 Session check - Token valid for userId:", decoded.userId);
     } catch (error: unknown) {
       // Обрабатываем разные типы ошибок JWT
       if (error instanceof jwt.JsonWebTokenError) {

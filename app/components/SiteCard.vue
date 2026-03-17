@@ -2,28 +2,31 @@
 import type { Site, CheckResult } from "../../server/utils/db";
 
 const { loggedIn } = useUserSession();
-const { latestResults, results, fetchSiteHistory } = useMonitoring();
+const { results, fetchSiteHistory } = useMonitoring();
 
 const props = defineProps<{
   site: Site;
   detailed?: boolean;
 }>();
 
+const siteId = Number(props.site.id);
+
 const emit = defineEmits<{
   (e: "delete", id: number): void;
 }>();
 
 const uptime = computed(() => {
-  if (!results?.length) return 100;
-
-  const upCount = results.filter((r) => r.status === "up").length;
-  return Math.round((upCount / results.length) * 100);
+  const data = results.value[siteId] || [];
+  if (!data.length) return 100;
+  const up = data.filter((r) => r.status === "up").length;
+  return ((up / data.length) * 100).toFixed();
 });
 
 const averageResponseTime = computed(() => {
-  if (!latestResults.value[props.site.id]) return 0;
-
-  return Math.round(latestResults.value[props.site.id].responseTime);
+  const data = results.value[siteId] || [];
+  if (!data.length) return 0;
+  const sum = data.reduce((acc, r) => acc + r.responseTime, 0);
+  return Math.round(sum / data.length);
 });
 
 const status = computed(() => props.site?.lastCheck?.status || "pending");
@@ -43,10 +46,10 @@ const statusColor = computed(() => {
 
 const lastChecked = computed(() => {
   // Проверяем, что checkedAt существует
-  if (!props?.site?.checkedAt) return "Never";
+  if (!props?.site?.lastCheck?.checkedAt) return "Never";
 
   try {
-    return new Date(props?.site.checkedAt).toLocaleString();
+    return new Date(props?.site.lastCheck.checkedAt).toLocaleString();
   } catch (e) {
     return "Invalid date";
   }
@@ -67,6 +70,9 @@ onMounted(() => {
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             {{ site.name }}
           </h3>
+          <span class="text-xs bg-black text-white px-2 py-1 rounded">
+            {{ site.check_type === "text" ? "Text check" : "HTTP" }}
+          </span>
           <StatusBadge :status="status" />
           <span
             v-if="!site.isActive"
@@ -80,7 +86,7 @@ onMounted(() => {
           :href="site.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 mb-4"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 mb-4 w-fit"
         >
           {{ site.url }}
           <UIcon
@@ -142,7 +148,7 @@ onMounted(() => {
           color="gray"
           variant="ghost"
           icon="heroicons:pencil-square-20-solid"
-          :to="`/dashboard/sites/${site.id}`"
+          :to="`/sites/${site.id}`"
         />
         <UButton
           color="red"

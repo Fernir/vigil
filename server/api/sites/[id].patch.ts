@@ -6,6 +6,10 @@ const updateSchema = z.object({
   url: z.string().url().optional(),
   checkInterval: z.number().min(1).max(60).optional(),
   isActive: z.boolean().optional(),
+  // 👇 новые поля
+  check_type: z.enum(["http", "text"]).optional(),
+  expected_text: z.string().nullable().optional(),
+  text_condition: z.enum(["contains", "not_contains"]).optional(),
 });
 
 export default defineEventHandler(async (event) => {
@@ -61,6 +65,22 @@ export default defineEventHandler(async (event) => {
       values.push(validated.isActive ? 1 : 0);
     }
 
+    // 👇 добавляем новые поля
+    if (validated.check_type !== undefined) {
+      updates.push("check_type = ?");
+      values.push(validated.check_type);
+    }
+
+    if (validated.expected_text !== undefined) {
+      updates.push("expected_text = ?");
+      values.push(validated.expected_text);
+    }
+
+    if (validated.text_condition !== undefined) {
+      updates.push("text_condition = ?");
+      values.push(validated.text_condition);
+    }
+
     // Добавляем updatedAt
     updates.push('updatedAt = datetime("now")');
 
@@ -88,10 +108,8 @@ export default defineEventHandler(async (event) => {
     return updatedSite;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      // Безопасно получаем первое сообщение об ошибке
       const firstError = error.errors[0];
       const errorMessage = firstError?.message || "Validation error";
-
       throw createError({
         statusCode: 400,
         message: errorMessage,
