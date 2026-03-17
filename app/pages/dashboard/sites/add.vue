@@ -1,0 +1,128 @@
+<script setup lang="ts">
+definePageMeta({
+  middleware: "auth",
+});
+
+useHead({
+  title: "Add Site",
+});
+
+const router = useRouter();
+const { addSite, loading } = useSites();
+
+const form = reactive({
+  name: "",
+  url: "",
+  checkInterval: 5,
+});
+
+const errors = ref<Record<string, string>>({});
+
+const validate = () => {
+  const newErrors: Record<string, string> = {};
+
+  if (!form.name) newErrors.name = "Name is required";
+  if (!form.url) newErrors.url = "URL is required";
+  else if (!form.url.match(/^https?:\/\/.+/)) {
+    newErrors.url = "URL must start with http:// or https://";
+  }
+  if (form.checkInterval < 1 || form.checkInterval > 60) {
+    newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
+  }
+
+  errors.value = newErrors;
+  return Object.keys(newErrors).length === 0;
+};
+
+const handleSubmit = async () => {
+  if (!validate()) return;
+
+  const result = await addSite(form);
+  if (result) {
+    router.push("/dashboard");
+  }
+};
+</script>
+
+<template>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Add New Site
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Add a website or service to monitor
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <!-- Name -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Site Name
+            </label>
+            <UInput
+              v-model="form.name"
+              placeholder="e.g., My Website, API Server"
+              :error="errors.name"
+            />
+            <p v-if="errors.name" class="mt-1 text-sm text-error-600">
+              {{ errors.name }}
+            </p>
+          </div>
+
+          <!-- URL -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              URL
+            </label>
+            <UInput
+              v-model="form.url"
+              placeholder="https://example.com"
+              :error="errors.url"
+            />
+            <p v-if="errors.url" class="mt-1 text-sm text-error-600">
+              {{ errors.url }}
+            </p>
+          </div>
+
+          <!-- Check Interval -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Check Interval (minutes)
+            </label>
+            <UInput
+              v-model="form.checkInterval"
+              type="number"
+              min="1"
+              max="60"
+              :error="errors.checkInterval"
+            />
+            <p v-if="errors.checkInterval" class="mt-1 text-sm text-error-600">
+              {{ errors.checkInterval }}
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+              How often to check this site (1-60 minutes)
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 pt-4">
+            <UButton type="submit" color="primary" :loading="loading">
+              Add Site
+            </UButton>
+            <UButton color="gray" variant="ghost" to="/"> Cancel </UButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
