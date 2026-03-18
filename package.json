@@ -9,6 +9,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "start": "node .output/server/index.mjs",
     "db:init": "rm -f db/data.sqlite3 && node scripts/init-db.js"
   },
   "dependencies": {

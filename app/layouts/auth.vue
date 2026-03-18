@@ -3,14 +3,12 @@
     class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
   >
     <div class="flex flex-row items-center justify-center gap-3">
-      <div class="flex justify-center">
-        <div
-          class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center"
+      <NuxtLink to="/" class="flex items-center gap-2">
+        <img src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
+        <span class="text-xl font-bold text-gray-900 dark:text-white"
+          >Vigil</span
         >
-          <span class="text-white font-bold text-2xl">V</span>
-        </div>
-      </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white">Vigil</div>
+      </NuxtLink>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
