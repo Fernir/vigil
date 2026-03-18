@@ -1,4 +1,4 @@
-import type { CheckResult } from "../../server/utils/db";
+import type { CheckResult } from "~~/server/utils/db";
 
 export const useMonitoring = () => {
   const results = ref<Record<number, CheckResult[]>>({});

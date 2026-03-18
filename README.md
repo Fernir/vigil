@@ -65,6 +65,7 @@ You can receive alerts when a site goes down or recovers. Just set a webhook URL
   "error": "connect ECONNREFUSED",
   "timestamp": "2025-03-18T12:34:56Z"
 }
+```
 
 ### Built with
 
@@ -75,7 +76,6 @@ You can receive alerts when a site goes down or recovers. Just set a webhook URL
 - [SQLite](https://www.sqlite.org/) – database
 - [JSON Web Tokens](https://jwt.io/) – authentication via httpOnly cookies
 - [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) – real‑time updates
-```
 
 ## Contributing
 
