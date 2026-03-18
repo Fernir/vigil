@@ -29,13 +29,13 @@ const handleDelete = async (id: number) => {
 <template>
   <div class="min-h-screen">
     <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <!-- Заголовок -->
+      <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
           System Status
         </h1>
 
-        <!-- Статистика (обёрнута в ClientOnly для избежания гидратации) -->
+        <!-- Statistics (wrapped in ClientOnly to avoid hydration issues) -->
         <ClientOnly>
           <div
             v-if="statsLoading"
@@ -87,7 +87,7 @@ const handleDelete = async (id: number) => {
             </div>
           </div>
           <template #fallback>
-            <!-- Скелетон для сервера -->
+            <!-- Skeleton for server -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div v-for="i in 4" :key="i" class="card p-4">
                 <div
@@ -101,7 +101,7 @@ const handleDelete = async (id: number) => {
           </template>
         </ClientOnly>
 
-        <!-- Индикатор SSE (всегда только на клиенте) -->
+        <!-- Indicator for SSE (always only on client) -->
         <ClientOnly>
           <div class="flex items-center gap-2 text-sm">
             <div
@@ -115,7 +115,7 @@ const handleDelete = async (id: number) => {
         </ClientOnly>
       </div>
 
-      <!-- Блок со списком сайтов – только для авторизованных (тоже ClientOnly) -->
+      <!-- Block with site list – only for authorized users (also ClientOnly) -->
       <ClientOnly>
         <div v-if="loggedIn" class="mt-8">
           <div class="flex items-center justify-between mb-4">
@@ -175,7 +175,7 @@ const handleDelete = async (id: number) => {
           </div>
         </div>
         <template #fallback>
-          <!-- Для сервера не показываем блок сайтов вообще -->
+          <!-- For server-side rendering, we don't show the sites block at all -->
         </template>
       </ClientOnly>
     </div>

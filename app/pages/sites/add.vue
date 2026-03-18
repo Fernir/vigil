@@ -119,7 +119,7 @@ const handleSubmit = async () => {
             </p>
           </div>
 
-          <!-- Тип проверки -->
+          <!-- Type of check -->
           <div>
             <label class="block text-sm font-medium mb-2">Check Type</label>
             <USelect
@@ -131,7 +131,7 @@ const handleSubmit = async () => {
             />
           </div>
 
-          <!-- Поле для текста (появляется если выбран text) -->
+          <!-- Field for text (appears if text is selected) -->
           <div v-if="form.check_type === 'text'">
             <label class="block text-sm font-medium mb-2">Expected Text</label>
             <UInput v-model="form.expected_text" placeholder="e.g. Welcome" />

@@ -22,14 +22,14 @@ export const useMonitoring = () => {
             if (result?.siteId) {
               const siteId = result.siteId;
 
-              // Обновляем результаты
+              // Renew results
               const currentResults = results.value[siteId] || [];
               results.value = {
                 ...results.value,
                 [siteId]: [result, ...currentResults].slice(0, 100),
               };
 
-              // Обновляем последний результат
+              // Renew the latest result
               latestResults.value = {
                 ...latestResults.value,
                 [siteId]: result,

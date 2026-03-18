@@ -1,4 +1,3 @@
-// server/plugins/speed-monitoring.ts
 import { useDB, dbRun, dbAll } from "../utils/db";
 import { checkSpeed } from "../utils/speedChecker";
 
@@ -36,7 +35,7 @@ export default defineNitroPlugin(() => {
     }
   };
 
-  // Первый запуск через 10 секунд, затем каждые 6 часов
+  // First run after 10 seconds, then every 6 hours
   setTimeout(runSpeedCheck, 10 * 1000);
   setInterval(runSpeedCheck, 60 * 1000);
 });

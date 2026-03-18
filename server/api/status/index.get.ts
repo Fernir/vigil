@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     "SELECT * FROM sites ORDER BY createdAt DESC",
   );
 
-  // Для каждого сайта получаем последний результат
+  // For each site we get the last result to determine its current status
   const sitesWithStatus = await Promise.all(
     sites.map(async (site) => {
       const lastResult = await dbGet<any>(

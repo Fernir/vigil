@@ -2,7 +2,7 @@ import sqlite3 from "sqlite3";
 import { resolve } from "path";
 import fs from "fs";
 
-// Типы для таблиц
+// Types for tables
 export interface User {
   id: number;
   email: string;
@@ -36,11 +36,11 @@ export interface CheckResult {
   checkedAt: string;
 }
 
-// Создаем и экспортируем функцию для получения БД
+// Make the database available and export the function for getting the DB connection
 export const useDB = () => {
   const dbPath = resolve(process.cwd(), "db/data.sqlite3");
 
-  // Проверяем существует ли БД
+  // Check if the database exists
   if (!fs.existsSync(dbPath)) {
     console.error("❌ Database not found at:", dbPath);
     console.error("💡 Run: npm run db:init");
@@ -54,13 +54,13 @@ export const useDB = () => {
     }
   });
 
-  // Включаем поддержку внешних ключей
+  // Toggle support for foreign keys
   db.run("PRAGMA foreign_keys = ON");
 
   return db;
 };
 
-// Промис-обертки для удобства
+// Promise wrappers for convenience
 export const dbGet = <T>(
   db: sqlite3.Database,
   sql: string,

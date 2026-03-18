@@ -7,7 +7,7 @@ let isRunning = false;
 
 export default defineNitroPlugin(() => {
   console.log(
-    "Мониторинг с индивидуальными интервалами запущен (проверка каждую минуту)",
+    "Monitoring with individual intervals started (checking every minute)",
   );
 
   const runMonitor = async () => {
@@ -31,7 +31,7 @@ export default defineNitroPlugin(() => {
       );
 
       if (sites.length === 0) {
-        console.log("Нет сайтов для проверки в этом цикле");
+        console.log("No sites to check at this time");
         return;
       }
 
@@ -42,7 +42,7 @@ export default defineNitroPlugin(() => {
           site.text_condition || "contains",
         );
 
-        // Получаем последний статус для сайта (предыдущий)
+        // Get the last status for the site (previous check)
         const lastResult = await dbAll<any>(
           db,
           `SELECT status FROM check_results 
@@ -52,7 +52,7 @@ export default defineNitroPlugin(() => {
         );
         const prevStatus = lastResult[0]?.status;
 
-        // Сохраняем новый результат
+        // Save the new result in the database
         const savedResult = await dbRun(
           db,
           `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checkedAt) 
@@ -66,7 +66,7 @@ export default defineNitroPlugin(() => {
           ],
         );
 
-        // Получаем полную запись для отправки через SSE
+        // Get the full record for sending via SSE
         const newRows = await dbAll<any>(
           db,
           `SELECT * FROM check_results WHERE id = ?`,
@@ -80,7 +80,7 @@ export default defineNitroPlugin(() => {
           });
         }
 
-        // Уведомление о падении (используем prevStatus)
+        // Notification about downtime (using prevStatus)
         if (
           result.status === "down" &&
           prevStatus !== "down" &&
@@ -103,7 +103,7 @@ export default defineNitroPlugin(() => {
           await sendWebhook(site.webhook_url, payload);
         }
 
-        // Уведомление о восстановлении
+        // Notification about recovery
         if (
           (result.status === "up" || result.status === "degraded") &&
           prevStatus === "down" &&
@@ -125,7 +125,7 @@ export default defineNitroPlugin(() => {
         }
       }
 
-      // Очистка истории (последние 50 записей для каждого сайта)
+      // Clear history (last 50 records for each site)
       const allSites = await dbAll<any>(
         db,
         `SELECT id FROM sites WHERE isActive = 1`,
@@ -146,16 +146,16 @@ export default defineNitroPlugin(() => {
         }
       }
 
-      console.log("Цикл мониторинга завершён");
+      console.log("Monitoring cycle completed");
     } catch (error) {
-      console.error("Ошибка мониторинга:", error);
+      console.error("Monitoring error:", error);
     } finally {
       isRunning = false;
     }
   };
 
-  // Запускаем раз в минуту
+  // Start every minute
   setInterval(runMonitor, 60_000);
-  // Запускаем сразу при старте
+  // Start immediately on startup  setTimeout(runMonitor, 5000);
   runMonitor();
 });

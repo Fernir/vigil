@@ -3,13 +3,13 @@ import { useDB, dbAll, dbGet } from "../utils/db";
 export default defineEventHandler(async (event) => {
   const db = useDB();
 
-  // Общее количество активных сайтов
+  // Overall sum of active sites
   const totalSites = await dbGet<{ count: number }>(
     db,
     `SELECT COUNT(*) as count FROM sites WHERE isActive = 1`,
   );
 
-  // Количество сайтов со статусом 'up' в последней проверке
+  // Number of sites with 'up' status in the last check
   const operational = await dbGet<{ count: number }>(
     db,
     `SELECT COUNT(*) as count FROM sites s
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
      )`,
   );
 
-  // Количество сайтов со статусом 'degraded' в последней проверке
+  // Number of sites with 'degraded' status in the last check
   const degraded = await dbGet<{ count: number }>(
     db,
     `SELECT COUNT(*) as count FROM sites s
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
      )`,
   );
 
-  // Количество сайтов со статусом 'down' в последней проверке
+  // Number of sites with 'down' status in the last check
   const down = await dbGet<{ count: number }>(
     db,
     `SELECT COUNT(*) as count FROM sites s
@@ -54,10 +54,10 @@ export default defineEventHandler(async (event) => {
      )`,
   );
 
-  // ---- Расчёт среднего аптайма за 30 дней ----
-  let overallUptime = 100; // значение по умолчанию
+  // ---- Calculate average uptime over the last 30 days ----
+  let overallUptime = 100; // value by default
 
-  // Получаем все активные сайты
+  // Get all active sites
   const sites = await dbAll<any>(db, `SELECT id FROM sites WHERE isActive = 1`);
 
   if (sites.length > 0) {
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
     let sitesWithData = 0;
 
     for (const site of sites) {
-      // Считаем количество проверок за последние 30 дней и количество up
+      // Calculate the number of checks over the last 30 days and the number of 'up' statuses
       const stats = await dbGet<{ total: number; up: number }>(
         db,
         `SELECT 

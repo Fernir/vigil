@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   const path = event.path;
   const method = event.method;
 
-  // Полностью публичные маршруты
+  // Fully public routes that don't require authentication
   const publicRoutes = [
     "/api/auth/login",
     "/api/auth/register",
@@ -17,12 +17,12 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  // Для /api/sites разрешаем GET без авторизации
+  // For /api/sites we allow GET without authentication to let the homepage load, but other methods require auth
   if (path.startsWith("/api/sites") && method === "GET") {
     return;
   }
 
-  // Все остальные API запросы требуют авторизации
+  // All other API requests require authentication
   if (path.startsWith("/api/")) {
     const token = getCookie(event, "auth_token");
     if (!token) {

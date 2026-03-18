@@ -32,7 +32,7 @@ const statusColor = computed(() => {
 });
 
 const lastChecked = computed(() => {
-  // Проверяем, что checkedAt существует
+  // Check if checkedAt exists
   if (!props?.site?.lastCheck?.checkedAt) return "Never";
 
   try {
@@ -115,7 +115,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Последний статус код если есть -->
+        <!-- Last status code if exists -->
         <div
           v-if="props.site?.lastCheck?.statusCode"
           class="mt-3 text-xs text-gray-500 dark:text-gray-400"

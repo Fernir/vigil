@@ -22,7 +22,7 @@ const error = ref("");
 const success = ref(false);
 
 const handleSubmit = async () => {
-  // Валидация
+  // Validation
   if (form.password !== form.confirmPassword) {
     error.value = "Passwords do not match";
     return;
@@ -40,7 +40,7 @@ const handleSubmit = async () => {
 
   if (result.success) {
     success.value = true;
-    // Перенаправляем на логин через 2 секунды
+    // Redirect to login page after 2 seconds
     setTimeout(() => {
       router.push("/auth/login");
     }, 2000);

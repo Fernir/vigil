@@ -26,50 +26,65 @@ export interface SpeedResult {
   checkedAt: string;
 }
 
+export interface ScreenshotResult {
+  id: number;
+  siteId: number;
+  filename: string;
+  width: number;
+  height: number;
+  checkedAt: string;
+}
+
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {
   const idRef = toRef(siteId);
+
+  // Get access to check history and its loading function
   const { results, fetchSiteHistory } = useMonitoring();
 
-  // Загружаем историю проверок при изменении siteId
+  // Load history when siteId changes
   watchEffect(() => {
     const id = idRef.value;
     if (id) {
-      fetchSiteHistory(id, 30);
+      fetchSiteHistory(id, 30); // last 30 days
     }
   });
 
   const sslUrl = computed(() => `/api/sites/${idRef.value}/ssl`);
   const speedUrl = computed(() => `/api/sites/${idRef.value}/speed`);
+  const screenshotUrl = computed(() => `/api/sites/${idRef.value}/screenshot`);
 
   const {
     data: sslResults,
     refresh: refreshSSL,
     pending: sslLoading,
     error: sslError,
-  } = useFetch<SSLResult[]>(sslUrl, {
-    lazy: true,
-    server: false,
-  });
+  } = useFetch<SSLResult[]>(sslUrl, { lazy: true, server: false });
 
   const {
     data: speedResults,
     refresh: refreshSpeed,
     pending: speedLoading,
     error: speedError,
-  } = useFetch<SpeedResult[]>(speedUrl, {
-    lazy: true,
-    server: false,
-  });
+  } = useFetch<SpeedResult[]>(speedUrl, { lazy: true, server: false });
+
+  const { data: screenshotData, refresh: refreshScreenshot } =
+    useFetch<ScreenshotResult>(screenshotUrl, {
+      lazy: true,
+      server: false,
+    });
 
   const lastSSL = computed(() => sslResults.value?.[0] || null);
   const lastSpeed = computed(() => speedResults.value?.[0] || null);
+  const lastScreenshot = computed(() => screenshotData.value || null);
+
   const loading = computed(() => sslLoading.value || speedLoading.value);
 
+  // Metrics based on check history
   const uptimePercentage = computed(() => {
     const data = results.value[idRef.value] || [];
     if (!data.length) return 0;
     const up = data.filter((r) => r.status === "up").length;
-    return Number(((up / data.length) * 100).toFixed());
+    return ((up / data.length) * 100).toFixed();
   });
 
   const avgResponseTime = computed(() => {
@@ -84,8 +99,10 @@ export const useSiteMetrics = (siteId: MaybeRef<number>) => {
     speedResults,
     lastSSL,
     lastSpeed,
+    lastScreenshot,
     refreshSSL,
     refreshSpeed,
+    refreshScreenshot,
     loading,
     sslError,
     speedError,

@@ -27,7 +27,7 @@ export async function checkSite(
     clearTimeout(timeoutId);
     const responseTime = Date.now() - startTime;
 
-    // Базовая проверка HTTP статуса
+    // Base check for HTTP status
     let status: "up" | "down" | "degraded" = "up";
     if (response.status >= 500) {
       status = "down";
@@ -35,7 +35,7 @@ export async function checkSite(
       status = "degraded";
     }
 
-    // Если задан ожидаемый текст, проверяем его
+    // If expected text is specified, check for it in the response body
     if (expectedText) {
       const text = await response.text();
 
@@ -44,7 +44,7 @@ export async function checkSite(
         (condition === "contains" && !textExists) ||
         (condition === "not_contains" && textExists)
       ) {
-        status = "degraded"; // или 'down' – можно обсуждать
+        status = "degraded";
         return {
           status,
           responseTime,

@@ -7,14 +7,10 @@ const siteId = Number(route.params.id);
 
 useHead({ title: "Edit Site" });
 
-const {
-  lastSSL,
-  lastSpeed,
-  sslResults,
-  speedResults,
-  uptimePercentage,
-  avgResponseTime,
-} = useSiteMetrics(siteId);
+const showModal = ref(false);
+
+const { lastSSL, lastSpeed, sslResults, speedResults, lastScreenshot } =
+  useSiteMetrics(siteId);
 const { sites, fetchSites, updateSite, loading } = useSites();
 const { results, fetchSiteHistory } = useMonitoring();
 const { formatDateTime } = useDate();
@@ -89,7 +85,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Левая колонка: форма редактирования -->
+        <!-- Left column: editing form -->
         <div class="lg:col-span-1">
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
@@ -165,27 +161,45 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
         </div>
 
-        <!-- Правая колонка: все метрики и графики -->
+        <!-- Right column: all metrics and charts -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Две быстрые карточки -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="card p-4">
-              <p class="text-xs text-gray-500">Uptime (30d)</p>
-              <p class="text-2xl font-bold">{{ uptimePercentage }}%</p>
-            </div>
-            <div class="card p-4">
-              <p class="text-xs text-gray-500">Avg Response</p>
-              <p class="text-2xl font-bold">{{ avgResponseTime }} ms</p>
-            </div>
+          <div class="card p-5" v-if="lastScreenshot">
+            <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
+            <img
+              :src="lastScreenshot.filename"
+              alt="Website screenshot"
+              class="w-full max-h-[600px] object-cover border rounded-lg shadow-sm cursor-pointer"
+              @click="showModal = true"
+            />
+            <p class="text-xs text-gray-500 mt-2 text-center">
+              Click to enlarge
+            </p>
+            <!-- Modal window for enlarged view -->
+            <UModal v-model="showModal" centered size="2xl" wrap-scroll overlay>
+              <template #close>
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  icon="heroicons:x-mark-20-solid"
+                  @click="showModal = false"
+                />
+              </template>
+              <div class="p-4 flex items-center justify-center h-full">
+                <img
+                  :src="lastScreenshot.filename"
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+            </UModal>
           </div>
 
-          <!-- График времени ответа -->
+          <!-- Chart of response times -->
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Response Time History</h3>
             <UptimeChart :data="chartData" :height="250" />
           </div>
 
-          <!-- Последняя проверка -->
+          <!-- Last Check -->
           <div class="card p-5" v-if="lastResult">
             <h3 class="text-md font-semibold mb-3">Last Check</h3>
             <div class="flex flex-col gap-2 text-sm">
@@ -218,7 +232,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
             </div>
           </div>
 
-          <!-- Блок SSL (горизонтальные метрики) -->
+          <!-- Block SSL (horizontal metrics) -->
           <div class="card p-5" v-if="lastSSL">
             <h3 class="text-md font-semibold mb-3">SSL Certificate</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -253,7 +267,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
             </div>
           </div>
 
-          <!-- Блок Performance (горизонтальные метрики) -->
+          <!-- Block Performance (horizontal metrics) -->
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
@@ -280,7 +294,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
             </div>
           </div>
 
-          <!-- Тренд скорости (если есть данные) -->
+          <!-- Load Time Trend (if data is available) -->
           <div class="card p-5" v-if="speedResults?.length > 1">
             <h3 class="text-md font-semibold mb-3">Load Time Trend</h3>
             <SpeedChart :data="speedResults" :height="200" />

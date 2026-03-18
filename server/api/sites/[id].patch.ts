@@ -6,7 +6,6 @@ const updateSchema = z.object({
   url: z.string().url().optional(),
   checkInterval: z.number().min(1).max(60).optional(),
   isActive: z.boolean().optional(),
-  // 👇 новые поля
   check_type: z.enum(["http", "text"]).optional(),
   expected_text: z.string().nullable().optional(),
   text_condition: z.enum(["contains", "not_contains"]).optional(),
@@ -27,7 +26,7 @@ export default defineEventHandler(async (event) => {
   try {
     const validated = updateSchema.parse(body);
 
-    // Проверяем, существует ли сайт
+    // Check if the site exists
     const existingSite = await dbGet<any>(
       db,
       "SELECT id FROM sites WHERE id = ?",
@@ -41,7 +40,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Строим динамический SQL запрос
+    // Build dynamic SQL query based on provided fields
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -65,7 +64,6 @@ export default defineEventHandler(async (event) => {
       values.push(validated.isActive ? 1 : 0);
     }
 
-    // 👇 добавляем новые поля
     if (validated.check_type !== undefined) {
       updates.push("check_type = ?");
       values.push(validated.check_type);
@@ -81,24 +79,23 @@ export default defineEventHandler(async (event) => {
       values.push(validated.text_condition);
     }
 
-    // Добавляем updatedAt
     updates.push('updatedAt = datetime("now")');
 
     if (updates.length === 0) {
       return { message: "No fields to update" };
     }
 
-    // Добавляем ID в конец массива значений
+    // Add ID to the end of the values array for the WHERE clause
     values.push(id);
 
-    // Выполняем обновление
+    // Make the update
     await dbRun(
       db,
       `UPDATE sites SET ${updates.join(", ")} WHERE id = ?`,
       values,
     );
 
-    // Получаем обновленный сайт
+    // Get the updated site data to return
     const updatedSite = await dbGet<any>(
       db,
       "SELECT * FROM sites WHERE id = ?",

@@ -1,4 +1,3 @@
-// server/utils/sslChecker.ts
 import { getCertificateInfo } from "sslko";
 
 export interface SSLInfo {
@@ -14,7 +13,7 @@ export interface SSLInfo {
 
 export async function checkSSL(domain: string): Promise<SSLInfo> {
   try {
-    // Очищаем URL от протокола и путей
+    // Clean URL from protocol and paths
     const hostname = domain.replace(/^https?:\/\//, "").split("/")[0];
 
     const certInfo = await getCertificateInfo(hostname, { timeout: 10000 });

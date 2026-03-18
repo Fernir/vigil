@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
   try {
-    // Получаем токен из куки
+    // Get the token from the cookie
     const token = getCookie(event, "auth_token");
 
     if (!token) {
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
       };
       console.log("Session check - Token valid for userId:", decoded.userId);
     } catch (error: unknown) {
-      // Обрабатываем разные типы ошибок JWT
+      // Manage different types of JWT errors
       if (error instanceof jwt.JsonWebTokenError) {
         console.log("Session check - JWT Error:", error.message);
       } else if (error instanceof jwt.TokenExpiredError) {

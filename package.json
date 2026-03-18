@@ -9,10 +9,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "db:init": "node scripts/init-db.js",
-    "db:reset": "rm -f db/data.sqlite3 && node scripts/init-db.js",
-    "db:seed": "node scripts/seed.js",
-    "monitor": "tsx scripts/monitor.ts"
+    "db:init": "rm -f db/data.sqlite3 && node scripts/init-db.js"
   },
   "dependencies": {
     "@nuxt/ui": "^2.20.0",

@@ -25,7 +25,7 @@ export const formatDateTime = (
   }
 };
 
-// Если нужно только время
+// If need only time
 export const formatTime = (dateString: string | undefined | null): string => {
   if (!dateString) return "Never";
   try {
@@ -39,7 +39,7 @@ export const formatTime = (dateString: string | undefined | null): string => {
   }
 };
 
-// Если нужна только дата
+// If need only date
 export const formatDate = (dateString: string | undefined | null): string => {
   if (!dateString) return "Never";
   try {

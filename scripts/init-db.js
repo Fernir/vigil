@@ -9,29 +9,29 @@ const dbDir = path.dirname(dbPath);
 console.log('Initializing database...');
 console.log('Database path:', dbPath);
 
-// Создаем папку если нет
+// Create folder if it doesn't exist
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
   console.log('Created database directory');
 }
 
-// Удаляем старую БД если есть
+// Delete existing database if it exists
 if (fs.existsSync(dbPath)) {
   console.log('Removing existing database...');
   fs.unlinkSync(dbPath);
 }
 
-// Создаем новую БД
+// Create new database
 const db = new sqlite3.Database(dbPath);
 
-// Используем serialize для последовательного выполнения
+// Use serialize for sequential execution
 db.serialize(() => {
   console.log('Creating tables...');
   
-  // Включаем поддержку внешних ключей
+  // Toggle support for foreign keys
   db.run('PRAGMA foreign_keys = ON');
   
-  // Таблица пользователей
+  // Table for users
   db.run(`
     CREATE TABLE users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +46,7 @@ db.serialize(() => {
     else console.log('Users table created');
   });
 
-  // Таблица сайтов
+  // Table for sites
     db.run(`
     CREATE TABLE sites (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +67,7 @@ db.serialize(() => {
     else console.log('Sites table created');
   });
 
-  // Таблица результатов
+  // Table for check results
   db.run(`
     CREATE TABLE check_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,7 +84,7 @@ db.serialize(() => {
     else console.log('Check_results table created');
   });
 
-  // Индексы
+  // Indexes for performance
   db.run(`CREATE INDEX idx_check_results_siteId_checkedAt ON check_results(siteId, checkedAt DESC)`);
   db.run(`CREATE INDEX idx_sites_userId ON sites(userId)`);
   db.run(`CREATE INDEX idx_sites_isActive ON sites(isActive)`);
@@ -92,7 +92,7 @@ db.serialize(() => {
   console.log('Indexes created');
 
 
-   // Таблица для SSL-проверок
+   // Table for SSL checks
   db.run(`
     CREATE TABLE ssl_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,7 +112,24 @@ db.serialize(() => {
     else console.log('SSL_results table created');
   });
 
-  // Таблица для результатов проверки скорости
+ // Table for screenshots
+  db.run(`
+    CREATE TABLE IF NOT EXISTS screenshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    siteId INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    width INTEGER,
+    height INTEGER,
+    checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
+  )`, (err) => {
+    if (err) console.error('Error creating screenshots table:', err);
+    else console.log('screenshots table created');
+  });
+
+  db.run(`CREATE INDEX idx_screenshots_siteId_checkedAt ON screenshots(siteId, checkedAt DESC);`);
+
+  // Table for speed check results
   db.run(`
     CREATE TABLE speed_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,7 +148,7 @@ db.serialize(() => {
     else console.log('Speed_results table created');
   });
 
-  // Индексы для новых таблиц
+  // Indexes for new tables
   db.run(`CREATE INDEX idx_ssl_results_siteId_checkedAt ON ssl_results(siteId, checkedAt DESC);`);
   db.run(`CREATE INDEX idx_speed_results_siteId_checkedAt ON speed_results(siteId, checkedAt DESC);`);
 });

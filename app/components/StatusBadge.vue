@@ -44,7 +44,7 @@ const sizeClasses = {
 
 const currentConfig = computed(() => statusConfig[props.status]);
 
-// Анимация только на клиенте
+// Animation only on client
 const showAnimation = computed(() => props.animated && process.client);
 </script>
 

@@ -26,7 +26,7 @@ const handleSubmit = async () => {
   const result = await login(form.email, form.password);
 
   if (result.success) {
-    // Даем время куке установиться
+    // Take time for the cookie to be set
     setTimeout(() => navigateTo("/"));
   } else {
     error.value = result.error || "Login failed";

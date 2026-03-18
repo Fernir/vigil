@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
-  // Удаляем куку
+  // Delete the auth token cookie
   setCookie(event, "auth_token", "", {
     httpOnly: true,
     maxAge: 0,

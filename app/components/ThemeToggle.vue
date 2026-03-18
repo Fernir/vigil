@@ -22,7 +22,7 @@ const toggleTheme = () => {
       @click="toggleTheme"
     />
     <template #fallback>
-      <!-- Плейсхолдер для серверного рендера -->
+      <!-- Placeholder for server-side rendering -->
       <UButton
         icon="heroicons:sun-20-solid"
         color="gray"

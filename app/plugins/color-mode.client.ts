@@ -2,7 +2,7 @@ import { defineNuxtPlugin } from "#app";
 import { useCookie } from "#app";
 
 export default defineNuxtPlugin(() => {
-  // Устанавливаем долгоживущую куку при старте клиента
+  // Set long-lived cookie on client-side startup
   const colorMode = useColorMode();
   const cookie = useCookie("color-mode", {
     maxAge: 60 * 60 * 24 * 365,
@@ -10,7 +10,7 @@ export default defineNuxtPlugin(() => {
     sameSite: "lax",
   });
 
-  // При изменении темы обновляем куку
+  // When the color mode changes, update the cookie
   watchEffect(() => {
     cookie.value = colorMode.value;
   });

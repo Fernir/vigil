@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: "auth",
-  ssr: false, // отключаем SSR, чтобы избежать проблем гидратации с user
+  ssr: false, // disable SSR for this page to avoid hydration issues with user data
 });
 
 useHead({ title: "Settings" });
@@ -69,8 +69,8 @@ const saveWebhookSettings = async () => {
             >
               Email
             </label>
-            <!-- Используем ClientOnly, чтобы на сервере отображалась заглушка,
-                 а на клиенте – реальное значение, избегая гидратации -->
+            <!-- Use ClientOnly for fallback on server where placeholder is shown,
+                 and real value on client, avoiding hydration issues -->
             <ClientOnly>
               <UInput :model-value="user?.email" disabled class="bg-gray-50" />
               <template #fallback>

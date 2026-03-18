@@ -30,7 +30,7 @@ const props = defineProps({
 const chartData = computed(() => ({
   labels: props.data.map((d) => {
     const date = new Date(d.checkedAt);
-    return `${date.getDate()}.${date.getMonth() + 1}`; // краткий формат "ДД.ММ"
+    return `${date.getDate()}.${date.getMonth() + 1}`; // short format "DD.MM"
   }),
   datasets: [
     {

@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware((to, from) => {
   const { loggedIn } = useUserSession();
 
-  // Если пользователь уже авторизован, перенаправляем на дашборд
+  // If the user is already logged in, redirect to the dashboard
   if (loggedIn.value) {
     return navigateTo("/");
   }

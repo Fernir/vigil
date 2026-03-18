@@ -1,9 +1,8 @@
-// server/plugins/ssl-monitoring.ts
 import { useDB, dbRun, dbAll } from "../utils/db";
 import { checkSSL } from "../utils/sslChecker";
 
 export default defineNitroPlugin(() => {
-  // Запускаем только в production или по расписанию
+  // Call only in production or on schedule, not during development to avoid unnecessary checks and logs
   if (!process.dev) return;
 
   console.log("SSL-мониторинг запущен (проверка раз в 24 часа)");
@@ -36,7 +35,7 @@ export default defineNitroPlugin(() => {
           ],
         );
 
-        // Уведомление, если осталось мало дней
+        // Notification if there are few days left
         if (sslInfo.daysLeft <= 14) {
           await sendNotification({
             type: "ssl",
@@ -50,7 +49,7 @@ export default defineNitroPlugin(() => {
     }
   };
 
-  // Запускаем сразу и затем раз в 24 часа
+  // Call immediately and then every 24 hours
   setTimeout(runSSLMonitor, 5000);
   setInterval(runSSLMonitor, 24 * 60 * 60 * 1000);
 });

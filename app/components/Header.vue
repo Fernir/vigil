@@ -26,7 +26,7 @@ const userMenuItems = [
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <!-- Логотип (всегда ведёт на главную) -->
+          <!-- Logo (always leads to the main page) -->
           <NuxtLink to="/" class="flex items-center gap-2">
             <div
               class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center"
@@ -38,7 +38,7 @@ const userMenuItems = [
             >
           </NuxtLink>
 
-          <!-- Правая часть: тема + кнопки входа/профиля -->
+          <!-- Right side: theme + sign in/sign out buttons -->
           <div class="flex items-center gap-2">
             <ThemeToggle />
 
@@ -63,7 +63,7 @@ const userMenuItems = [
       </div>
     </header>
     <template #fallback>
-      <!-- Заглушка для сервера (без кнопок, только лого) -->
+      <!-- Fallback for server (no buttons, only logo) -->
       <header
         class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16"
       >
@@ -80,7 +80,7 @@ const userMenuItems = [
               >
             </div>
             <div class="w-20 h-8"></div>
-            <!-- пустое место -->
+            <!-- empty space -->
           </div>
         </div>
       </header>

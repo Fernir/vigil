@@ -59,9 +59,9 @@ export default defineEventHandler(async (event) => {
       token,
     };
   } catch (error) {
-    // Проверяем, является ли ошибка от Zod
+    // Check if the error is from Zod
     if (error instanceof z.ZodError) {
-      // Безопасно получаем первое сообщение об ошибке
+      // Safely get the first error message
       const firstError = error.errors[0];
       const errorMessage = firstError?.message || "Validation error";
 
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Если это уже createError, просто пробрасываем дальше
+    // If this is already a createError, just throw it further
     throw error;
   }
 });

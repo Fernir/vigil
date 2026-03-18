@@ -9,7 +9,7 @@ export default <Config>{
   theme: {
     extend: {
       colors: {
-        // Добавляем все оттенки success/warning/error
+        // Add all shades of success/warning/error
         success: {
           50: "#f0fdf4",
           100: "#dcfce7",
