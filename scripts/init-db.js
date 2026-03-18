@@ -1,23 +1,25 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
-const bcrypt = require('bcryptjs');
+require("dotenv").config();
 
-const dbPath = path.resolve(__dirname, '../db/data.sqlite3');
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const fs = require("fs");
+const bcrypt = require("bcryptjs");
+
+const dbPath = path.resolve(__dirname, "../db/data.sqlite3");
 const dbDir = path.dirname(dbPath);
 
-console.log('Initializing database...');
-console.log('Database path:', dbPath);
+console.log("Initializing database...");
+console.log("Database path:", dbPath);
 
 // Create folder if it doesn't exist
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
-  console.log('Created database directory');
+  console.log("Created database directory");
 }
 
 // Delete existing database if it exists
 if (fs.existsSync(dbPath)) {
-  console.log('Removing existing database...');
+  console.log("Removing existing database...");
   fs.unlinkSync(dbPath);
 }
 
@@ -26,28 +28,35 @@ const db = new sqlite3.Database(dbPath);
 
 // Use serialize for sequential execution
 db.serialize(() => {
-  console.log('Creating tables...');
-  
+  console.log("Creating tables...");
+
   // Toggle support for foreign keys
-  db.run('PRAGMA foreign_keys = ON');
-  
+  db.run("PRAGMA foreign_keys = ON");
+
   // Table for users
-  db.run(`
+  db.run(
+    `
     CREATE TABLE users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       webhook_url TEXT,
+      banned_at DATETIME,
+      is_admin BOOLEAN DEFAULT 0,
+      max_sites INTEGER DEFAULT 4,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating users table:', err);
-    else console.log('Users table created');
-  });
+  `,
+    (err) => {
+      if (err) console.error("Error creating users table:", err);
+      else console.log("Users table created");
+    },
+  );
 
   // Table for sites
-    db.run(`
+  db.run(
+    `
     CREATE TABLE sites (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -62,13 +71,16 @@ db.serialize(() => {
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) console.error('Error creating sites table:', err);
-    else console.log('Sites table created');
-  });
+  `,
+    (err) => {
+      if (err) console.error("Error creating sites table:", err);
+      else console.log("Sites table created");
+    },
+  );
 
   // Table for check results
-  db.run(`
+  db.run(
+    `
     CREATE TABLE check_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       siteId INTEGER NOT NULL,
@@ -79,21 +91,25 @@ db.serialize(() => {
       checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) console.error('Error creating check_results table:', err);
-    else console.log('Check_results table created');
-  });
+  `,
+    (err) => {
+      if (err) console.error("Error creating check_results table:", err);
+      else console.log("Check_results table created");
+    },
+  );
 
   // Indexes for performance
-  db.run(`CREATE INDEX idx_check_results_siteId_checkedAt ON check_results(siteId, checkedAt DESC)`);
+  db.run(
+    `CREATE INDEX idx_check_results_siteId_checkedAt ON check_results(siteId, checkedAt DESC)`,
+  );
   db.run(`CREATE INDEX idx_sites_userId ON sites(userId)`);
   db.run(`CREATE INDEX idx_sites_isActive ON sites(isActive)`);
-  
-  console.log('Indexes created');
 
+  console.log("Indexes created");
 
-   // Table for SSL checks
-  db.run(`
+  // Table for SSL checks
+  db.run(
+    `
     CREATE TABLE ssl_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       siteId INTEGER NOT NULL,
@@ -107,13 +123,16 @@ db.serialize(() => {
       checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) console.error('Error creating ssl_results table:', err);
-    else console.log('SSL_results table created');
-  });
+  `,
+    (err) => {
+      if (err) console.error("Error creating ssl_results table:", err);
+      else console.log("SSL_results table created");
+    },
+  );
 
- // Table for screenshots
-  db.run(`
+  // Table for screenshots
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS screenshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     siteId INTEGER NOT NULL,
@@ -122,15 +141,20 @@ db.serialize(() => {
     height INTEGER,
     checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
-  )`, (err) => {
-    if (err) console.error('Error creating screenshots table:', err);
-    else console.log('screenshots table created');
-  });
+  )`,
+    (err) => {
+      if (err) console.error("Error creating screenshots table:", err);
+      else console.log("screenshots table created");
+    },
+  );
 
-  db.run(`CREATE INDEX idx_screenshots_siteId_checkedAt ON screenshots(siteId, checkedAt DESC);`);
+  db.run(
+    `CREATE INDEX idx_screenshots_siteId_checkedAt ON screenshots(siteId, checkedAt DESC);`,
+  );
 
   // Table for speed check results
-  db.run(`
+  db.run(
+    `
     CREATE TABLE speed_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       siteId INTEGER NOT NULL,
@@ -143,12 +167,34 @@ db.serialize(() => {
       checkedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) console.error('Error creating speed_results table:', err);
-    else console.log('Speed_results table created');
-  });
+  `,
+    (err) => {
+      if (err) console.error("Error creating speed_results table:", err);
+      else console.log("Speed_results table created");
+    },
+  );
 
   // Indexes for new tables
-  db.run(`CREATE INDEX idx_ssl_results_siteId_checkedAt ON ssl_results(siteId, checkedAt DESC);`);
-  db.run(`CREATE INDEX idx_speed_results_siteId_checkedAt ON speed_results(siteId, checkedAt DESC);`);
+  db.run(
+    `CREATE INDEX idx_ssl_results_siteId_checkedAt ON ssl_results(siteId, checkedAt DESC);`,
+  );
+  db.run(
+    `CREATE INDEX idx_speed_results_siteId_checkedAt ON speed_results(siteId, checkedAt DESC);`,
+  );
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  const adminSalt = bcrypt.genSaltSync(10);
+  const adminHash = bcrypt.hashSync(adminPassword, adminSalt);
+
+  db.run(
+    `INSERT OR IGNORE INTO users (email, password, is_admin, createdAt, updatedAt, max_sites) 
+     VALUES (?, ?, 1, datetime('now'), datetime('now'), 999)`,
+    [adminEmail, adminHash],
+    function (err) {
+      if (err) console.error("Error creating admin:", err);
+      else console.log("Admin user created");
+    },
+  );
 });

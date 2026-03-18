@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     const db = useDB();
     const user = await dbGet<any>(
       db,
-      "SELECT id, email, webhook_url FROM users WHERE id = ?",
+      "SELECT id, email, webhook_url, is_admin, banned_at FROM users WHERE id = ?",
       [decoded.userId],
     );
 

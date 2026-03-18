@@ -6,7 +6,7 @@ definePageMeta({
 
 useHead({ title: "Settings" });
 
-const { user, logout } = useUserSession();
+const { user } = useUserSession();
 
 const webhookForm = reactive({
   url: user.value?.webhook_url || "",
@@ -120,8 +120,19 @@ const saveWebhookSettings = async () => {
                     recovers.
                   </li>
                   <li>
-                    Example payload for Slack, Discord, etc. – see
-                    <a href="#" class="underline">docs</a>.
+                    Example payload for Slack, Discord, etc. – see docs:
+                    <a
+                      href="https://api.slack.com/messaging/webhooks"
+                      class="underline"
+                      target="_blank"
+                      >slack</a
+                    >,
+                    <a
+                      href="https://docs.discord.com/developers/resources/webhook"
+                      class="underline"
+                      target="_blank"
+                      >discord</a
+                    >.
                   </li>
                 </ol>
               </div>
@@ -152,19 +163,6 @@ const saveWebhookSettings = async () => {
             class="mt-4"
           >
             Save Webhook URL
-          </UButton>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="card p-6 border border-red-200 dark:border-red-800">
-          <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
-            Danger Zone
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Once you logout, you'll need to sign in again.
-          </p>
-          <UButton color="red" variant="soft" @click="logout">
-            Sign Out
           </UButton>
         </div>
       </div>

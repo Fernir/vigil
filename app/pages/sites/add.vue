@@ -13,6 +13,9 @@ const { addSite, loading } = useSites();
 const form = reactive({
   name: "",
   url: "",
+  check_type: "text",
+  expected_text: "",
+  text_condition: "contains",
   checkInterval: 5,
 });
 
@@ -23,6 +26,8 @@ const validate = () => {
 
   if (!form.name) newErrors.name = "Name is required";
   if (!form.url) newErrors.url = "URL is required";
+  if (!form.expected_text)
+    newErrors.expected_text = "Expected text is required";
   else if (!form.url.match(/^https?:\/\/.+/)) {
     newErrors.url = "URL must start with http:// or https://";
   }
@@ -134,7 +139,14 @@ const handleSubmit = async () => {
           <!-- Field for text (appears if text is selected) -->
           <div v-if="form.check_type === 'text'">
             <label class="block text-sm font-medium mb-2">Expected Text</label>
-            <UInput v-model="form.expected_text" placeholder="e.g. Welcome" />
+            <UInput
+              v-model="form.expected_text"
+              placeholder="e.g. Welcome"
+              :error="errors.expected_text"
+            />
+            <p v-if="errors.expected_text" class="mt-1 text-sm text-error-600">
+              {{ errors.expected_text }}
+            </p>
             <div class="mt-2">
               <label class="inline-flex items-center">
                 <URadio v-model="form.text_condition" value="contains" />

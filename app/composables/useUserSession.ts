@@ -4,7 +4,8 @@ import { navigateTo } from "#app";
 interface User {
   id: number;
   email: string;
-  telegramChatId?: string;
+  is_admin?: boolean;
+  webhook_url?: string;
 }
 
 interface LoginResponse {

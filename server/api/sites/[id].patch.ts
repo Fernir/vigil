@@ -17,30 +17,37 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
   if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: "Invalid site ID",
-    });
+    throw createError({ statusCode: 400, message: "Invalid site ID" });
   }
 
   try {
     const validated = updateSchema.parse(body);
 
-    // Check if the site exists
+    // Get userId from context (set in auth middleware)
+    const userId = event.context.auth?.userId;
+    if (!userId) {
+      throw createError({ statusCode: 401, message: "Unauthorized" });
+    }
+
+    // Check if the site exists and belongs to this user    // If not found – 404
     const existingSite = await dbGet<any>(
       db,
-      "SELECT id FROM sites WHERE id = ?",
+      "SELECT id, userId FROM sites WHERE id = ?",
       [id],
     );
 
     if (!existingSite) {
+      throw createError({ statusCode: 404, message: "Site not found" });
+    }
+
+    if (existingSite.userId !== userId) {
       throw createError({
-        statusCode: 404,
-        message: "Site not found",
+        statusCode: 403,
+        message: "You can only edit your own sites",
       });
     }
 
-    // Build dynamic SQL query based on provided fields
+    // Build dynamic SQL query
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -79,23 +86,24 @@ export default defineEventHandler(async (event) => {
       values.push(validated.text_condition);
     }
 
+    // Add updatedAt
     updates.push('updatedAt = datetime("now")');
 
     if (updates.length === 0) {
       return { message: "No fields to update" };
     }
 
-    // Add ID to the end of the values array for the WHERE clause
+    // Add ID to the end of the values array
     values.push(id);
 
-    // Make the update
+    // Execute the update
     await dbRun(
       db,
       `UPDATE sites SET ${updates.join(", ")} WHERE id = ?`,
       values,
     );
 
-    // Get the updated site data to return
+    // Get the updated site
     const updatedSite = await dbGet<any>(
       db,
       "SELECT * FROM sites WHERE id = ?",
@@ -107,10 +115,7 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];
       const errorMessage = firstError?.message || "Validation error";
-      throw createError({
-        statusCode: 400,
-        message: errorMessage,
-      });
+      throw createError({ statusCode: 400, message: errorMessage });
     }
     throw error;
   }

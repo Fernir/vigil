@@ -3,7 +3,8 @@ definePageMeta({});
 
 useHead({ title: "Status" });
 
-const { loggedIn } = useUserSession();
+const { formatDateTime } = useDate();
+const { user, loggedIn } = useUserSession();
 const { stats, loading: statsLoading } = useStats();
 const { sseConnected, connectToSSE } = useMonitoring();
 const { sites, fetchSites, loading: sitesLoading, deleteSite } = useSites();
@@ -117,7 +118,13 @@ const handleDelete = async (id: number) => {
 
       <!-- Block with site list – only for authorized users (also ClientOnly) -->
       <ClientOnly>
-        <div v-if="loggedIn" class="mt-8">
+        <div
+          v-if="loggedIn && !!user?.banned_at"
+          class="mt-8 text-center p-6 card border-red-500 bg-red-50 dark:bg-red-900/20"
+        >
+          You are banned at {{ formatDateTime(user?.banned_at) }}.
+        </div>
+        <div v-if="loggedIn && !user?.banned_at" class="mt-8">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               All services

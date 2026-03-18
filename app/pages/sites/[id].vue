@@ -175,19 +175,23 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               Click to enlarge
             </p>
             <!-- Modal window for enlarged view -->
-            <UModal v-model="showModal" centered size="2xl" wrap-scroll overlay>
-              <template #close>
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  icon="heroicons:x-mark-20-solid"
-                  @click="showModal = false"
-                />
-              </template>
+            <UModal
+              v-model="showModal"
+              centered
+              :ui="{ width: 'w-fit sm:max-w-none' }"
+            >
+              <UButton
+                variant="ghost"
+                color="white"
+                size="lg"
+                class="fixed top-4 right-4"
+                icon="heroicons:x-mark-solid"
+                @click.stop="showModal = false"
+              />
               <div class="p-4 flex items-center justify-center h-full">
                 <img
                   :src="lastScreenshot.filename"
-                  class="max-w-full max-h-full object-contain"
+                  class="max-h-full rounded-lg"
                 />
               </div>
             </UModal>

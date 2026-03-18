@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { loggedIn, logout } = useUserSession();
+const { loggedIn, logout, user } = useUserSession();
 
 const userMenuItems = [
   [
@@ -38,22 +38,35 @@ const userMenuItems = [
           <div class="flex items-center gap-2">
             <ThemeToggle />
 
-            <UButton
-              v-if="!loggedIn"
-              color="primary"
-              variant="solid"
-              to="/auth/login"
-            >
-              Sign In
-            </UButton>
-
-            <UDropdown v-else :items="userMenuItems">
+            <UTooltip text="Account">
               <UButton
-                color="gray"
-                variant="ghost"
-                icon="heroicons:user-circle-20-solid"
-              />
-            </UDropdown>
+                v-if="!loggedIn"
+                color="primary"
+                variant="solid"
+                to="/auth/login"
+              >
+                Sign In
+              </UButton>
+
+              <UDropdown v-else :items="userMenuItems">
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  icon="heroicons:user-circle-20-solid"
+                />
+              </UDropdown>
+            </UTooltip>
+
+            <template v-if="loggedIn && user?.is_admin">
+              <UTooltip text="Admin Dashboard">
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  to="/admin"
+                  icon="heroicons:shield-check-20-solid"
+                />
+              </UTooltip>
+            </template>
           </div>
         </div>
       </div>

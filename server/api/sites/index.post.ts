@@ -24,6 +24,24 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const siteCount = await dbGet<{ count: number }>(
+      db,
+      "SELECT COUNT(*) as count FROM sites WHERE userId = ?",
+      [auth.userId],
+    );
+    const user = await dbGet<{ max_sites: number }>(
+      db,
+      "SELECT max_sites FROM users WHERE id = ?",
+      [auth.userId],
+    );
+
+    if (siteCount.count >= user.max_sites) {
+      throw createError({
+        statusCode: 403,
+        message: `You have reached your site limit (${user.max_sites})`,
+      });
+    }
+
     const validated = createSchema.parse(body);
 
     const result = await dbRun(

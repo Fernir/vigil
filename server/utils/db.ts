@@ -10,6 +10,9 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   webhook_url?: string;
+  max_sites: number;
+  banned_at: string | null;
+  is_admin?: boolean;
 }
 
 export interface Site {

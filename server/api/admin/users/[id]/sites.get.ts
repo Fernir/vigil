@@ -1,0 +1,16 @@
+import { useDB, dbAll } from "../../../../utils/db";
+import { checkAdmin } from "../../../../utils/checkAdmin";
+
+export default defineEventHandler(async (event) => {
+  await checkAdmin(event);
+  const id = parseInt(event.context.params?.id || "0");
+  if (!id) throw createError({ statusCode: 400, message: "Invalid user ID" });
+
+  const db = useDB();
+  const sites = await dbAll(
+    db,
+    "SELECT * FROM sites WHERE userId = ? ORDER BY createdAt DESC",
+    [id],
+  );
+  return sites;
+});
