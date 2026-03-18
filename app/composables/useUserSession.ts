@@ -1,24 +1,18 @@
 import { ref, computed } from "vue";
 import { navigateTo } from "#app";
-
-interface User {
-  id: number;
-  email: string;
-  is_admin?: boolean;
-  webhook_url?: string;
-}
+import type { UserInterface } from "~~/server/utils/db";
 
 interface LoginResponse {
-  user: User;
+  user: UserInterface;
   token?: string;
 }
 
 interface SessionResponse {
-  user: User | null;
+  user: UserInterface | null;
 }
 
 const sessionLoaded = ref(false);
-const user = ref<User | null>(null);
+const user = ref<UserInterface | null>(null);
 const token = ref<string | null>(null);
 
 export const useUserSession = () => {

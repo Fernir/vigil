@@ -1,5 +1,3 @@
-import { logger } from "./logger";
-
 export interface CheckResultData {
   status: "up" | "down" | "degraded";
   responseTime: number;

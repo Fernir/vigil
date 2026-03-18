@@ -34,15 +34,6 @@ export default defineNitroPlugin(() => {
             sslInfo.error || null,
           ],
         );
-
-        // Notification if there are few days left
-        if (sslInfo.daysLeft <= 14) {
-          await sendNotification({
-            type: "ssl",
-            site: site.url,
-            daysLeft: sslInfo.daysLeft,
-          });
-        }
       } catch (error) {
         console.error(`SSL check failed for ${site.url}:`, error);
       }

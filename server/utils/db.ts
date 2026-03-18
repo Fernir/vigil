@@ -27,6 +27,13 @@ export interface SiteInterface {
   text_condition?: "contains" | "not_contains";
   created_at: string;
   updated_at: string;
+  lastCheck?: {
+    status: "up" | "down" | "degraded";
+    responseTime: number;
+    statusCode?: number;
+    errorMessage?: string;
+    checked_at: string;
+  };
 }
 
 export interface CheckResult {

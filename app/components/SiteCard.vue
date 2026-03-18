@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Site } from "../../server/utils/db";
+import type { SiteInterface } from "../../server/utils/db";
 
 const props = defineProps<{
-  site: Site;
+  site: SiteInterface;
   detailed?: boolean;
 }>();
 

@@ -1,4 +1,4 @@
-import { useDB, dbRun } from "../../utils/db";
+import { useDB, dbRun, dbGet } from "../../utils/db";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -35,10 +35,10 @@ export default defineEventHandler(async (event) => {
       [auth.userId],
     );
 
-    if (siteCount.count >= user.max_sites) {
+    if (Number(siteCount?.count) >= Number(user?.max_sites)) {
       throw createError({
         statusCode: 403,
-        message: `You have reached your site limit (${user.max_sites})`,
+        message: `You have reached your site limit (${Number(user?.max_sites)})`,
       });
     }
 

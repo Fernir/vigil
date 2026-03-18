@@ -17,9 +17,13 @@ export async function takeAndSaveScreenshot(
   siteId: number,
   url: string,
   options: ScreenshotOptions = {},
-): Promise<{ imagePath: string; width: number; height: number } | null> {
+): Promise<{
+  width: number;
+  height: number;
+  filename: string;
+} | null> {
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
