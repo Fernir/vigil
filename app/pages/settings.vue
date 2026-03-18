@@ -1,33 +1,38 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: "auth",
+  ssr: false, // отключаем SSR, чтобы избежать проблем гидратации с user
 });
 
-useHead({
-  title: "Settings",
-});
+useHead({ title: "Settings" });
 
 const { user, logout } = useUserSession();
 
-const telegramForm = reactive({
-  chatId: user.value?.telegramChatId || "",
+const webhookForm = reactive({
+  url: user.value?.webhook_url || "",
 });
 
 const saving = ref(false);
 const success = ref("");
 const error = ref("");
 
-const saveTelegramSettings = async () => {
+const saveWebhookSettings = async () => {
   saving.value = true;
   success.value = "";
   error.value = "";
 
   try {
-    // TODO: Save Telegram settings via API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    success.value = "Settings saved successfully";
-  } catch (e) {
-    error.value = "Failed to save settings";
+    await $fetch("/api/user", {
+      method: "PATCH",
+      body: { webhook_url: webhookForm.url || null },
+      credentials: "include",
+    });
+    success.value = "Webhook URL saved";
+    if (user.value) {
+      user.value.webhook_url = webhookForm.url;
+    }
+  } catch (e: any) {
+    error.value = e?.data?.message || "Failed to save";
   } finally {
     saving.value = false;
   }
@@ -37,6 +42,11 @@ const saveTelegramSettings = async () => {
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-4">
+        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">
+          Back to Dashboard
+        </UButton>
+      </div>
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -53,99 +63,96 @@ const saveTelegramSettings = async () => {
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Profile
           </h2>
-
-          <div class="space-y-4">
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email
-              </label>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Email
+            </label>
+            <!-- Используем ClientOnly, чтобы на сервере отображалась заглушка,
+                 а на клиенте – реальное значение, избегая гидратации -->
+            <ClientOnly>
               <UInput :model-value="user?.email" disabled class="bg-gray-50" />
-            </div>
+              <template #fallback>
+                <UInput disabled class="bg-gray-50" placeholder="Loading..." />
+              </template>
+            </ClientOnly>
           </div>
         </div>
 
-        <!-- Notifications Section -->
+        <!-- Webhook Section -->
         <div class="card p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Notifications
+            Webhook Notifications
           </h2>
 
-          <!-- Success/Error messages -->
           <UAlert
             v-if="success"
             color="green"
             variant="soft"
             :title="success"
             class="mb-4"
-            icon="heroicons:check-circle-20-solid"
           />
-
           <UAlert
             v-if="error"
             color="red"
             variant="soft"
             :title="error"
             class="mb-4"
-            icon="heroicons:exclamation-triangle-20-solid"
           />
 
-          <!-- Telegram Settings -->
-          <div class="space-y-4">
-            <h3 class="text-md font-medium text-gray-800 dark:text-gray-200">
-              Telegram Notifications
-            </h3>
-
-            <div
-              class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4"
-            >
-              <div class="flex items-start gap-3">
-                <UIcon
-                  name="simple-icons:telegram"
-                  class="w-5 h-5 text-blue-500 mt-0.5"
-                />
-                <div class="text-sm text-blue-700 dark:text-blue-300">
-                  <p class="font-medium mb-1">
-                    How to get your Telegram Chat ID:
-                  </p>
-                  <ol class="list-decimal list-inside space-y-1">
-                    <li>
-                      Start a chat with
-                      <a
-                        href="https://t.me/userinfobot"
-                        target="_blank"
-                        class="underline"
-                        >@userinfobot</a
-                      >
-                    </li>
-                    <li>Send /start</li>
-                    <li>Copy your Chat ID</li>
-                  </ol>
-                </div>
+          <div
+            class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4"
+          >
+            <div class="flex items-start gap-3">
+              <UIcon
+                name="heroicons:link"
+                class="w-5 h-5 text-blue-500 mt-0.5"
+              />
+              <div class="text-sm text-blue-700 dark:text-blue-300">
+                <p class="font-medium mb-1">How to use webhooks:</p>
+                <ol class="list-decimal list-inside space-y-1">
+                  <li>
+                    Enter a URL that accepts POST requests with JSON payload.
+                  </li>
+                  <li>
+                    You'll receive notifications when a site goes down or
+                    recovers.
+                  </li>
+                  <li>
+                    Example payload for Slack, Discord, etc. – see
+                    <a href="#" class="underline">docs</a>.
+                  </li>
+                </ol>
               </div>
             </div>
-
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Telegram Chat ID
-              </label>
-              <UInput
-                v-model="telegramForm.chatId"
-                placeholder="Enter your Telegram Chat ID"
-              />
-            </div>
-
-            <UButton
-              color="primary"
-              :loading="saving"
-              @click="saveTelegramSettings"
-            >
-              Save Notification Settings
-            </UButton>
           </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Webhook URL
+            </label>
+            <ClientOnly>
+              <UInput
+                v-model="webhookForm.url"
+                placeholder="https://hooks.slack.com/services/..."
+              />
+              <template #fallback>
+                <UInput disabled placeholder="Loading..." />
+              </template>
+            </ClientOnly>
+          </div>
+
+          <UButton
+            color="primary"
+            :loading="saving"
+            @click="saveWebhookSettings"
+            class="mt-4"
+          >
+            Save Webhook URL
+          </UButton>
         </div>
 
         <!-- Danger Zone -->
@@ -153,17 +160,12 @@ const saveTelegramSettings = async () => {
           <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
             Danger Zone
           </h2>
-
-          <div class="space-y-4">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Once you logout, you'll need to sign in again to access your
-              dashboard.
-            </p>
-
-            <UButton color="red" variant="soft" @click="logout">
-              Sign Out
-            </UButton>
-          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Once you logout, you'll need to sign in again.
+          </p>
+          <UButton color="red" variant="soft" @click="logout">
+            Sign Out
+          </UButton>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { checkSpeed } from "../utils/speedChecker";
 
 export default defineNitroPlugin(() => {
   if (!process.dev) return;
-  console.log("⚡ Speed monitoring запущен (проверка раз в 6 часов)");
+  console.log("Speed monitoring запущен (проверка раз в 6 часов)");
 
   const runSpeedCheck = async () => {
     const db = useDB();

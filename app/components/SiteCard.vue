@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { Site, CheckResult } from "../../server/utils/db";
 
-const { loggedIn } = useUserSession();
-const { results, fetchSiteHistory } = useMonitoring();
-
 const props = defineProps<{
   site: Site;
   detailed?: boolean;
@@ -11,23 +8,13 @@ const props = defineProps<{
 
 const siteId = Number(props.site.id);
 
+const { loggedIn } = useUserSession();
+const { results, fetchSiteHistory } = useMonitoring();
+const { uptimePercentage, avgResponseTime } = useSiteMetrics(siteId);
+
 const emit = defineEmits<{
   (e: "delete", id: number): void;
 }>();
-
-const uptime = computed(() => {
-  const data = results.value[siteId] || [];
-  if (!data.length) return 100;
-  const up = data.filter((r) => r.status === "up").length;
-  return ((up / data.length) * 100).toFixed();
-});
-
-const averageResponseTime = computed(() => {
-  const data = results.value[siteId] || [];
-  if (!data.length) return 0;
-  const sum = data.reduce((acc, r) => acc + r.responseTime, 0);
-  return Math.round(sum / data.length);
-});
 
 const status = computed(() => props.site?.lastCheck?.status || "pending");
 
@@ -101,7 +88,7 @@ onMounted(() => {
               Uptime (30d)
             </div>
             <div class="text-lg font-semibold" :class="statusColor">
-              {{ uptime }}%
+              {{ uptimePercentage }}%
             </div>
           </div>
           <div>
@@ -109,7 +96,7 @@ onMounted(() => {
               Avg Response
             </div>
             <div class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ averageResponseTime }}ms
+              {{ avgResponseTime }}ms
             </div>
           </div>
           <div>

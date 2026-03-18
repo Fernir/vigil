@@ -64,24 +64,13 @@ export const useMonitoring = () => {
 
   const fetchSiteHistory = async (siteId: number, days = 10) => {
     if (!siteId) return;
-
     try {
       const data = await $fetch<CheckResult[]>(
         `/api/sites/${siteId}/stats?days=${days}`,
       );
 
       if (data) {
-        results.value = {
-          ...results.value,
-          [siteId]: data,
-        };
-
-        if (data[0]) {
-          latestResults.value = {
-            ...latestResults.value,
-            [siteId]: data[0],
-          };
-        }
+        results.value = { ...results.value, [siteId]: data };
       }
     } catch (e) {
       console.error("Failed to fetch history", e);

@@ -35,17 +35,9 @@ export async function checkSite(
       status = "degraded";
     }
 
-    console.log("[DEBUG]", expectedText);
     // Если задан ожидаемый текст, проверяем его
     if (expectedText) {
       const text = await response.text();
-
-      console.log(
-        `[DEBUG] Checking text: expected="${expectedText}", condition=${condition}`,
-      );
-      console.log(
-        `[DEBUG] Page text length: ${text.length}, includes? ${text.includes(expectedText)}`,
-      );
 
       const textExists = text.includes(expectedText);
       if (
@@ -64,7 +56,7 @@ export async function checkSite(
 
     return { status, responseTime, statusCode: response.status };
   } catch (error: any) {
-    logger.error(`Error checking ${url}:`, error.message);
+    console.error(`Error checking ${url}:`, error.message);
     return {
       status: "down",
       responseTime: Date.now() - startTime,

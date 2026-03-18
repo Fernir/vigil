@@ -6,7 +6,7 @@ export default defineNitroPlugin(() => {
   // Запускаем только в production или по расписанию
   if (!process.dev) return;
 
-  console.log("🔒 SSL-мониторинг запущен (проверка раз в 24 часа)");
+  console.log("SSL-мониторинг запущен (проверка раз в 24 часа)");
 
   const runSSLMonitor = async () => {
     const db = useDB();

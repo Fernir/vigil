@@ -1,4 +1,5 @@
 import type { Ref } from "vue";
+import { useMonitoring } from "./useMonitoring";
 
 export interface SSLResult {
   id: number;
@@ -25,29 +26,31 @@ export interface SpeedResult {
   checkedAt: string;
 }
 
-/**
- * Композабл для загрузки SSL и Speed метрик по ID сайта
- * @param siteId – число или ref с числом (id сайта)
- */
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {
   const idRef = toRef(siteId);
+  const { results, fetchSiteHistory } = useMonitoring();
 
-  // URL для запросов (реактивные)
+  // Загружаем историю проверок при изменении siteId
+  watchEffect(() => {
+    const id = idRef.value;
+    if (id) {
+      fetchSiteHistory(id, 30);
+    }
+  });
+
   const sslUrl = computed(() => `/api/sites/${idRef.value}/ssl`);
   const speedUrl = computed(() => `/api/sites/${idRef.value}/speed`);
 
-  // Запрос SSL истории
   const {
     data: sslResults,
     refresh: refreshSSL,
     pending: sslLoading,
     error: sslError,
   } = useFetch<SSLResult[]>(sslUrl, {
-    lazy: true, // загружаются при монтировании компонента
-    server: false, // отключаем SSR для этих данных (не критичны для SEO)
+    lazy: true,
+    server: false,
   });
 
-  // Запрос Speed истории
   const {
     data: speedResults,
     refresh: refreshSpeed,
@@ -58,12 +61,23 @@ export const useSiteMetrics = (siteId: MaybeRef<number>) => {
     server: false,
   });
 
-  // Последние результаты (удобно для отображения в UI)
   const lastSSL = computed(() => sslResults.value?.[0] || null);
   const lastSpeed = computed(() => speedResults.value?.[0] || null);
-
-  // Общий статус загрузки
   const loading = computed(() => sslLoading.value || speedLoading.value);
+
+  const uptimePercentage = computed(() => {
+    const data = results.value[idRef.value] || [];
+    if (!data.length) return 0;
+    const up = data.filter((r) => r.status === "up").length;
+    return Number(((up / data.length) * 100).toFixed());
+  });
+
+  const avgResponseTime = computed(() => {
+    const data = results.value[idRef.value] || [];
+    if (!data.length) return 0;
+    const sum = data.reduce((acc, r) => acc + r.responseTime, 0);
+    return Math.round(sum / data.length);
+  });
 
   return {
     sslResults,
@@ -75,5 +89,7 @@ export const useSiteMetrics = (siteId: MaybeRef<number>) => {
     loading,
     sslError,
     speedError,
+    uptimePercentage,
+    avgResponseTime,
   };
 };

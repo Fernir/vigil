@@ -7,7 +7,14 @@ const siteId = Number(route.params.id);
 
 useHead({ title: "Edit Site" });
 
-const { lastSSL, lastSpeed, sslResults, speedResults } = useSiteMetrics(siteId);
+const {
+  lastSSL,
+  lastSpeed,
+  sslResults,
+  speedResults,
+  uptimePercentage,
+  avgResponseTime,
+} = useSiteMetrics(siteId);
 const { sites, fetchSites, updateSite, loading } = useSites();
 const { results, fetchSiteHistory } = useMonitoring();
 const { formatDateTime } = useDate();
@@ -28,7 +35,7 @@ const errors = ref<Record<string, string>>({});
 
 onMounted(async () => {
   await fetchSites();
-  await fetchSiteHistory(siteId, 30);
+  await fetchSiteHistory(siteId);
   if (site.value) {
     form.name = site.value.name;
     form.url = site.value.url;
@@ -69,19 +76,7 @@ const chartData = computed(() =>
   (results.value[siteId] || []).slice().reverse(),
 );
 
-const uptimePercentage = computed(() => {
-  const data = results.value[siteId] || [];
-  if (!data.length) return 100;
-  const up = data.filter((r) => r.status === "up").length;
-  return ((up / data.length) * 100).toFixed(2);
-});
-
-const avgResponseTime = computed(() => {
-  const data = results.value[siteId] || [];
-  if (!data.length) return 0;
-  const sum = data.reduce((acc, r) => acc + r.responseTime, 0);
-  return Math.round(sum / data.length);
-});
+const lastResult = computed(() => results.value[siteId]?.[0] || null);
 </script>
 
 <template>
@@ -188,6 +183,39 @@ const avgResponseTime = computed(() => {
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Response Time History</h3>
             <UptimeChart :data="chartData" :height="250" />
+          </div>
+
+          <!-- Последняя проверка -->
+          <div class="card p-5" v-if="lastResult">
+            <h3 class="text-md font-semibold mb-3">Last Check</h3>
+            <div class="flex flex-col gap-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-500">Status</span>
+                <span
+                  :class="{
+                    'text-green-600': lastResult.status === 'up',
+                    'text-yellow-600': lastResult.status === 'degraded',
+                    'text-red-600': lastResult.status === 'down',
+                  }"
+                  >{{ lastResult.status }}</span
+                >
+              </div>
+              <div v-if="lastResult.errorMessage" class="text-red-500 text-sm">
+                Error: {{ lastResult.errorMessage }}
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Response Time</span>
+                <span>{{ lastResult.responseTime }} ms</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Status Code</span>
+                <span>{{ lastResult.statusCode || "—" }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Checked at</span>
+                <span>{{ formatDateTime(lastResult.checkedAt) }}</span>
+              </div>
+            </div>
           </div>
 
           <!-- Блок SSL (горизонтальные метрики) -->

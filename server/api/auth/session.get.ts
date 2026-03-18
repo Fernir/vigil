@@ -15,17 +15,17 @@ export default defineEventHandler(async (event) => {
       decoded = jwt.verify(token, useRuntimeConfig().jwtSecret) as {
         userId: number;
       };
-      console.log("🔍 Session check - Token valid for userId:", decoded.userId);
+      console.log("Session check - Token valid for userId:", decoded.userId);
     } catch (error: unknown) {
       // Обрабатываем разные типы ошибок JWT
       if (error instanceof jwt.JsonWebTokenError) {
-        console.log("🔍 Session check - JWT Error:", error.message);
+        console.log("Session check - JWT Error:", error.message);
       } else if (error instanceof jwt.TokenExpiredError) {
-        console.log("🔍 Session check - Token expired");
+        console.log("Session check - Token expired");
       } else if (error instanceof Error) {
-        console.log("🔍 Session check - Error:", error.message);
+        console.log("Session check - Error:", error.message);
       } else {
-        console.log("🔍 Session check - Unknown error");
+        console.log("Session check - Unknown error");
       }
       return { user: null };
     }
@@ -33,19 +33,18 @@ export default defineEventHandler(async (event) => {
     const db = useDB();
     const user = await dbGet<any>(
       db,
-      "SELECT id, email, telegramChatId FROM users WHERE id = ?",
+      "SELECT id, email, webhook_url FROM users WHERE id = ?",
       [decoded.userId],
     );
 
     if (!user) {
-      console.log("🔍 Session check - User not found");
+      console.log("Session check - User not found");
       return { user: null };
     }
 
-    console.log("🔍 Session check - User found:", user.email);
     return { user };
   } catch (error: unknown) {
-    console.error("🔍 Session check - Error:", error);
+    console.error("Session check - Error:", error);
     return { user: null };
   }
 });

@@ -7,9 +7,9 @@ export interface User {
   id: number;
   email: string;
   password: string;
-  telegramChatId?: string;
   createdAt: string;
   updatedAt: string;
+  webhook_url?: string;
 }
 
 export interface Site {

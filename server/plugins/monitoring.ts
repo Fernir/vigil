@@ -1,12 +1,13 @@
 import { useDB, dbRun, dbAll } from "../utils/db";
 import { checkSite } from "../utils/httpChecker";
 import { broadcastCheckResult } from "../api/sse";
+import { sendWebhook } from "../utils/webhook";
 
 let isRunning = false;
 
 export default defineNitroPlugin(() => {
   console.log(
-    "🚀 Мониторинг с индивидуальными интервалами запущен (проверка каждую минуту)",
+    "Мониторинг с индивидуальными интервалами запущен (проверка каждую минуту)",
   );
 
   const runMonitor = async () => {
@@ -17,8 +18,9 @@ export default defineNitroPlugin(() => {
       const db = useDB();
       const sites = await dbAll<any>(
         db,
-        `SELECT s.* 
+        `SELECT s.*, u.webhook_url 
             FROM sites s
+            LEFT JOIN users u ON s.userId = u.id
             LEFT JOIN (
                 SELECT siteId, MAX(checkedAt) as lastCheck
                 FROM check_results
@@ -29,7 +31,7 @@ export default defineNitroPlugin(() => {
       );
 
       if (sites.length === 0) {
-        console.log("⏳ Нет сайтов для проверки в этом цикле");
+        console.log("Нет сайтов для проверки в этом цикле");
         return;
       }
 
@@ -39,6 +41,18 @@ export default defineNitroPlugin(() => {
           site.expected_text,
           site.text_condition || "contains",
         );
+
+        // Получаем последний статус для сайта (предыдущий)
+        const lastResult = await dbAll<any>(
+          db,
+          `SELECT status FROM check_results 
+           WHERE siteId = ? 
+           ORDER BY checkedAt DESC LIMIT 1`,
+          [site.id],
+        );
+        const prevStatus = lastResult[0]?.status;
+
+        // Сохраняем новый результат
         const savedResult = await dbRun(
           db,
           `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checkedAt) 
@@ -50,9 +64,6 @@ export default defineNitroPlugin(() => {
             result.statusCode || null,
             result.errorMessage || null,
           ],
-        );
-        console.log(
-          `  ${site.name} – ${result.status} (${result.responseTime}ms)`,
         );
 
         // Получаем полную запись для отправки через SSE
@@ -68,17 +79,83 @@ export default defineNitroPlugin(() => {
             siteUrl: site.url,
           });
         }
+
+        // Уведомление о падении (используем prevStatus)
+        if (
+          result.status === "down" &&
+          prevStatus !== "down" &&
+          site.webhook_url
+        ) {
+          const payload = {
+            event: "down",
+            site: {
+              id: site.id,
+              name: site.name,
+              url: site.url,
+            },
+            status: result.status,
+            responseTime: result.responseTime,
+            statusCode: result.statusCode,
+            error: result.errorMessage,
+            timestamp: new Date().toISOString(),
+          };
+
+          await sendWebhook(site.webhook_url, payload);
+        }
+
+        // Уведомление о восстановлении
+        if (
+          (result.status === "up" || result.status === "degraded") &&
+          prevStatus === "down" &&
+          site.webhook_url
+        ) {
+          const payload = {
+            event: "up",
+            site: {
+              id: site.id,
+              name: site.name,
+              url: site.url,
+            },
+            status: result.status,
+            responseTime: result.responseTime,
+            statusCode: result.statusCode,
+            timestamp: new Date().toISOString(),
+          };
+          await sendWebhook(site.webhook_url, payload);
+        }
       }
 
-      // Очистка истории...
+      // Очистка истории (последние 50 записей для каждого сайта)
+      const allSites = await dbAll<any>(
+        db,
+        `SELECT id FROM sites WHERE isActive = 1`,
+      );
+      for (const site of allSites) {
+        const rows = await dbAll<{ id: number }>(
+          db,
+          `SELECT id FROM check_results WHERE siteId = ? ORDER BY checkedAt DESC LIMIT 1 OFFSET 49`,
+          [site.id],
+        );
+        const row = rows[0];
+        if (row) {
+          await dbRun(
+            db,
+            `DELETE FROM check_results WHERE siteId = ? AND id < ?`,
+            [site.id, row.id],
+          );
+        }
+      }
+
+      console.log("Цикл мониторинга завершён");
     } catch (error) {
-      console.error("❌ Ошибка мониторинга:", error);
+      console.error("Ошибка мониторинга:", error);
     } finally {
       isRunning = false;
     }
   };
 
+  // Запускаем раз в минуту
   setInterval(runMonitor, 60_000);
-
-  runMonitor(); // Запускаем сразу при старте сервера
+  // Запускаем сразу при старте
+  runMonitor();
 });

@@ -6,18 +6,18 @@ const bcrypt = require('bcryptjs');
 const dbPath = path.resolve(__dirname, '../db/data.sqlite3');
 const dbDir = path.dirname(dbPath);
 
-console.log('🚀 Initializing database...');
-console.log('📁 Database path:', dbPath);
+console.log('Initializing database...');
+console.log('Database path:', dbPath);
 
 // Создаем папку если нет
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
-  console.log('📁 Created database directory');
+  console.log('Created database directory');
 }
 
 // Удаляем старую БД если есть
 if (fs.existsSync(dbPath)) {
-  console.log('🗑️ Removing existing database...');
+  console.log('Removing existing database...');
   fs.unlinkSync(dbPath);
 }
 
@@ -26,7 +26,7 @@ const db = new sqlite3.Database(dbPath);
 
 // Используем serialize для последовательного выполнения
 db.serialize(() => {
-  console.log('📦 Creating tables...');
+  console.log('Creating tables...');
   
   // Включаем поддержку внешних ключей
   db.run('PRAGMA foreign_keys = ON');
@@ -37,13 +37,13 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      telegramChatId TEXT,
+      webhook_url TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `, (err) => {
-    if (err) console.error('❌ Error creating users table:', err);
-    else console.log('✅ Users table created');
+    if (err) console.error('Error creating users table:', err);
+    else console.log('Users table created');
   });
 
   // Таблица сайтов
@@ -63,8 +63,8 @@ db.serialize(() => {
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `, (err) => {
-    if (err) console.error('❌ Error creating sites table:', err);
-    else console.log('✅ Sites table created');
+    if (err) console.error('Error creating sites table:', err);
+    else console.log('Sites table created');
   });
 
   // Таблица результатов
@@ -80,8 +80,8 @@ db.serialize(() => {
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
   `, (err) => {
-    if (err) console.error('❌ Error creating check_results table:', err);
-    else console.log('✅ Check_results table created');
+    if (err) console.error('Error creating check_results table:', err);
+    else console.log('Check_results table created');
   });
 
   // Индексы
@@ -89,7 +89,7 @@ db.serialize(() => {
   db.run(`CREATE INDEX idx_sites_userId ON sites(userId)`);
   db.run(`CREATE INDEX idx_sites_isActive ON sites(isActive)`);
   
-  console.log('✅ Indexes created');
+  console.log('Indexes created');
 
 
    // Таблица для SSL-проверок
@@ -108,8 +108,8 @@ db.serialize(() => {
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
   `, (err) => {
-    if (err) console.error('❌ Error creating ssl_results table:', err);
-    else console.log('✅ SSL_results table created');
+    if (err) console.error('Error creating ssl_results table:', err);
+    else console.log('SSL_results table created');
   });
 
   // Таблица для результатов проверки скорости
@@ -127,8 +127,8 @@ db.serialize(() => {
       FOREIGN KEY (siteId) REFERENCES sites(id) ON DELETE CASCADE
     )
   `, (err) => {
-    if (err) console.error('❌ Error creating speed_results table:', err);
-    else console.log('✅ Speed_results table created');
+    if (err) console.error('Error creating speed_results table:', err);
+    else console.log('Speed_results table created');
   });
 
   // Индексы для новых таблиц
