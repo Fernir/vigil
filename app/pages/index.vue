@@ -120,12 +120,10 @@ const handleDelete = async (id: number) => {
         <div v-if="loggedIn" class="mt-8">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Your Sites
+              All services
             </h2>
             <UButton
-              type="submit"
               color="primary"
-              :loading="sitesLoading"
               to="/sites/add"
               icon="heroicons:plus-solid"
             >

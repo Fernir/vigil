@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Site, CheckResult } from "../../server/utils/db";
+import type { Site } from "../../server/utils/db";
 
 const props = defineProps<{
   site: Site;
@@ -32,12 +32,10 @@ const statusColor = computed(() => {
 });
 
 const lastChecked = computed(() => {
-  // Check if checkedAt exists
   if (!props?.site?.lastCheck?.checkedAt) return "Never";
-
   try {
-    return new Date(props?.site.lastCheck.checkedAt).toLocaleString();
-  } catch (e) {
+    return new Date(props.site.lastCheck.checkedAt).toLocaleString();
+  } catch {
     return "Invalid date";
   }
 });
@@ -50,99 +48,95 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card p-6 hover:shadow-md transition-shadow">
-    <div class="flex items-start justify-between">
-      <div class="flex-1">
-        <div class="flex items-center gap-3 mb-2">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+  <div class="card p-4 hover:shadow-md transition-shadow">
+    <div class="flex flex-col gap-3">
+      <!-- Верхняя строка: название, тип, статус, кнопки (если detailed) -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
             {{ site.name }}
           </h3>
-          <span class="text-xs bg-black text-white px-2 py-1 rounded">
-            {{ site.check_type === "text" ? "Text check" : "HTTP" }}
+          <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded">
+            {{ site.check_type === "text" ? "Text" : "HTTP" }}
           </span>
           <StatusBadge :status="status" />
           <span
             v-if="!site.isActive"
-            class="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-2 py-1 rounded"
+            class="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded"
           >
             Paused
           </span>
         </div>
-
-        <a
-          :href="site.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 mb-4 w-fit"
-        >
-          {{ site.url }}
-          <UIcon
-            name="heroicons:arrow-top-right-on-square-20-solid"
-            class="w-4 h-4"
+        <div v-if="detailed" class="flex gap-1 ml-2 shrink-0">
+          <UButton
+            color="gray"
+            variant="ghost"
+            icon="heroicons:pencil-square-20-solid"
+            :to="`/sites/${site.id}`"
+            size="xs"
           />
-        </a>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-          <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              Uptime (30d)
-            </div>
-            <div class="text-lg font-semibold" :class="statusColor">
-              {{ uptimePercentage }}%
-            </div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              Avg Response
-            </div>
-            <div class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ avgResponseTime }}ms
-            </div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              Last Check
-            </div>
-            <div class="text-sm text-gray-900 dark:text-white">
-              {{ lastChecked }}
-            </div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Interval</div>
-            <div class="text-sm text-gray-900 dark:text-white">
-              Every {{ site.checkInterval }} min
-            </div>
-          </div>
-        </div>
-
-        <!-- Last status code if exists -->
-        <div
-          v-if="props.site?.lastCheck?.statusCode"
-          class="mt-3 text-xs text-gray-500 dark:text-gray-400"
-        >
-          Last status code: {{ props.site?.lastCheck?.statusCode }}
-        </div>
-        <div
-          v-if="props.site?.lastCheck?.errorMessage"
-          class="mt-3 text-xs text-red-500 dark:text-red-400"
-        >
-          Error: {{ props.site?.lastCheck?.errorMessage }}
+          <UButton
+            color="red"
+            variant="ghost"
+            icon="heroicons:trash-20-solid"
+            size="xs"
+            @click="emit('delete', site.id)"
+          />
         </div>
       </div>
 
-      <div v-if="detailed" class="flex gap-2 ml-4">
-        <UButton
-          color="gray"
-          variant="ghost"
-          icon="heroicons:pencil-square-20-solid"
-          :to="`/sites/${site.id}`"
+      <!-- Строка с URL -->
+      <a
+        :href="site.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 w-fit"
+      >
+        {{ site.url }}
+        <UIcon
+          name="heroicons:arrow-top-right-on-square-20-solid"
+          class="w-3 h-3"
         />
-        <UButton
-          color="red"
-          variant="ghost"
-          icon="heroicons:trash-20-solid"
-          @click="emit('delete', site.id)"
-        />
+      </a>
+
+      <!-- Метрики в одну строку -->
+      <div class="flex items-center gap-6 text-sm mt-1 flex-wrap">
+        <div class="flex items-center gap-1">
+          <span class="text-gray-500 dark:text-gray-400">Uptime:</span>
+          <span class="font-medium" :class="statusColor"
+            >{{ uptimePercentage }}%</span
+          >
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-500 dark:text-gray-400">Avg:</span>
+          <span class="font-medium">{{ avgResponseTime }}ms</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-500 dark:text-gray-400">Last:</span>
+          <span class="font-medium">{{ lastChecked }}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-500 dark:text-gray-400">Interval:</span>
+          <span class="font-medium">{{ site.checkInterval }} min</span>
+        </div>
+        <div
+          v-if="props.site?.lastCheck?.statusCode"
+          class="flex items-center gap-1"
+        >
+          <span class="text-gray-500 dark:text-gray-400">Code:</span>
+          <span class="font-medium">{{ props.site.lastCheck.statusCode }}</span>
+        </div>
+        <div
+          v-if="props.site?.lastCheck?.errorMessage"
+          class="flex items-center gap-1"
+        >
+          <span
+            class="text-red-500 text-xs truncate max-w-[200px]"
+            :title="props.site.lastCheck.errorMessage"
+          >
+            Error: {{ props.site.lastCheck.errorMessage }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
