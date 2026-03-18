@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
        SELECT 1 FROM check_results c
        WHERE c.siteId = s.id
        AND c.status = 'up'
-       AND c.checkedAt = (
-         SELECT MAX(checkedAt) FROM check_results WHERE siteId = s.id
+       AND c.checked_at = (
+         SELECT MAX(checked_at) FROM check_results WHERE siteId = s.id
        )
      )`,
   );
@@ -33,8 +33,8 @@ export default defineEventHandler(async (event) => {
        SELECT 1 FROM check_results c
        WHERE c.siteId = s.id
        AND c.status = 'degraded'
-       AND c.checkedAt = (
-         SELECT MAX(checkedAt) FROM check_results WHERE siteId = s.id
+       AND c.checked_at = (
+         SELECT MAX(checked_at) FROM check_results WHERE siteId = s.id
        )
      )`,
   );
@@ -48,8 +48,8 @@ export default defineEventHandler(async (event) => {
        SELECT 1 FROM check_results c
        WHERE c.siteId = s.id
        AND c.status = 'down'
-       AND c.checkedAt = (
-         SELECT MAX(checkedAt) FROM check_results WHERE siteId = s.id
+       AND c.checked_at = (
+         SELECT MAX(checked_at) FROM check_results WHERE siteId = s.id
        )
      )`,
   );
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
           COUNT(*) as total,
           SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as up
          FROM check_results
-         WHERE siteId = ? AND checkedAt >= datetime('now', '-30 days')`,
+         WHERE siteId = ? AND checked_at >= datetime('now', '-30 days')`,
         [site.id],
       );
 

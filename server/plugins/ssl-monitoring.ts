@@ -21,7 +21,7 @@ export default defineNitroPlugin(() => {
         await dbRun(
           db,
           `INSERT INTO ssl_results 
-           (siteId, valid, expired, daysLeft, validFrom, validTo, issuer, error, checkedAt)
+           (siteId, valid, expired, daysLeft, validFrom, validTo, issuer, error, checked_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
           [
             site.id,

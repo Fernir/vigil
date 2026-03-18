@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
 
     const result = await dbRun(
       db,
-      `INSERT INTO users (email, password, createdAt, updatedAt) 
+      `INSERT INTO users (email, password, created_at, updated_at) 
        VALUES (?, ?, datetime('now'), datetime('now'))`,
       [validated.email, hashedPassword],
     );

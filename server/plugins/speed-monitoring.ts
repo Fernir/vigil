@@ -16,7 +16,7 @@ export default defineNitroPlugin(() => {
         const result = await checkSpeed(site.url);
         await dbRun(
           db,
-          `INSERT INTO speed_results (siteId, loadTime, ttfb, domContentLoaded, pageSize, requestCount, error, checkedAt)
+          `INSERT INTO speed_results (siteId, loadTime, ttfb, domContentLoaded, pageSize, requestCount, error, checked_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
           [
             site.id,

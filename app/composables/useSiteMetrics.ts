@@ -1,4 +1,3 @@
-import type { Ref } from "vue";
 import { useMonitoring } from "./useMonitoring";
 
 export interface SSLResult {
@@ -11,7 +10,7 @@ export interface SSLResult {
   validTo: string;
   issuer: string | null;
   error: string | null;
-  checkedAt: string;
+  checked_at: string;
 }
 
 export interface SpeedResult {
@@ -23,7 +22,7 @@ export interface SpeedResult {
   pageSize: number;
   requestCount: number;
   error: string | null;
-  checkedAt: string;
+  checked_at: string;
 }
 
 export interface ScreenshotResult {
@@ -32,7 +31,7 @@ export interface ScreenshotResult {
   filename: string;
   width: number;
   height: number;
-  checkedAt: string;
+  checked_at: string;
 }
 
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {

@@ -25,13 +25,13 @@ ChartJS.register(
 );
 
 const props = defineProps<{
-  data: Array<{ checkedAt: string; responseTime: number; status: string }>;
+  data: Array<{ checked_at: string; responseTime: number; status: string }>;
   height?: number;
 }>();
 
 const chartData = computed(() => ({
   labels: props.data.map((d) => {
-    const date = new Date(d.checkedAt);
+    const date = new Date(d.checked_at);
     return `${date.getDate()}.${date.getMonth() + 1} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`; // short format "DD.MM HH:MM"
   }),
   datasets: [

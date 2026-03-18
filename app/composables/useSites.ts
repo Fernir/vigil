@@ -1,7 +1,7 @@
-import type { Site } from "../../server/utils/db";
+import type { SiteInterface } from "../../server/utils/db";
 
 export const useSites = () => {
-  const sites = ref<Site[]>([]);
+  const sites = ref<SiteInterface[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -10,7 +10,7 @@ export const useSites = () => {
     loading.value = true;
     error.value = null;
     try {
-      const data = await $fetch<Site[]>("/api/status");
+      const data = await $fetch<SiteInterface[]>("/api/status");
       sites.value = data || [];
     } catch (e) {
       console.error("Failed to load sites:", e);
@@ -20,7 +20,7 @@ export const useSites = () => {
     }
   };
 
-  const addSite = async (siteData: Partial<Site>) => {
+  const addSite = async (siteData: Partial<SiteInterface>) => {
     loading.value = true;
     error.value = null;
     try {
@@ -41,7 +41,7 @@ export const useSites = () => {
     }
   };
 
-  const updateSite = async (id: number, siteData: Partial<Site>) => {
+  const updateSite = async (id: number, siteData: Partial<SiteInterface>) => {
     loading.value = true;
     error.value = null;
     try {

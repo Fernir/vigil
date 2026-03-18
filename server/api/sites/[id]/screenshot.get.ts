@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
   const results = await dbAll<any>(
     db,
-    "SELECT * FROM screenshots WHERE siteId = ? ORDER BY checkedAt DESC LIMIT 1",
+    "SELECT * FROM screenshots WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1",
     [id],
   );
 

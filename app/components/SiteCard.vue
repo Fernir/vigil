@@ -32,9 +32,9 @@ const statusColor = computed(() => {
 });
 
 const lastChecked = computed(() => {
-  if (!props?.site?.lastCheck?.checkedAt) return "Never";
+  if (!props?.site?.lastCheck?.checked_at) return "Never";
   try {
-    return new Date(props.site.lastCheck.checkedAt).toLocaleString();
+    return new Date(props.site.lastCheck.checked_at).toLocaleString();
   } catch {
     return "Invalid date";
   }

@@ -50,7 +50,7 @@ export default defineNitroPlugin(() => {
         if (result) {
           await dbRun(
             db,
-            `INSERT INTO screenshots (siteId, filename, width, height, checkedAt)
+            `INSERT INTO screenshots (siteId, filename, width, height, checked_at)
              VALUES (?, ?, ?, ?, datetime('now'))`,
             [site.id, result.filename, result.width, result.height],
           );

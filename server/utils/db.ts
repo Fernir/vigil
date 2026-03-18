@@ -3,19 +3,19 @@ import { resolve } from "path";
 import fs from "fs";
 
 // Types for tables
-export interface User {
+export interface UserInterface {
   id: number;
   email: string;
   password: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   webhook_url?: string;
   max_sites: number;
   banned_at: string | null;
   is_admin?: boolean;
 }
 
-export interface Site {
+export interface SiteInterface {
   id: number;
   name: string;
   url: string;
@@ -23,10 +23,10 @@ export interface Site {
   isActive: boolean;
   userId?: number;
   check_type?: "http" | "text";
-  expected_text?: string | null;
+  expected_text?: string | number | undefined;
   text_condition?: "contains" | "not_contains";
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CheckResult {
@@ -36,10 +36,9 @@ export interface CheckResult {
   responseTime: number;
   statusCode?: number;
   errorMessage?: string;
-  checkedAt: string;
+  checked_at: string;
 }
 
-// Make the database available and export the function for getting the DB connection
 export const useDB = () => {
   const dbPath = resolve(process.cwd(), "db/data.sqlite3");
 

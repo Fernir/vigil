@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const results = await dbAll<any>(
     db,
-    'SELECT * FROM check_results WHERE siteId = ? AND checkedAt >= datetime("now", ?) ORDER BY checkedAt DESC',
+    'SELECT * FROM check_results WHERE siteId = ? AND checked_at >= datetime("now", ?) ORDER BY checked_at DESC',
     [id, `-${days} days`],
   );
 

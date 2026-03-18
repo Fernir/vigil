@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const sites = await dbAll<any>(
     db,
-    "SELECT * FROM sites ORDER BY createdAt DESC",
+    "SELECT * FROM sites ORDER BY created_at DESC",
   );
 
   return sites;

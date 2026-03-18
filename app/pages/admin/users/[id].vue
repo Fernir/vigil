@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import type { UserInterface, SiteInterface } from "../../../../server/utils/db";
+
 definePageMeta({ middleware: "admin" });
 
 const route = useRoute();
-const router = useRouter();
 const userId = Number(route.params.id);
 const toast = useToast();
 
 // Загружаем данные пользователя и его сайты
-const { data: user, refresh: refreshUser } = await useFetch(
+const { data: user, refresh: refreshUser } = await useFetch<UserInterface>(
   `/api/admin/users/${userId}`,
 );
-const { data: sites, refresh: refreshSites } = await useFetch(
+const { data: sites, refresh: refreshSites } = await useFetch<SiteInterface[]>(
   `/api/admin/users/${userId}/sites`,
 );
 
@@ -122,7 +123,10 @@ const addSite = async () => {
               </div>
 
               <div class="flex items-center gap-2">
-                <UToggle v-model="form.is_admin" />
+                <UToggle
+                  :model-value="!!form.is_admin"
+                  @update:model-value="form.is_admin = $event"
+                />
                 <span>Is Admin</span>
               </div>
 

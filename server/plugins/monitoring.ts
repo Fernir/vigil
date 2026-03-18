@@ -22,7 +22,7 @@ export default defineNitroPlugin(() => {
             FROM sites s
             LEFT JOIN users u ON s.userId = u.id
             LEFT JOIN (
-                SELECT siteId, MAX(checkedAt) as lastCheck
+                SELECT siteId, MAX(checked_at) as lastCheck
                 FROM check_results
                 GROUP BY siteId
             ) c ON s.id = c.siteId
@@ -47,7 +47,7 @@ export default defineNitroPlugin(() => {
           db,
           `SELECT status FROM check_results 
            WHERE siteId = ? 
-           ORDER BY checkedAt DESC LIMIT 1`,
+           ORDER BY checked_at DESC LIMIT 1`,
           [site.id],
         );
         const prevStatus = lastResult[0]?.status;
@@ -55,7 +55,7 @@ export default defineNitroPlugin(() => {
         // Save the new result in the database
         const savedResult = await dbRun(
           db,
-          `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checkedAt) 
+          `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checked_at) 
            VALUES (?, ?, ?, ?, ?, datetime('now'))`,
           [
             site.id,
@@ -133,7 +133,7 @@ export default defineNitroPlugin(() => {
       for (const site of allSites) {
         const rows = await dbAll<{ id: number }>(
           db,
-          `SELECT id FROM check_results WHERE siteId = ? ORDER BY checkedAt DESC LIMIT 1 OFFSET 49`,
+          `SELECT id FROM check_results WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1 OFFSET 49`,
           [site.id],
         );
         const row = rows[0];

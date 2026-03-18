@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB();
   const result = await dbRun(
     db,
-    `INSERT INTO sites (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, createdAt, updatedAt)
+    `INSERT INTO sites (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
     [
       validated.name,

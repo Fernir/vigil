@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { SiteInterface } from "../../../server/utils/db";
+
 definePageMeta({ middleware: "auth" });
 
 const route = useRoute();
@@ -17,7 +19,7 @@ const { formatDateTime } = useDate();
 
 const site = computed(() => sites.value.find((s) => s.id === siteId));
 
-const form = reactive({
+const form = reactive<Partial<SiteInterface>>({
   name: "",
   url: "",
   checkInterval: 5,
@@ -52,7 +54,7 @@ const validate = () => {
   else if (!form.url.match(/^https?:\/\/.+/)) {
     newErrors.url = "URL must start with http:// or https://";
   }
-  if (form.checkInterval < 1 || form.checkInterval > 60) {
+  if (Number(form.checkInterval) < 1 || Number(form.checkInterval) > 60) {
     newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
   }
   if (form.check_type === "text" && !form.expected_text) {
@@ -231,7 +233,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-500">Checked at</span>
-                <span>{{ formatDateTime(lastResult.checkedAt) }}</span>
+                <span>{{ formatDateTime(lastResult.checked_at) }}</span>
               </div>
             </div>
           </div>
@@ -299,7 +301,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
 
           <!-- Load Time Trend (if data is available) -->
-          <div class="card p-5" v-if="speedResults?.length > 1">
+          <div class="card p-5" v-if="Number(speedResults?.length) > 1">
             <h3 class="text-md font-semibold mb-3">Load Time Trend</h3>
             <SpeedChart :data="speedResults" :height="200" />
           </div>

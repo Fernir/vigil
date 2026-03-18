@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const sites = await dbAll<any>(
     db,
-    "SELECT * FROM sites ORDER BY createdAt DESC",
+    "SELECT * FROM sites ORDER BY created_at DESC",
   );
 
   // For each site we get the last result to determine its current status
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     sites.map(async (site) => {
       const lastResult = await dbGet<any>(
         db,
-        "SELECT * FROM check_results WHERE siteId = ? ORDER BY checkedAt DESC LIMIT 1",
+        "SELECT * FROM check_results WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1",
         [site.id],
       );
 
