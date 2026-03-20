@@ -7,7 +7,7 @@ export interface SSLInfo {
   daysLeft: number;
   validFrom: Date;
   validTo: Date;
-  issuer?: string;
+  issuer?: string | string[];
   error?: string;
 }
 
