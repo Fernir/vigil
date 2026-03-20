@@ -75,7 +75,7 @@ const save = async () => {
           variant="ghost"
           icon="heroicons:arrow-left"
         >
-          Back to User
+          Back
         </UButton>
       </div>
 

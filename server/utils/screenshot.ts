@@ -1,27 +1,27 @@
 import puppeteer from "puppeteer";
-import fs from "fs/promises";
-import path from "path";
+import type { Buffer } from "node:buffer";
 
 export interface ScreenshotOptions {
   viewportWidth?: number;
   viewportHeight?: number;
   fullPage?: boolean;
   format?: "png" | "jpeg" | "webp";
-  blockAds?: boolean; // Puppeteer does not block ads without additional plugins
-  blockCookieBanners?: boolean; // also not standard, would require custom logic
-  delay?: number; // delay before taking screenshot (ms)
+  blockAds?: boolean;
+  blockCookieBanners?: boolean;
+  delay?: number;
   userAgent?: string;
 }
 
-export async function takeAndSaveScreenshot(
-  siteId: number,
-  url: string,
-  options: ScreenshotOptions = {},
-): Promise<{
+export interface ScreenshotResult {
+  imageBuffer: Buffer;
   width: number;
   height: number;
-  filename: string;
-} | null> {
+}
+
+export async function takeScreenshot(
+  url: string,
+  options: ScreenshotOptions = {},
+): Promise<ScreenshotResult | null> {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -35,49 +35,32 @@ export async function takeAndSaveScreenshot(
 
   try {
     const page = await browser.newPage();
-
-    // Set viewport
     await page.setViewport({
       width: options.viewportWidth || 1280,
       height: options.viewportHeight || 800,
       deviceScaleFactor: 1,
     });
 
-    // If userAgent is specified, set it
     if (options.userAgent) {
       await page.setUserAgent(options.userAgent);
     }
 
-    // Navigate to the page
-    const response = await page.goto(url, {
+    await page.goto(url, {
       waitUntil: "networkidle2",
       timeout: 30000,
     });
 
-    if (!response) {
-      throw new Error("No response");
-    }
-
-    // Wait for the delay, if specified
     if (options.delay) {
       await new Promise((resolve) => setTimeout(resolve, options.delay));
     }
 
-    // Make the screenshot
-    const fileName = `site-${siteId}-${Date.now()}.${options.format || "png"}`;
-    const publicDir = path.resolve(process.cwd(), "public/screenshots");
-    const filePath = path.join(publicDir, fileName);
-
-    await fs.mkdir(publicDir, { recursive: true });
-
-    const screenshotBuffer = await page.screenshot({
+    // Get screenshot as Buffer
+    const screenshotBuffer = (await page.screenshot({
       fullPage: options.fullPage || false,
       type: options.format === "jpeg" ? "jpeg" : "png",
-    });
+    })) as Buffer;
 
-    await fs.writeFile(filePath, screenshotBuffer);
-
-    // Get dimensions of the page
+    // Get page dimensions
     const dimensions = await page.evaluate(() => ({
       width: document.documentElement.scrollWidth,
       height: document.documentElement.scrollHeight,
@@ -86,7 +69,7 @@ export async function takeAndSaveScreenshot(
     await browser.close();
 
     return {
-      filename: `/screenshots/${fileName}`,
+      imageBuffer: screenshotBuffer,
       width: options.fullPage
         ? dimensions.width
         : options.viewportWidth || 1280,
@@ -95,7 +78,7 @@ export async function takeAndSaveScreenshot(
         : options.viewportHeight || 800,
     };
   } catch (error) {
-    console.error(`❌ Failed to take screenshot for ${url}:`, error);
+    console.error(`Failed to take screenshot for ${url}:`, error);
     await browser.close().catch(() => {});
     return null;
   }

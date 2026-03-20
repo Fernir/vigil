@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserInterface, SiteInterface } from "../../../../server/utils/db";
+import type { UserInterface, SiteInterface } from "~~/server/utils/db";
 
 definePageMeta({ middleware: "admin" });
 
@@ -99,7 +99,7 @@ const addSite = async () => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
         <UButton to="/admin" variant="ghost" icon="heroicons:arrow-left">
-          Back to Admin
+          Back
         </UButton>
       </div>
 

@@ -1,4 +1,4 @@
-import { useDB, dbRun, dbGet } from "../../utils/db";
+import { useDB, dbRun } from "~~/server/utils/db";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -18,27 +18,26 @@ export default defineEventHandler(async (event) => {
   try {
     const auth = event.context.auth;
     if (!auth?.userId) {
-      throw createError({
-        statusCode: 401,
-        message: "Unauthorized",
-      });
+      throw createError({ statusCode: 401, message: "Unauthorized" });
     }
 
+    // Проверка лимита
     const siteCount = await dbGet<{ count: number }>(
       db,
       "SELECT COUNT(*) as count FROM sites WHERE userId = ?",
       [auth.userId],
     );
+
     const user = await dbGet<{ max_sites: number }>(
       db,
       "SELECT max_sites FROM users WHERE id = ?",
       [auth.userId],
     );
 
-    if (Number(siteCount?.count) >= Number(user?.max_sites)) {
+    if (Number(siteCount?.count) >= (user?.max_sites || 4)) {
       throw createError({
         statusCode: 403,
-        message: `You have reached your site limit (${Number(user?.max_sites)})`,
+        message: `You have reached your site limit (${user?.max_sites || 4})`,
       });
     }
 
@@ -46,9 +45,8 @@ export default defineEventHandler(async (event) => {
 
     const result = await dbRun(
       db,
-      `INSERT INTO sites 
-   (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, created_at, updated_at) 
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      `INSERT INTO sites (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
         validated.name,
         validated.url,
@@ -61,20 +59,10 @@ export default defineEventHandler(async (event) => {
       ],
     );
 
-    return {
-      id: result.lastID,
-      ...validated,
-      userId: auth.userId,
-    };
+    return { id: result.lastID, ...validated, userId: auth.userId };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const errorMessage = firstError?.message || "Validation error";
-
-      throw createError({
-        statusCode: 400,
-        message: errorMessage,
-      });
+      throw createError({ statusCode: 400, message: error.errors[0].message });
     }
     throw error;
   }

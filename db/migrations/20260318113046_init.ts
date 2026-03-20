@@ -78,7 +78,7 @@ export async function up(knex: Knex): Promise<void> {
       .references("id")
       .inTable("sites")
       .onDelete("CASCADE");
-    table.string("filename").notNullable();
+    table.binary("image_data");
     table.integer("width");
     table.integer("height");
     table.timestamp("checked_at").defaultTo(knex.fn.now());

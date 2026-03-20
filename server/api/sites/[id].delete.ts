@@ -1,6 +1,4 @@
-import { useDB, dbGet, dbRun, dbAll } from "../../utils/db";
-import fs from "fs/promises";
-import path from "path";
+import { useDB, dbGet, dbRun } from "~~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   const db = useDB();
@@ -34,26 +32,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // If delete is not admin, but owner – allow
-  // If admin – also allow, but only if site belongs to someone else (to prevent self-deletion of sites)
-
-  // Get all screenshots for this site
-  const screenshots = await dbAll<any>(
-    db,
-    "SELECT filename FROM screenshots WHERE siteId = ?",
-    [id],
-  );
-
-  // Delete files from disk
-  for (const s of screenshots) {
-    const filePath = path.join(process.cwd(), "public/screenshots", s.filename);
-    await fs.unlink(filePath).catch(() => {
-      // Ignore errors if file is already deleted or doesn't exist
-    });
-  }
-
   // Delete site (screenshots will be deleted cascaded in DB)
   await dbRun(db, "DELETE FROM sites WHERE id = ?", [id]);
 
-  return { success: true, deletedFiles: screenshots.length };
+  return { success: true };
 });

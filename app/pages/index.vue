@@ -33,7 +33,7 @@ const handleDelete = async (id: number) => {
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          System Status
+          Services average status
         </h1>
 
         <!-- Statistics (wrapped in ClientOnly to avoid hydration issues) -->
@@ -52,7 +52,7 @@ const handleDelete = async (id: number) => {
           <div v-else class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-4">
               <div class="text-sm text-gray-500 dark:text-gray-400">
-                Overall Uptime
+                Overall uptime
               </div>
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ stats?.overallUptime ?? 100 }}%

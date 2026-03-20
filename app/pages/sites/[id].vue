@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SiteInterface } from "../../../server/utils/db";
+import type { SiteInterface } from "~~/server/utils/db";
 
 definePageMeta({ middleware: "auth" });
 
@@ -11,10 +11,26 @@ useHead({ title: "Edit Site" });
 
 const showModal = ref(false);
 
-const { lastSSL, lastSpeed, sslResults, speedResults, lastScreenshot } =
-  useSiteMetrics(siteId);
+const {
+  getLatestSSL,
+  getLatestSpeed,
+  getLatestScreenshot,
+  speedResults,
+  fetchSpeedHistory,
+  fetchSSLHistory,
+  fetchScreenshotData,
+  results,
+  fetchSiteHistory,
+  connectToSSE,
+} = useMonitoring();
+
+const lastSSL = computed(() => getLatestSSL(siteId));
+const lastSpeed = computed(() => getLatestSpeed(siteId));
+const lastScreenshot = computed(() => getLatestScreenshot(siteId));
+
+console.log("Speed results:", lastSpeed.value);
+
 const { sites, fetchSites, updateSite, loading } = useSites();
-const { results, fetchSiteHistory } = useMonitoring();
 const { formatDateTime } = useDate();
 
 const site = computed(() => sites.value.find((s) => s.id === siteId));
@@ -32,8 +48,13 @@ const form = reactive<Partial<SiteInterface>>({
 const errors = ref<Record<string, string>>({});
 
 onMounted(async () => {
+  connectToSSE();
   await fetchSites();
   await fetchSiteHistory(siteId);
+  await fetchSpeedHistory(siteId);
+  await fetchSSLHistory(siteId);
+  await fetchScreenshotData(siteId);
+
   if (site.value) {
     form.name = site.value.name;
     form.url = site.value.url;
@@ -64,14 +85,34 @@ const validate = () => {
   return Object.keys(newErrors).length === 0;
 };
 
+const handleDelete = async () => {
+  if (
+    confirm(
+      "Are you sure you want to delete this site? This action cannot be undone.",
+    )
+  ) {
+    try {
+      const { deleteSite } = useSites();
+      await deleteSite(siteId);
+      router.push("/");
+    } catch (error) {
+      console.error("Failed to delete site:", error);
+    }
+  }
+};
+
 const handleSubmit = async () => {
   if (!validate()) return;
   const result = await updateSite(siteId, form);
   if (result) router.push("/");
 };
 
-const chartData = computed(() =>
+const chartDataUptime = computed(() =>
   (results.value[siteId] || []).slice().reverse(),
+);
+
+const chartDataSpeedResults = computed(() =>
+  (speedResults.value[siteId] || []).slice().reverse(),
 );
 
 const lastResult = computed(() => results.value[siteId]?.[0] || null);
@@ -82,7 +123,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
         <UButton to="/" variant="ghost" icon="heroicons:arrow-left">
-          Back to Dashboard
+          Back
         </UButton>
       </div>
 
@@ -158,6 +199,16 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
                 <UButton color="gray" variant="ghost" to="/dashboard" size="sm">
                   Cancel
                 </UButton>
+
+                <UButton
+                  color="red"
+                  variant="soft"
+                  icon="heroicons:trash-20-solid"
+                  size="sm"
+                  @click="handleDelete"
+                >
+                  Delete
+                </UButton>
               </div>
             </form>
           </div>
@@ -168,7 +219,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <div class="card p-5" v-if="lastScreenshot">
             <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
             <img
-              :src="lastScreenshot.filename"
+              :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
               alt="Website screenshot"
               class="w-full max-h-[600px] object-cover border rounded-lg shadow-sm cursor-pointer"
               @click="showModal = true"
@@ -192,7 +243,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               />
               <div class="p-4 flex items-center justify-center h-full">
                 <img
-                  :src="lastScreenshot.filename"
+                  :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
                   class="max-h-full rounded-lg"
                 />
               </div>
@@ -202,7 +253,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <!-- Chart of response times -->
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Response Time History</h3>
-            <UptimeChart :data="chartData" :height="250" />
+            <UptimeChart :data="chartDataUptime" :height="250" />
           </div>
 
           <!-- Last Check -->
@@ -301,9 +352,9 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
 
           <!-- Load Time Trend (if data is available) -->
-          <div class="card p-5" v-if="Number(speedResults?.length) > 1">
+          <div class="card p-5" v-if="chartDataSpeedResults?.length > 1">
             <h3 class="text-md font-semibold mb-3">Load Time Trend</h3>
-            <SpeedChart :data="speedResults" :height="200" />
+            <SpeedChart :data="chartDataSpeedResults" :height="200" />
           </div>
         </div>
       </div>

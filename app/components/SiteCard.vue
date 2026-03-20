@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { SiteInterface } from "../../server/utils/db";
+import type { SiteInterface } from "~~/server/utils/db";
+import { ref } from "vue";
 
 const props = defineProps<{
   site: SiteInterface;
@@ -9,7 +10,7 @@ const props = defineProps<{
 const siteId = Number(props.site.id);
 
 const { loggedIn } = useUserSession();
-const { results, fetchSiteHistory } = useMonitoring();
+const { fetchSiteHistory } = useMonitoring();
 const { uptimePercentage, avgResponseTime } = useSiteMetrics(siteId);
 
 const emit = defineEmits<{
@@ -40,6 +41,12 @@ const lastChecked = computed(() => {
   }
 });
 
+const handleCardClick = () => {
+  if (props.detailed) {
+    navigateTo(`/sites/${props.site.id}`);
+  }
+};
+
 onMounted(() => {
   if (loggedIn.value) {
     fetchSiteHistory(props.site.id);
@@ -48,41 +55,27 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card p-4 hover:shadow-md transition-shadow">
+  <div
+    class="card p-4 hover:shadow-md transition-all duration-200 relative group"
+    :class="{ 'cursor-pointer hover:scale-[1.02]': detailed }"
+    @click="handleCardClick"
+  >
     <div class="flex flex-col gap-3">
-      <!-- Верхняя строка: название, тип, статус, кнопки (если detailed) -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2 flex-wrap">
-          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-            {{ site.name }}
-          </h3>
-          <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded">
-            {{ site.check_type === "text" ? "Text" : "HTTP" }}
-          </span>
-          <StatusBadge :status="status" />
-          <span
-            v-if="!site.isActive"
-            class="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded"
-          >
-            Paused
-          </span>
-        </div>
-        <div v-if="detailed" class="flex gap-1 ml-2 shrink-0">
-          <UButton
-            color="gray"
-            variant="ghost"
-            icon="heroicons:pencil-square-20-solid"
-            :to="`/sites/${site.id}`"
-            size="xs"
-          />
-          <UButton
-            color="red"
-            variant="ghost"
-            icon="heroicons:trash-20-solid"
-            size="xs"
-            @click="emit('delete', site.id)"
-          />
-        </div>
+      <!-- Верхняя строка: название, тип, статус -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+          {{ site.name }}
+        </h3>
+        <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded">
+          {{ site.check_type === "text" ? "Text" : "HTTP" }}
+        </span>
+        <StatusBadge :status="status" />
+        <span
+          v-if="!site.isActive"
+          class="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded"
+        >
+          Paused
+        </span>
       </div>
 
       <!-- Строка с URL -->
@@ -91,6 +84,7 @@ onMounted(() => {
         target="_blank"
         rel="noopener noreferrer"
         class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 w-fit"
+        @click.stop
       >
         {{ site.url }}
         <UIcon

@@ -1,4 +1,4 @@
-import { emitter } from "../utils/events";
+import { emitter } from "~~/server/utils/events";
 
 const clients = new Set<any>();
 

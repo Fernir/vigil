@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "../utils/db";
+import { useDB, dbGet } from "~~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   // Пропускаем публичные маршруты

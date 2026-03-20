@@ -8,7 +8,7 @@ export async function sendWebhook(url: string, payload: any): Promise<boolean> {
     });
     return true;
   } catch (error) {
-    console.error("❌ Failed to send webhook:", error);
+    console.error("Failed to send webhook:", error);
     return false;
   }
 }

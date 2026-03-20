@@ -1,5 +1,5 @@
-import { useDB, dbGet } from "../../../utils/db";
-import { checkAdmin } from "../../../utils/checkAdmin";
+import { useDB, dbGet } from "~~/server/utils/db";
+import { checkAdmin } from "~~/server/utils/checkAdmin";
 
 export default defineEventHandler(async (event) => {
   await checkAdmin(event);

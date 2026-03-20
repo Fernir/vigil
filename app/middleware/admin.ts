@@ -35,7 +35,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     };
 
     // Connect to DB and check if user is admin
-    const { useDB, dbGet } = await import("../../server/utils/db");
+    const { useDB, dbGet } = await import("~~/server/utils/db");
     const db = useDB();
     const user = await dbGet<{ is_admin: boolean }>(
       db,

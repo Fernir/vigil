@@ -26,10 +26,11 @@ const validate = () => {
 
   if (!form.name) newErrors.name = "Name is required";
   if (!form.url) newErrors.url = "URL is required";
-  if (!form.expected_text)
-    newErrors.expected_text = "Expected text is required";
-  else if (!form.url.match(/^https?:\/\/.+/)) {
+  if (!form.url.match(/^https?:\/\/.+/)) {
     newErrors.url = "URL must start with http:// or https://";
+  }
+  if (form.check_type === "text" && !form.expected_text) {
+    newErrors.expected_text = "Expected text is required for text check";
   }
   if (form.checkInterval < 1 || form.checkInterval > 60) {
     newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
@@ -54,7 +55,7 @@ const handleSubmit = async () => {
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
         <UButton to="/" variant="ghost" icon="heroicons:arrow-left">
-          Back to Dashboard
+          Back
         </UButton>
       </div>
       <div class="mb-8">

@@ -1,7 +1,5 @@
-import { useDB, dbAll, dbRun } from "../../../utils/db";
-import { checkAdmin } from "../../../utils/checkAdmin";
-import fs from "fs/promises";
-import path from "path";
+import { useDB, dbAll, dbRun } from "~~/server/utils/db";
+import { checkAdmin } from "~~/server/utils/checkAdmin";
 
 export default defineEventHandler(async (event) => {
   await checkAdmin(event);
@@ -11,26 +9,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB();
 
   // 1. Get all sites for the user
-  const sites = await dbAll<any>(db, "SELECT id FROM sites WHERE userId = ?", [
-    id,
-  ]);
-
-  // 2. For each site, delete screenshots from disk
-  for (const site of sites) {
-    const screenshots = await dbAll<any>(
-      db,
-      "SELECT filename FROM screenshots WHERE siteId = ?",
-      [site.id],
-    );
-    for (const s of screenshots) {
-      const filePath = path.join(
-        process.cwd(),
-        "public/screenshots",
-        s.filename,
-      );
-      await fs.unlink(filePath).catch(() => {});
-    }
-  }
+  await dbAll<any>(db, "SELECT id FROM sites WHERE userId = ?", [id]);
 
   // 3. Delete the user (cascaded deletion of sites and their screenshots from the DB)
   await dbRun(db, "DELETE FROM users WHERE id = ?", [id]);

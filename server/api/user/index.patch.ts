@@ -1,4 +1,4 @@
-import { useDB, dbRun } from "../../utils/db";
+import { useDB, dbRun } from "~~/server/utils/db";
 import { z } from "zod";
 
 const updateUserSchema = z.object({

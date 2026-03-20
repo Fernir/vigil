@@ -1,4 +1,4 @@
-import { useDB, dbAll, dbGet } from "../utils/db";
+import { useDB, dbAll, dbGet } from "~~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   const db = useDB();

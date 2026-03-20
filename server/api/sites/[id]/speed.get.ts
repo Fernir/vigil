@@ -1,5 +1,5 @@
 // server/api/sites/[id]/speed.get.ts
-import { useDB, dbAll } from "../../../utils/db";
+import { useDB, dbAll } from "~~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   const db = useDB();

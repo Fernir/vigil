@@ -89,10 +89,21 @@ const chartOptions = {
     line: { borderJoinStyle: "round" },
   },
 };
+
+const chartKey = ref(0);
+watch(
+  () => props.data,
+  () => {
+    chartKey.value += 1;
+  },
+);
 </script>
 
 <template>
-  <div class="w-full" style="height: 200px">
-    <Line :data="chartData" :options="chartOptions" />
+  <div :key="chartKey">
+    <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
+    <div v-else class="h-full flex items-center justify-center text-gray-500">
+      No data available
+    </div>
   </div>
 </template>

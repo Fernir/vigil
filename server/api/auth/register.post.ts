@@ -1,4 +1,4 @@
-import { useDB, dbGet, dbRun } from "../../utils/db";
+import { useDB, dbGet, dbRun } from "~~/server/utils/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 

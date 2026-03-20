@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "../../utils/db";
+import { useDB, dbGet } from "~~/server/utils/db";
 import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {

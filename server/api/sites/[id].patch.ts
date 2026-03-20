@@ -1,4 +1,4 @@
-import { useDB, dbRun, dbGet } from "../../utils/db";
+import { useDB, dbRun, dbGet } from "~~/server/utils/db";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -35,6 +35,13 @@ export default defineEventHandler(async (event) => {
       "SELECT id, userId FROM sites WHERE id = ?",
       [id],
     );
+
+    if (existingSite.userId !== userId) {
+      throw createError({
+        statusCode: 403,
+        message: "You can only edit your own sites",
+      });
+    }
 
     if (!existingSite) {
       throw createError({ statusCode: 404, message: "Site not found" });

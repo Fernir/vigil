@@ -1,5 +1,5 @@
-import { useDB, dbRun } from "../../../utils/db";
-import { checkAdmin } from "../../../utils/checkAdmin";
+import { useDB, dbRun } from "~~/server/utils/db";
+import { checkAdmin } from "~~/server/utils/checkAdmin";
 import { z } from "zod";
 
 const bodySchema = z.object({

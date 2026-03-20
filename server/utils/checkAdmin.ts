@@ -1,5 +1,4 @@
-// server/utils/checkAdmin.ts
-import { useDB, dbGet } from "./db";
+import { useDB, dbGet } from "~~/server/utils/db";
 
 export async function checkAdmin(event: any) {
   const userId = event.context.auth?.userId;

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
 
 // Загружаем переменные из .env
-dotenv.config({ path: require("path").resolve(__dirname, "../../.env") });
+dotenv.config({ path: require("path").resolve(__dirname, "~~/.env") });
 
 export async function seed(knex: Knex): Promise<void> {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {

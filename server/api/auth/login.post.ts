@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "../../utils/db";
+import { useDB, dbGet } from "~~/server/utils/db";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
