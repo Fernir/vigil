@@ -1,4 +1,4 @@
-import { useDB, dbRun, dbGet } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { checkAdmin } from "~~/server/utils/checkAdmin";
 import { z } from "zod";
 
@@ -10,7 +10,7 @@ const updateSchema = z.object({
   check_type: z.enum(["http", "text"]).optional(),
   expected_text: z.string().nullable().optional(),
   text_condition: z.enum(["contains", "not_contains"]).optional(),
-  userId: z.number().optional(), // если нужно передать другому пользователю
+  userId: z.number().optional(),
 });
 
 export default defineEventHandler(async (event) => {
@@ -21,10 +21,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const validated = updateSchema.parse(body);
 
-  const db = useDB();
-
   // Проверяем существование сайта
-  const existing = await dbGet(db, "SELECT id FROM sites WHERE id = ?", [id]);
+  const existing = await prisma.sites.findUnique({
+    where: { id: id },
+  });
   if (!existing)
     throw createError({ statusCode: 404, message: "Site not found" });
 
@@ -70,12 +70,13 @@ export default defineEventHandler(async (event) => {
   if (updates.length === 0) return { message: "No fields to update" };
 
   values.push(id);
-  await dbRun(
-    db,
-    `UPDATE sites SET ${updates.join(", ")} WHERE id = ?`,
-    values,
-  );
+  await prisma.sites.update({
+    where: { id: id },
+    data: validated,
+  });
 
-  const updated = await dbGet(db, "SELECT * FROM sites WHERE id = ?", [id]);
+  const updated = await prisma.sites.findUnique({
+    where: { id: id },
+  });
   return updated;
 });

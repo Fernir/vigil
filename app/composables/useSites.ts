@@ -1,4 +1,4 @@
-import type { SiteInterface } from "~~/server/utils/db";
+import type { SiteInterface } from "~~/types";
 
 export const useSites = () => {
   const sites = ref<SiteInterface[]>([]);

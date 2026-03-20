@@ -1,4 +1,4 @@
-import { useDB, dbGet, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -12,13 +12,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     const validated = registerSchema.parse(body);
-    const db = useDB();
 
-    const existingUser = await dbGet<{ id: number }>(
-      db,
-      "SELECT id FROM users WHERE email = ?",
-      [validated.email],
-    );
+    const existingUser = await prisma.users.findUnique({
+      where: { email: validated.email },
+    });
 
     if (existingUser) {
       throw createError({
@@ -29,16 +26,16 @@ export default defineEventHandler(async (event) => {
 
     const hashedPassword = await bcrypt.hash(validated.password, 10);
 
-    const result = await dbRun(
-      db,
-      `INSERT INTO users (email, password, created_at, updated_at) 
-       VALUES (?, ?, datetime('now'), datetime('now'))`,
-      [validated.email, hashedPassword],
-    );
+    const result = await prisma.users.create({
+      data: {
+        email: validated.email,
+        password: hashedPassword,
+      },
+    });
 
     return {
       user: {
-        id: result.lastID,
+        id: result.id,
         email: validated.email,
       },
       message: "Registration successful",

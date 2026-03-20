@@ -1,4 +1,4 @@
-import { useDB, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { z } from "zod";
 
 const updateUserSchema = z.object({
@@ -14,12 +14,13 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const validated = updateUserSchema.parse(body);
 
-  const db = useDB();
-  await dbRun(
-    db,
-    'UPDATE users SET webhook_url = ?, updatedAt = datetime("now") WHERE id = ?',
-    [validated.webhook_url || null, auth.userId],
-  );
+  await prisma.users.update({
+    where: { id: auth.userId },
+    data: {
+      webhook_url: validated.webhook_url || null,
+      updated_at: new Date(),
+    },
+  });
 
   return { success: true };
 });

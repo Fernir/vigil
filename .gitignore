@@ -38,3 +38,17 @@ lerna-debug.log*
 
 public/screenshots/*
 !public/screenshots/.gitkeep
+/app/generated/prisma
+
+# Prisma
+prisma/*.db
+prisma/*.sqlite
+prisma/*.sqlite-journal
+prisma/migrations/*.db
+prisma/migrations/*.sqlite
+prisma/migrations/*.sqlite-journal
+
+# Но коммитим сами миграции
+!prisma/migrations/**/*.sql
+prisma/schema.prisma
+prisma/seed.ts

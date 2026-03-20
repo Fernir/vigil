@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserInterface, SiteInterface } from "~~/server/utils/db";
+import type { UserInterface, SiteInterface } from "~~/types";
 
 definePageMeta({ middleware: "admin" });
 
@@ -49,7 +49,7 @@ const save = async () => {
 };
 
 const ban = () => {
-  form.banned_at = new Date().toISOString();
+  form.banned_at = new Date();
 };
 
 const unban = () => {
@@ -241,9 +241,9 @@ const addSite = async () => {
             <UInput
               v-model.number="newSiteForm.checkInterval"
               type="number"
-              min="1"
-              max="60"
-              placeholder="Check interval (min)"
+              min="30"
+              max="3600"
+              placeholder="Check interval (seconds)"
             />
 
             <div>

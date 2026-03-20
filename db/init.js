@@ -1,53 +1,49 @@
-const { execSync } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import "dotenv/config";
 
-console.log("Initializing database...");
+const prisma = new PrismaClient();
 
-// Path to DB
-const dbPath = path.resolve(__dirname, "./data.sqlite3");
-const dbDir = path.dirname(dbPath);
+async function initDatabase() {
+  console.log("Initializing database...");
 
-// Create directory if it doesn't exist
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-  console.log("Created database directory");
+  try {
+    // Очищаем таблицы в правильном порядке (из-за внешних ключей)
+    console.log("Clearing existing data...");
+    await prisma.speed_results.deleteMany();
+    await prisma.screenshots.deleteMany();
+    await prisma.ssl_results.deleteMany();
+    await prisma.check_results.deleteMany();
+    await prisma.sites.deleteMany();
+    await prisma.users.deleteMany();
+
+    console.log("Data cleared");
+
+    // Создаём администратора
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    const admin = await prisma.users.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        is_admin: true,
+        max_sites: 100,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    console.log(`Admin created: ${adminEmail}`);
+
+    console.log("Database initialization complete!");
+  } catch (error) {
+    console.error("Error initializing database:", error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-// Delete existing database file if it exists
-if (fs.existsSync(dbPath)) {
-  console.log("Removing existing database...");
-  fs.unlinkSync(dbPath);
-}
-
-// Create empty database file (Knex will create it, but for certainty we create it here)
-fs.writeFileSync(dbPath, "");
-console.log("Empty database file created");
-
-// Run migrations
-try {
-  console.log("Running migrations...");
-  execSync("npx knex migrate:latest --knexfile ./knexfile.ts", {
-    stdio: "inherit",
-    cwd: path.resolve(__dirname),
-  });
-  console.log("Migrations completed");
-} catch (error) {
-  console.error("Migrations failed:", error);
-  process.exit(1);
-}
-
-// Run seeds
-try {
-  console.log("Running seeds...");
-  execSync("npx knex seed:run --knexfile ./knexfile.ts", {
-    stdio: "inherit",
-    cwd: path.resolve(__dirname),
-  });
-  console.log("Seeds completed");
-} catch (error) {
-  console.error("Seeds failed:", error);
-  process.exit(1);
-}
-
-console.log("Database initialization complete!");
+initDatabase();

@@ -1,4 +1,4 @@
-import { useDB, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { checkAdmin } from "~~/server/utils/checkAdmin";
 import { z } from "zod";
 
@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const validated = bodySchema.parse(body);
 
-  const db = useDB();
   const updates = [];
   const values = [];
 
@@ -35,10 +34,11 @@ export default defineEventHandler(async (event) => {
   if (updates.length === 0) return { message: "Nothing to update" };
 
   values.push(id);
-  await dbRun(
-    db,
-    `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
-    values,
-  );
+
+  await prisma.users.update({
+    where: { id: id },
+    data: validated,
+  });
+
   return { success: true };
 });

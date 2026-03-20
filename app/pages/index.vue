@@ -6,12 +6,7 @@ useHead({ title: "Status" });
 const { formatDateTime } = useDate();
 const { user, loggedIn } = useUserSession();
 const { stats, loading: statsLoading } = useStats();
-const { sseConnected, connectToSSE } = useMonitoring();
 const { sites, fetchSites, loading: sitesLoading, deleteSite } = useSites();
-
-onMounted(() => {
-  connectToSSE();
-});
 
 watchEffect(() => {
   if (loggedIn.value) {
@@ -102,18 +97,7 @@ const handleDelete = async (id: number) => {
           </template>
         </ClientOnly>
 
-        <!-- Indicator for SSE (always only on client) -->
-        <ClientOnly>
-          <div class="flex items-center gap-2 text-sm">
-            <div
-              class="w-2 h-2 rounded-full"
-              :class="sseConnected ? 'bg-green-500' : 'bg-red-500'"
-            />
-            <span class="text-gray-600 dark:text-gray-400">
-              {{ sseConnected ? "Live updates connected" : "Reconnecting..." }}
-            </span>
-          </div>
-        </ClientOnly>
+        <SSEIndicator />
       </div>
 
       <!-- Block with site list – only for authorized users (also ClientOnly) -->
@@ -122,7 +106,7 @@ const handleDelete = async (id: number) => {
           v-if="loggedIn && !!user?.banned_at"
           class="mt-8 text-center p-6 card border-red-500 bg-red-50 dark:bg-red-900/20"
         >
-          You are banned at {{ formatDateTime(user?.banned_at) }}.
+          You are banned at {{ formatDateTime(user?.banned_at.toString()) }}.
         </div>
         <div v-if="loggedIn && !user?.banned_at" class="mt-8">
           <div class="flex items-center justify-between mb-4">
@@ -156,7 +140,6 @@ const handleDelete = async (id: number) => {
               v-for="site in sites"
               :key="site.id"
               :site="site"
-              detailed
               @delete="handleDelete"
             />
           </div>

@@ -1,6 +1,7 @@
+// app/composables/useUserSession.ts
 import { ref, computed } from "vue";
 import { navigateTo } from "#app";
-import type { UserInterface } from "~~/server/utils/db";
+import type { UserInterface } from "~~/types";
 
 interface LoginResponse {
   user: UserInterface;
@@ -11,7 +12,9 @@ interface SessionResponse {
   user: UserInterface | null;
 }
 
-const sessionLoaded = ref(false);
+let sessionPromise: Promise<void> | null = null;
+let sessionLoaded = ref(false);
+
 const user = ref<UserInterface | null>(null);
 const token = ref<string | null>(null);
 
@@ -19,22 +22,27 @@ export const useUserSession = () => {
   const fetchSession = async () => {
     if (!process.client) return;
 
-    sessionLoaded.value = false;
-
-    try {
-      const session = await $fetch<SessionResponse>("/api/auth/session");
-      user.value = session?.user || null;
-    } catch (e) {
-      console.error("❌ Failed to fetch session", e);
-      user.value = null;
-    } finally {
-      sessionLoaded.value = true;
+    // Return existing promise if already fetching
+    if (sessionPromise) {
+      await sessionPromise;
+      return;
     }
-  };
 
-  if (process.client) {
-    fetchSession();
-  }
+    sessionPromise = (async () => {
+      try {
+        const session = await $fetch<SessionResponse>("/api/auth/session");
+        user.value = session?.user || null;
+      } catch (e) {
+        console.error("Failed to fetch session", e);
+        user.value = null;
+      } finally {
+        sessionLoaded.value = true;
+        sessionPromise = null;
+      }
+    })();
+
+    await sessionPromise;
+  };
 
   const loggedIn = computed(() => !!user.value);
 
@@ -48,11 +56,12 @@ export const useUserSession = () => {
       if (response?.user) {
         user.value = response.user;
         token.value = response.token || null;
+        sessionLoaded.value = true;
         return { success: true };
       }
       return { success: false, error: "No data received" };
     } catch (error: any) {
-      console.error("❌ Login error:", error);
+      console.error("Login error:", error);
       return {
         success: false,
         error: error.data?.message || error.message || "Login failed",
@@ -68,7 +77,7 @@ export const useUserSession = () => {
       });
       return { success: true };
     } catch (error: any) {
-      console.error("❌ Register error:", error);
+      console.error("Register error:", error);
       return {
         success: false,
         error: error.data?.message || error.message || "Registration failed",
@@ -84,8 +93,14 @@ export const useUserSession = () => {
     }
     user.value = null;
     token.value = null;
+    sessionLoaded.value = false;
     await navigateTo("/auth/login");
   };
+
+  // Initialize only once
+  if (process.client && !sessionLoaded.value && !sessionPromise) {
+    fetchSession();
+  }
 
   return {
     user,

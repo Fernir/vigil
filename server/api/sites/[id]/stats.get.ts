@@ -1,7 +1,6 @@
-import { useDB, dbAll } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 
 export default defineEventHandler(async (event) => {
-  const db = useDB();
   const id = parseInt(event.context.params?.id || "0");
   const query = getQuery(event);
   const days = parseInt((query.days as string) || "7");
@@ -13,11 +12,17 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const results = await dbAll<any>(
-    db,
-    'SELECT * FROM check_results WHERE siteId = ? AND checked_at >= datetime("now", ?) ORDER BY checked_at DESC',
-    [id, `-${days} days`],
-  );
+  const results = await prisma.check_results.findMany({
+    where: {
+      siteId: id,
+      checked_at: {
+        gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+      },
+    },
+    orderBy: {
+      checked_at: "desc",
+    },
+  });
 
   return results;
 });

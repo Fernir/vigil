@@ -1,4 +1,4 @@
-export interface CheckResultData {
+export interface CheckResultDataInterface {
   status: "up" | "down" | "degraded";
   responseTime: number;
   statusCode?: number;
@@ -9,7 +9,7 @@ export async function checkSite(
   url: string,
   expectedText?: string | null,
   condition: "contains" | "not_contains" = "contains",
-): Promise<CheckResultData> {
+): Promise<CheckResultDataInterface> {
   const startTime = Date.now();
 
   try {

@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
@@ -30,12 +30,16 @@ export default defineEventHandler(async (event) => {
       return { user: null };
     }
 
-    const db = useDB();
-    const user = await dbGet<any>(
-      db,
-      "SELECT id, email, webhook_url, is_admin, banned_at FROM users WHERE id = ?",
-      [decoded.userId],
-    );
+    const user = await prisma.users.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        webhook_url: true,
+        is_admin: true,
+        banned_at: true,
+      },
+    });
 
     if (!user) {
       console.log("Session check - User not found");

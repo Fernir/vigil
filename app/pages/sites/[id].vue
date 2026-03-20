@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SiteInterface } from "~~/server/utils/db";
+import type { SiteInterface } from "~~/types";
 
 definePageMeta({ middleware: "auth" });
 
@@ -21,14 +21,11 @@ const {
   fetchScreenshotData,
   results,
   fetchSiteHistory,
-  connectToSSE,
 } = useMonitoring();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
 const lastScreenshot = computed(() => getLatestScreenshot(siteId));
-
-console.log("Speed results:", lastSpeed.value);
 
 const { sites, fetchSites, updateSite, loading } = useSites();
 const { formatDateTime } = useDate();
@@ -48,7 +45,6 @@ const form = reactive<Partial<SiteInterface>>({
 const errors = ref<Record<string, string>>({});
 
 onMounted(async () => {
-  connectToSSE();
   await fetchSites();
   await fetchSiteHistory(siteId);
   await fetchSpeedHistory(siteId);
@@ -129,7 +125,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left column: editing form -->
-        <div class="lg:col-span-1">
+        <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
             <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -146,9 +142,9 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               <UInput
                 v-model="form.checkInterval"
                 type="number"
-                min="1"
-                max="60"
-                placeholder="Interval (min)"
+                min="30"
+                max="3600"
+                placeholder="Interval (sec)"
                 :error="errors.checkInterval"
               />
               <div class="flex items-center gap-2">
@@ -212,6 +208,9 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               </div>
             </form>
           </div>
+          <div class="card p-5">
+            <SSEIndicator />
+          </div>
         </div>
 
         <!-- Right column: all metrics and charts -->
@@ -221,7 +220,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
             <img
               :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
               alt="Website screenshot"
-              class="w-full max-h-[600px] object-cover border rounded-lg shadow-sm cursor-pointer"
+              class="w-full max-h-64 object-cover border rounded-lg shadow-sm cursor-pointer"
               @click="showModal = true"
             />
             <p class="text-xs text-gray-500 mt-2 text-center">
@@ -234,7 +233,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               :ui="{ width: 'w-fit sm:max-w-none' }"
             >
               <UButton
-                variant="ghost"
+                variant="link"
                 color="white"
                 size="lg"
                 class="fixed top-4 right-4"
@@ -334,19 +333,19 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               </div>
               <div>
                 <span class="text-gray-500 block">TTFB</span
-                >{{ lastSpeed.ttfb.toFixed(0) }} ms
+                >{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms
               </div>
               <div>
                 <span class="text-gray-500 block">DOM</span
-                >{{ lastSpeed.domContentLoaded.toFixed(0) }} ms
+                >{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms
               </div>
               <div>
                 <span class="text-gray-500 block">Size</span
-                >{{ (lastSpeed.pageSize / 1024).toFixed(0) }} KB
+                >{{ ((lastSpeed?.pageSize ?? 0) / 1024).toFixed(0) }} KB
               </div>
               <div>
                 <span class="text-gray-500 block">Req</span
-                >{{ lastSpeed.requestCount }}
+                >{{ lastSpeed?.requestCount }}
               </div>
             </div>
           </div>

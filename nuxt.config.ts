@@ -3,6 +3,8 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
+  devtools: { enabled: false },
+
   modules: ["@nuxt/ui", "@nuxtjs/tailwindcss", "@vueuse/nuxt", "@pinia/nuxt"],
 
   colorMode: {

@@ -1,17 +1,17 @@
 import { getCertificateInfo } from "sslko";
 
-export interface SSLInfo {
+export interface SSLInfoInterface {
   domain: string;
   valid: boolean;
   expired: boolean;
   daysLeft: number;
   validFrom: Date;
   validTo: Date;
-  issuer?: string | string[];
+  issuer?: string;
   error?: string;
 }
 
-export async function checkSSL(domain: string): Promise<SSLInfo> {
+export async function checkSSL(domain: string): Promise<SSLInfoInterface> {
   try {
     // Clean URL from protocol and paths
     const hostname = domain.replace(/^https?:\/\//, "").split("/")?.[0] ?? "";
@@ -25,7 +25,7 @@ export async function checkSSL(domain: string): Promise<SSLInfo> {
       daysLeft: certInfo.daysLeft,
       validFrom: new Date(certInfo.validFromDate),
       validTo: new Date(certInfo.validToDate),
-      issuer: certInfo.issuer?.O,
+      issuer: certInfo.issuer?.O?.toString(),
       error: certInfo.errors?.join(", "),
     };
   } catch (error: any) {

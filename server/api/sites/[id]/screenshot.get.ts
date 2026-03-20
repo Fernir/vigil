@@ -1,14 +1,13 @@
-import { useDB, dbAll } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 
 export default defineEventHandler(async (event) => {
-  const db = useDB();
   const id = parseInt(event.context.params?.id || "0");
 
-  const results = await dbAll<any>(
-    db,
-    "SELECT id, siteId, image_data, width, height, checked_at FROM screenshots WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1",
-    [id],
-  );
+  const results = await prisma.screenshots.findMany({
+    where: { siteId: id },
+    orderBy: { checked_at: "desc" },
+    take: 1,
+  });
 
   const screenshot = results[0];
   if (!screenshot) return null;
@@ -17,7 +16,7 @@ export default defineEventHandler(async (event) => {
   return {
     id: screenshot.id,
     siteId: screenshot.siteId,
-    image_base64: screenshot.image_data.toString("base64"),
+    image_base64: screenshot?.image_data?.toString?.("base64"),
     width: screenshot.width,
     height: screenshot.height,
     checked_at: screenshot.checked_at,

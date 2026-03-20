@@ -1,4 +1,4 @@
-import { useDB, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { checkAdmin } from "~~/server/utils/checkAdmin";
 import { z } from "zod";
 
@@ -18,22 +18,18 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const validated = createSchema.parse(body);
 
-  const db = useDB();
-  const result = await dbRun(
-    db,
-    `INSERT INTO sites (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    [
-      validated.name,
-      validated.url,
-      validated.checkInterval,
-      validated.isActive ? 1 : 0,
-      validated.userId,
-      validated.check_type,
-      validated.expected_text || null,
-      validated.text_condition,
-    ],
-  );
+  const result = await prisma.sites.create({
+    data: {
+      name: validated.name,
+      url: validated.url,
+      checkInterval: validated.checkInterval,
+      isActive: validated.isActive,
+      userId: validated.userId,
+      check_type: validated.check_type,
+      expected_text: validated.expected_text || null,
+      text_condition: validated.text_condition,
+    },
+  });
 
-  return { id: result.lastID, ...validated };
+  return { id: result.id, ...validated };
 });

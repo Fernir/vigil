@@ -1,15 +1,15 @@
-import { useDB, dbGet } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 
 export async function checkAdmin(event: any) {
   const userId = event.context.auth?.userId;
+
   if (!userId) throw createError({ statusCode: 401, message: "Unauthorized" });
 
-  const db = useDB();
-  const user = await dbGet<{ is_admin: boolean }>(
-    db,
-    "SELECT is_admin FROM users WHERE id = ?",
-    [userId],
-  );
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { is_admin: true },
+  });
+
   if (!user?.is_admin)
     throw createError({ statusCode: 403, message: "Admin access required" });
 }

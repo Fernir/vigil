@@ -1,89 +1,52 @@
 <script setup lang="ts">
-import type { SiteInterface } from "~~/server/utils/db";
-import { ref } from "vue";
+import type { CheckResultInterface, SiteInterface } from "~~/types";
 
-const props = defineProps<{
-  site: SiteInterface;
-  detailed?: boolean;
-}>();
-
+const props = defineProps<{ site: SiteInterface }>();
 const siteId = Number(props.site.id);
+const lastCheck = ref<CheckResultInterface>();
 
-const { loggedIn } = useUserSession();
-const { fetchSiteHistory } = useMonitoring();
-const { uptimePercentage, avgResponseTime } = useSiteMetrics(siteId);
+const handleSSEUpdate = (ev: Event) => {
+  const { detail } = ev as CustomEvent;
 
-const emit = defineEmits<{
-  (e: "delete", id: number): void;
-}>();
-
-const status = computed(() => props.site?.lastCheck?.status || "pending");
-
-const statusColor = computed(() => {
-  switch (status.value) {
-    case "up":
-      return "text-green-600 dark:text-green-400";
-    case "down":
-      return "text-red-600 dark:text-red-400";
-    case "degraded":
-      return "text-yellow-600 dark:text-yellow-400";
-    default:
-      return "text-gray-600 dark:text-gray-400";
-  }
-});
-
-const lastChecked = computed(() => {
-  if (!props?.site?.lastCheck?.checked_at) return "Never";
-  try {
-    return new Date(props.site.lastCheck.checked_at).toLocaleString();
-  } catch {
-    return "Invalid date";
-  }
-});
-
-const handleCardClick = () => {
-  if (props.detailed) {
-    navigateTo(`/sites/${props.site.id}`);
+  if (detail.siteId === siteId && detail.type === "http") {
+    lastCheck.value = detail;
   }
 };
 
 onMounted(() => {
-  if (loggedIn.value) {
-    fetchSiteHistory(props.site.id);
-  }
+  window.addEventListener("monitoring-update", handleSSEUpdate);
 });
+
+onUnmounted(() => {
+  window.removeEventListener("monitoring-update", handleSSEUpdate);
+});
+
+const lastResult = computed(
+  () => lastCheck.value || props.site.lastCheck || null,
+);
 </script>
 
 <template>
   <div
-    class="card p-4 hover:shadow-md transition-all duration-200 relative group"
-    :class="{ 'cursor-pointer hover:scale-[1.02]': detailed }"
-    @click="handleCardClick"
+    class="card px-4 py-2 hover:shadow-md transition-all cursor-pointer hover:translate-x-[-4px] text-sm flex items-center justify-between"
+    @click="navigateTo(`/sites/${siteId}`)"
   >
-    <div class="flex flex-col gap-3">
-      <!-- Верхняя строка: название, тип, статус -->
-      <div class="flex items-center gap-2 flex-wrap">
-        <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-          {{ site.name }}
-        </h3>
-        <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded">
-          {{ site.check_type === "text" ? "Text" : "HTTP" }}
-        </span>
-        <StatusBadge :status="status" />
-        <span
-          v-if="!site.isActive"
-          class="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded"
-        >
-          Paused
-        </span>
-      </div>
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="font-semibold">{{ site.name }}</span>
+      <span class="text-[10px] bg-black text-white px-1.5 rounded">{{
+        site.check_type === "text" ? "Text" : "HTTP"
+      }}</span>
+      <StatusBadge :status="lastResult?.status ?? 'pending'" size="sm" />
+      <span
+        v-if="!site.isActive"
+        class="text-[10px] bg-gray-100 text-gray-600 px-1.5 rounded"
+        >Paused</span
+      >
 
-      <!-- Строка с URL -->
       <a
         :href="site.url"
         target="_blank"
-        rel="noopener noreferrer"
-        class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 w-fit"
+        class="text-gray-500 hover:text-primary-600 flex items-center gap-0.5"
         @click.stop
       >
         {{ site.url }}
@@ -92,46 +55,32 @@ onMounted(() => {
           class="w-3 h-3"
         />
       </a>
+    </div>
 
-      <!-- Метрики в одну строку -->
-      <div class="flex items-center gap-6 text-sm mt-1 flex-wrap">
-        <div class="flex items-center gap-1">
-          <span class="text-gray-500 dark:text-gray-400">Uptime:</span>
-          <span class="font-medium" :class="statusColor"
-            >{{ uptimePercentage }}%</span
-          >
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="text-gray-500 dark:text-gray-400">Avg:</span>
-          <span class="font-medium">{{ avgResponseTime }}ms</span>
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="text-gray-500 dark:text-gray-400">Last:</span>
-          <span class="font-medium">{{ lastChecked }}</span>
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="text-gray-500 dark:text-gray-400">Interval:</span>
-          <span class="font-medium">{{ site.checkInterval }} min</span>
-        </div>
-        <div
-          v-if="props.site?.lastCheck?.statusCode"
-          class="flex items-center gap-1"
-        >
-          <span class="text-gray-500 dark:text-gray-400">Code:</span>
-          <span class="font-medium">{{ props.site.lastCheck.statusCode }}</span>
-        </div>
-        <div
-          v-if="props.site?.lastCheck?.errorMessage"
-          class="flex items-center gap-1"
-        >
-          <span
-            class="text-red-500 text-xs truncate max-w-[200px]"
-            :title="props.site.lastCheck.errorMessage"
-          >
-            Error: {{ props.site.lastCheck.errorMessage }}
-          </span>
-        </div>
-      </div>
+    <div class="flex items-center gap-4 flex-shrink-0">
+      <span class="flex items-center gap-1">
+        <span class="text-gray-500">Last:</span>
+        <span class="font-medium">{{
+          lastResult?.checked_at
+            ? new Date(lastResult.checked_at).toLocaleString()
+            : "Never"
+        }}</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="text-gray-500">Int:</span>
+        <span class="font-medium">{{ site.checkInterval }} sec</span>
+      </span>
+      <span v-if="lastResult?.statusCode" class="flex items-center gap-1">
+        <span class="text-gray-500">Code:</span>
+        <span class="font-medium">{{ lastResult.statusCode }}</span>
+      </span>
+      <span
+        v-if="lastResult?.errorMessage"
+        class="text-red-500 text-xs truncate max-w-[180px]"
+        :title="lastResult.errorMessage"
+      >
+        {{ lastResult.errorMessage }}
+      </span>
     </div>
   </div>
 </template>

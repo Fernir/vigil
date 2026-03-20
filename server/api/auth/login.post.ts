@@ -1,4 +1,4 @@
-import { useDB, dbGet } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -13,11 +13,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     const validated = loginSchema.parse(body);
-    const db = useDB();
 
-    const user = await dbGet<any>(db, "SELECT * FROM users WHERE email = ?", [
-      validated.email,
-    ]);
+    const user = await prisma.users.findUnique({
+      where: { email: validated.email },
+    });
 
     if (!user) {
       throw createError({

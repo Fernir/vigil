@@ -1,7 +1,6 @@
-import { useDB, dbGet, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 
 export default defineEventHandler(async (event) => {
-  const db = useDB();
   const id = parseInt(event.context.params?.id || "0");
 
   if (!id) {
@@ -14,16 +13,19 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check existence of the site and its owner
-  const site = await dbGet<any>(db, "SELECT * FROM sites WHERE id = ?", [id]);
+  const site = await prisma.sites.findUnique({
+    where: { id: id },
+  });
 
   if (!site) {
     throw createError({ statusCode: 404, message: "Site not found" });
   }
 
   // Check permissions: either owner or admin can delete
-  const user = await dbGet<any>(db, "SELECT is_admin FROM users WHERE id = ?", [
-    userId,
-  ]);
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { is_admin: true },
+  });
 
   if (site.userId !== userId && !user?.is_admin) {
     throw createError({
@@ -33,7 +35,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Delete site (screenshots will be deleted cascaded in DB)
-  await dbRun(db, "DELETE FROM sites WHERE id = ?", [id]);
+  await prisma.sites.delete({
+    where: { id: id },
+  });
 
   return { success: true };
 });

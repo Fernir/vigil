@@ -35,13 +35,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     };
 
     // Connect to DB and check if user is admin
-    const { useDB, dbGet } = await import("~~/server/utils/db");
-    const db = useDB();
-    const user = await dbGet<{ is_admin: boolean }>(
-      db,
-      "SELECT is_admin FROM users WHERE id = ?",
-      [decoded.userId],
-    );
+    const prisma = (await import("~~/server/utils/prisma")).default;
+
+    const user = await prisma.users.findUnique({
+      where: { id: decoded.userId },
+      select: { is_admin: true },
+    });
 
     if (!user?.is_admin) {
       return navigateTo("/");

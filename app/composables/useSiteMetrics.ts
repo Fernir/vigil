@@ -3,10 +3,8 @@ import { useMonitoring } from "./useMonitoring";
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {
   const idRef = toRef(siteId);
 
-  // Подключаемся к monitoring, чтобы получать обновления в реальном времени
   const { results } = useMonitoring();
 
-  // Метрики на основе истории проверок - теперь они реактивно обновляются при изменении results
   const uptimePercentage = computed(() => {
     const data = results.value[idRef.value] || [];
     if (!data.length) return "0";

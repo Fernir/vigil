@@ -1,97 +1,80 @@
-import { useDB, dbRun, dbAll } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { checkSite } from "~~/server/utils/httpChecker";
 import { checkSSL } from "~~/server/utils/sslChecker";
-import { checkSpeed } from "~~/server/utils/speedChecker";
-import { takeScreenshot } from "~~/server/utils/screenshot";
+import { checkSiteUnified } from "~~/server/utils/puppeeterChecks";
 import { broadcastCheckResult } from "~~/server/api/sse";
 import { sendWebhook } from "~~/server/utils/webhook";
 
 let isRunning = false;
+const RETENTION_LIMIT = 20;
 
 export default defineNitroPlugin(() => {
-  console.log(
-    "monitoring running (check every minute, with 5 seconds delay on startup)",
-  );
+  console.log("[Monitoring] Unified monitor started (check every minute)");
 
   const runUnifiedMonitor = async () => {
     if (isRunning) return;
     isRunning = true;
 
     try {
-      const db = useDB();
-
-      // Get all active sites with user data
-      const sites = await dbAll<any>(
-        db,
-        `SELECT s.*, u.webhook_url 
-         FROM sites s
-         LEFT JOIN users u ON s.userId = u.id
-         WHERE s.isActive = 1`,
-      );
+      const sites = await prisma.sites.findMany({
+        where: { isActive: true },
+        include: {
+          users: {
+            select: { webhook_url: true },
+          },
+        },
+      });
 
       if (sites.length === 0) {
-        console.log("Нет активных сайтов для мониторинга");
+        console.log("[Monitoring] No active sites to monitor");
         isRunning = false;
         return;
       }
 
       for (const site of sites) {
+        console.log(`[Monitoring] Checking ${site.name} (${site.url})...`);
+
         try {
-          // 1. Main HTTP/Text check
           const httpResult = await checkSite(
             site.url,
             site.expected_text,
             site.text_condition || "contains",
           );
 
-          // Get previous status for comparison
-          const prevResults = await dbAll<any>(
-            db,
-            `SELECT status FROM check_results 
-             WHERE siteId = ? 
-             ORDER BY checked_at DESC LIMIT 1`,
-            [site.id],
-          );
-          const prevStatus = prevResults[0]?.status;
+          const prevResult = await prisma.check_results.findFirst({
+            where: { siteId: site.id },
+            orderBy: { checked_at: "desc" },
+          });
+          const prevStatus = prevResult?.status;
 
-          // Save result
-          const savedHttp = await dbRun(
-            db,
-            `INSERT INTO check_results (siteId, status, responseTime, statusCode, errorMessage, checked_at)
-             VALUES (?, ?, ?, ?, ?, datetime('now'))`,
-            [
-              site.id,
-              httpResult.status,
-              httpResult.responseTime,
-              httpResult.statusCode || null,
-              httpResult.errorMessage || null,
-            ],
+          const httpRecord = await prisma.check_results.create({
+            data: {
+              siteId: site.id,
+              status: httpResult.status,
+              responseTime: httpResult.responseTime,
+              statusCode: httpResult.statusCode,
+              errorMessage: httpResult.errorMessage,
+              checked_at: new Date(),
+            },
+          });
+
+          console.log(
+            `  HTTP: ${httpResult.status} (${httpResult.responseTime}ms)`,
           );
 
-          // Get the full record for SSE
-          const httpRecord = await dbAll<any>(
-            db,
-            `SELECT * FROM check_results WHERE id = ?`,
-            [savedHttp.lastID],
-          );
+          broadcastCheckResult({
+            type: "http",
+            ...httpRecord,
+            siteName: site.name,
+            siteUrl: site.url,
+          });
 
-          // Send via SSE
-          if (httpRecord[0]) {
-            broadcastCheckResult({
-              type: "http",
-              ...httpRecord[0],
-              siteName: site.name,
-              siteUrl: site.url,
-            });
-          }
-
-          // Notifications about downtime/recovery
           if (
             httpResult.status === "down" &&
             prevStatus !== "down" &&
-            site.webhook_url
+            site.users?.webhook_url
           ) {
-            await sendWebhook(site.webhook_url, {
+            await sendWebhook(site.users.webhook_url, {
               event: "down",
               site: { id: site.id, name: site.name, url: site.url },
               status: httpResult.status,
@@ -105,9 +88,9 @@ export default defineNitroPlugin(() => {
           if (
             (httpResult.status === "up" || httpResult.status === "degraded") &&
             prevStatus === "down" &&
-            site.webhook_url
+            site.users?.webhook_url
           ) {
-            await sendWebhook(site.webhook_url, {
+            await sendWebhook(site.users.webhook_url, {
               event: "up",
               site: { id: site.id, name: site.name, url: site.url },
               status: httpResult.status,
@@ -117,44 +100,33 @@ export default defineNitroPlugin(() => {
             });
           }
 
-          // 2. SSL check (every time, can be optimized to run less frequently if needed)
+          // 2. SSL check
           try {
             const sslInfo = await checkSSL(site.url);
 
-            const savedSSL = await dbRun(
-              db,
-              `INSERT INTO ssl_results 
-               (siteId, valid, expired, daysLeft, validFrom, validTo, issuer, error, checked_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-              [
-                site.id,
-                sslInfo.valid ? 1 : 0,
-                sslInfo.expired ? 1 : 0,
-                sslInfo.daysLeft,
-                sslInfo.validFrom.toISOString(),
-                sslInfo.validTo.toISOString(),
-                sslInfo.issuer || null,
-                sslInfo.error || null,
-              ],
-            );
+            const sslRecord = await prisma.ssl_results.create({
+              data: {
+                siteId: site.id,
+                valid: sslInfo.valid,
+                expired: sslInfo.expired,
+                daysLeft: sslInfo.daysLeft,
+                validFrom: sslInfo.validFrom,
+                validTo: sslInfo.validTo,
+                issuer: sslInfo.issuer,
+                error: sslInfo.error,
+                checked_at: new Date(),
+              },
+            });
 
-            const sslRecord = await dbAll<any>(
-              db,
-              `SELECT * FROM ssl_results WHERE id = ?`,
-              [savedSSL.lastID],
-            );
+            broadcastCheckResult({
+              type: "ssl",
+              ...sslRecord,
+              siteName: site.name,
+              siteUrl: site.url,
+            });
 
-            if (sslRecord[0]) {
-              broadcastCheckResult({
-                type: "ssl",
-                ...sslRecord[0],
-                siteName: site.name,
-                siteUrl: site.url,
-              });
-            }
-
-            if (sslInfo.daysLeft <= 14 && site.webhook_url) {
-              await sendWebhook(site.webhook_url, {
+            if (sslInfo.daysLeft <= 14 && site.users?.webhook_url) {
+              await sendWebhook(site.users.webhook_url, {
                 event: "ssl_warning",
                 site: { id: site.id, name: site.name, url: site.url },
                 daysLeft: sslInfo.daysLeft,
@@ -162,156 +134,155 @@ export default defineNitroPlugin(() => {
                 timestamp: new Date().toISOString(),
               });
             }
+
+            console.log(`  SSL: ${sslInfo.daysLeft} days left`);
           } catch (error) {
-            console.error(`SSL error:`, error);
+            console.error(`  SSL error:`, error);
           }
 
-          // 3. Speed check (every time, can be optimized to run less frequently if needed)
+          // 3. Unified browser check (speed + screenshot)
           try {
-            const speedResult = await checkSpeed(site.url);
-
-            const savedSpeed = await dbRun(
-              db,
-              `INSERT INTO speed_results (siteId, loadTime, ttfb, domContentLoaded, pageSize, requestCount, error, checked_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-              [
-                site.id,
-                speedResult.loadTime,
-                speedResult.ttfb,
-                speedResult.domContentLoaded,
-                speedResult.pageSize,
-                speedResult.requestCount,
-                speedResult.error || null,
-              ],
-            );
-
-            const speedRecord = await dbAll<any>(
-              db,
-              `SELECT * FROM speed_results WHERE id = ?`,
-              [savedSpeed.lastID],
-            );
-
-            if (speedRecord[0]) {
-              broadcastCheckResult({
-                type: "speed",
-                ...speedRecord[0],
-                siteName: site.name,
-                siteUrl: site.url,
-              });
-            }
-          } catch (error) {
-            console.error(`Speed error:`, error);
-          }
-
-          // 4. Screenshot (every time, can be optimized to run less frequently if needed)
-          try {
-            // Удаляем старый скриншот
-            await dbRun(db, "DELETE FROM screenshots WHERE siteId = ?", [
-              site.id,
-            ]);
-
-            const screenshotResult = await takeScreenshot(site.url, {
+            const unifiedResult = await checkSiteUnified(site.url, {
               viewportWidth: 1280,
               viewportHeight: 800,
               fullPage: true,
+              timeout: 30000,
             });
 
-            if (screenshotResult) {
-              const savedScreenshot = await dbRun(
-                db,
-                `INSERT INTO screenshots (siteId, image_data, width, height, checked_at)
-                 VALUES (?, ?, ?, ?, datetime('now'))`,
-                [
-                  site.id,
-                  screenshotResult.imageBuffer,
-                  screenshotResult.width,
-                  screenshotResult.height,
-                ],
+            if (unifiedResult && !unifiedResult.error) {
+              const speedRecord = await prisma.speed_results.create({
+                data: {
+                  siteId: site.id,
+                  loadTime: unifiedResult.loadTime,
+                  ttfb: unifiedResult.ttfb,
+                  domContentLoaded: unifiedResult.domContentLoaded,
+                  pageSize: unifiedResult.pageSize,
+                  requestCount: unifiedResult.requestCount,
+                  checked_at: new Date(),
+                },
+              });
+
+              broadcastCheckResult({
+                type: "speed",
+                ...speedRecord,
+                siteName: site.name,
+                siteUrl: site.url,
+              });
+
+              console.log(
+                `  Speed: ${unifiedResult.loadTime}ms, Size: ${unifiedResult.pageSize}KB`,
               );
 
-              const screenshotRecord = await dbAll<any>(
-                db,
-                `SELECT id, siteId, width, height, checked_at FROM screenshots WHERE id = ?`,
-                [savedScreenshot.lastID],
-              );
+              await prisma.screenshots.deleteMany({
+                where: { siteId: site.id },
+              });
 
-              if (screenshotRecord[0]) {
-                broadcastCheckResult({
-                  type: "screenshot",
-                  ...screenshotRecord[0],
-                  siteName: site.name,
-                  siteUrl: site.url,
-                });
-              }
+              const screenshotRecord = await prisma.screenshots.create({
+                data: {
+                  siteId: site.id,
+                  image_data: unifiedResult.screenshotBuffer,
+                  width: unifiedResult.width,
+                  height: unifiedResult.height,
+                  checked_at: new Date(),
+                },
+              });
+
+              broadcastCheckResult({
+                type: "screenshot",
+                id: screenshotRecord.id,
+                siteId: screenshotRecord.siteId,
+                width: screenshotRecord.width,
+                height: screenshotRecord.height,
+                checked_at: screenshotRecord.checked_at,
+                siteName: site.name,
+                siteUrl: site.url,
+              });
+
+              console.log(
+                `  Screenshot: ${unifiedResult.width}x${unifiedResult.height}`,
+              );
+            } else {
+              console.log(
+                `  Unified check failed: ${unifiedResult?.error || "Unknown error"}`,
+              );
             }
           } catch (error) {
-            console.error(`Screenshot error:`, error);
+            console.error(`  Unified check error:`, error);
           }
         } catch (error) {
           console.error(`Error processing site ${site.url}:`, error);
         }
       }
 
-      // History cleanup (save the last N records for each site)
-      console.log("Cleaning old records...");
-      const retentionLimit = 20; // we can save the last N records for each site (can be configured)
+      // Cleanup old records
+      console.log("[Monitoring] Cleaning old records...");
 
-      const allSites = await dbAll<any>(
-        db,
-        "SELECT id FROM sites WHERE isActive = 1",
-      );
+      const allSites = await prisma.sites.findMany({
+        where: { isActive: true },
+        select: { id: true },
+      });
 
       for (const site of allSites) {
-        // Cleanup check_results
-        const rows = await dbAll<{ id: number }>(
-          db,
-          `SELECT id FROM check_results WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1 OFFSET ${retentionLimit - 1}`,
-          [site.id],
-        );
-        if (rows[0]) {
-          await dbRun(
-            db,
-            `DELETE FROM check_results WHERE siteId = ? AND id < ?`,
-            [site.id, rows[0].id],
-          );
+        const row = await prisma.check_results.findFirst({
+          where: { siteId: site.id },
+          orderBy: { checked_at: "desc" },
+          skip: RETENTION_LIMIT - 1,
+          take: 1,
+          select: { id: true },
+        });
+
+        if (row) {
+          await prisma.check_results.deleteMany({
+            where: {
+              siteId: site.id,
+              id: { lt: row.id },
+            },
+          });
         }
 
-        // Cleanup speed_results
-        const speedRows = await dbAll<{ id: number }>(
-          db,
-          `SELECT id FROM speed_results WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1 OFFSET ${retentionLimit - 1}`,
-          [site.id],
-        );
-        if (speedRows[0]) {
-          await dbRun(
-            db,
-            `DELETE FROM speed_results WHERE siteId = ? AND id < ?`,
-            [site.id, speedRows[0].id],
-          );
+        const speedRow = await prisma.speed_results.findFirst({
+          where: { siteId: site.id },
+          orderBy: { checked_at: "desc" },
+          skip: RETENTION_LIMIT - 1,
+          take: 1,
+          select: { id: true },
+        });
+
+        if (speedRow) {
+          await prisma.speed_results.deleteMany({
+            where: {
+              siteId: site.id,
+              id: { lt: speedRow.id },
+            },
+          });
         }
 
-        // Cleanup ssl_results
-        const sslRows = await dbAll<{ id: number }>(
-          db,
-          `SELECT id FROM ssl_results WHERE siteId = ? ORDER BY checked_at DESC LIMIT 1 OFFSET ${retentionLimit - 1}`,
-          [site.id],
-        );
-        if (sslRows[0]) {
-          await dbRun(
-            db,
-            `DELETE FROM ssl_results WHERE siteId = ? AND id < ?`,
-            [site.id, sslRows[0].id],
-          );
+        const sslRow = await prisma.ssl_results.findFirst({
+          where: { siteId: site.id },
+          orderBy: { checked_at: "desc" },
+          skip: RETENTION_LIMIT - 1,
+          take: 1,
+          select: { id: true },
+        });
+
+        if (sslRow) {
+          await prisma.ssl_results.deleteMany({
+            where: {
+              siteId: site.id,
+              id: { lt: sslRow.id },
+            },
+          });
         }
       }
+
+      console.log("[Monitoring] Unified monitoring cycle completed");
     } catch (error) {
-      console.error("Error in monitoring:", error);
+      console.error("[Monitoring] Error in unified monitor:", error);
     } finally {
       isRunning = false;
     }
   };
 
-  // Call the function immediately and then every minute
-  setTimeout(runUnifiedMonitor, 5000);
-  setInterval(runUnifiedMonitor, 60 * 1000);
+  setTimeout(runUnifiedMonitor, 5_000);
+  setInterval(runUnifiedMonitor, 30_000);
 });

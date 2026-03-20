@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { SiteInterface } from "~~/types";
+
 definePageMeta({
   middleware: "auth",
 });
@@ -10,13 +12,18 @@ useHead({
 const router = useRouter();
 const { addSite, loading } = useSites();
 
-const form = reactive({
-  name: "",
-  url: "",
-  check_type: "text",
+const form = reactive<
+  Omit<
+    SiteInterface,
+    "id" | "userId" | "created_at" | "updated_at" | "isActive"
+  >
+>({
+  name: "google.com (Example)",
+  url: "https://www.google.com",
+  check_type: "http",
   expected_text: "",
   text_condition: "contains",
-  checkInterval: 5,
+  checkInterval: 30,
 });
 
 const errors = ref<Record<string, string>>({});
@@ -32,8 +39,8 @@ const validate = () => {
   if (form.check_type === "text" && !form.expected_text) {
     newErrors.expected_text = "Expected text is required for text check";
   }
-  if (form.checkInterval < 1 || form.checkInterval > 60) {
-    newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
+  if (form.checkInterval < 30 || form.checkInterval > 3600) {
+    newErrors.checkInterval = "Interval must be between 30 and 3600 seconds";
   }
 
   errors.value = newErrors;
@@ -108,20 +115,20 @@ const handleSubmit = async () => {
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Check Interval (minutes)
+              Check Interval (seconds)
             </label>
             <UInput
               v-model="form.checkInterval"
               type="number"
-              min="1"
-              max="60"
+              min="30"
+              max="3600"
               :error="errors.checkInterval"
             />
             <p v-if="errors.checkInterval" class="mt-1 text-sm text-error-600">
               {{ errors.checkInterval }}
             </p>
             <p class="mt-1 text-xs text-gray-500">
-              How often to check this site (1-60 minutes)
+              How often to check this site (30-3600 seconds)
             </p>
           </div>
 

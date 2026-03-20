@@ -1,10 +1,10 @@
-import { useDB, dbRun } from "~~/server/utils/db";
+import prisma from "~~/lib/prisma";
 import { z } from "zod";
 
-const createSchema = z.object({
+export const siteSchema = z.object({
   name: z.string().min(1).max(100),
   url: z.string().url(),
-  checkInterval: z.number().min(1).max(60).default(5),
+  checkInterval: z.number().min(30).max(3600).default(60), // 30 sec to 1 hour
   isActive: z.boolean().default(true),
   check_type: z.enum(["http", "text"]).default("http"),
   expected_text: z.string().optional().nullable(),
@@ -12,7 +12,6 @@ const createSchema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  const db = useDB();
   const body = await readBody(event);
 
   try {
@@ -21,45 +20,41 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, message: "Unauthorized" });
     }
 
-    // Проверка лимита
-    const siteCount = await dbGet<{ count: number }>(
-      db,
-      "SELECT COUNT(*) as count FROM sites WHERE userId = ?",
-      [auth.userId],
-    );
+    // Check site limit
+    const siteCount = await prisma.sites.count({
+      where: { userId: auth.userId },
+    });
 
-    const user = await dbGet<{ max_sites: number }>(
-      db,
-      "SELECT max_sites FROM users WHERE id = ?",
-      [auth.userId],
-    );
+    const user = await prisma.users.findUnique({
+      where: { id: auth.userId },
+      select: { max_sites: true },
+    });
 
-    if (Number(siteCount?.count) >= (user?.max_sites || 4)) {
+    if (siteCount >= (user?.max_sites || 4)) {
       throw createError({
         statusCode: 403,
         message: `You have reached your site limit (${user?.max_sites || 4})`,
       });
     }
 
-    const validated = createSchema.parse(body);
+    const validated = siteSchema.parse(body);
 
-    const result = await dbRun(
-      db,
-      `INSERT INTO sites (name, url, checkInterval, isActive, userId, check_type, expected_text, text_condition, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-      [
-        validated.name,
-        validated.url,
-        validated.checkInterval,
-        validated.isActive ? 1 : 0,
-        auth.userId,
-        validated.check_type,
-        validated.expected_text || null,
-        validated.text_condition,
-      ],
-    );
+    const newSite = await prisma.sites.create({
+      data: {
+        name: validated.name,
+        url: validated.url,
+        checkInterval: validated.checkInterval,
+        isActive: validated.isActive,
+        userId: auth.userId,
+        check_type: validated.check_type,
+        expected_text: validated.expected_text,
+        text_condition: validated.text_condition,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
 
-    return { id: result.lastID, ...validated, userId: auth.userId };
+    return newSite;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw createError({
