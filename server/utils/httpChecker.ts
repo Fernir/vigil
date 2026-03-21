@@ -38,10 +38,8 @@ export async function checkSite(
       const text = await response.text();
 
       const textExists = text.includes(expectedText);
-      if (
-        (condition === "contains" && !textExists) ||
-        (condition === "not_contains" && textExists)
-      ) {
+      const conditionMet = condition === "contains" ? textExists : !textExists;
+      if (!conditionMet) {
         status = "degraded";
         return {
           status,

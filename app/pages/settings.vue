@@ -1,7 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: "auth",
-  ssr: false, // disable SSR for this page to avoid hydration issues with user data
 });
 
 useHead({ title: "Settings" });

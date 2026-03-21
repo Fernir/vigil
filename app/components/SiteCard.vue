@@ -1,29 +1,19 @@
 <script setup lang="ts">
-import type { CheckResultInterface, SiteInterface } from "~~/types";
+import type { SiteInterface } from "~~/types";
 
 const props = defineProps<{ site: SiteInterface }>();
 const siteId = Number(props.site.id);
-const lastCheck = ref<CheckResultInterface>();
 
-const handleSSEUpdate = (ev: Event) => {
-  const { detail } = ev as CustomEvent;
-
-  if (detail.siteId === siteId && detail.type === "http") {
-    lastCheck.value = detail;
-  }
-};
-
-onMounted(() => {
-  window.addEventListener("monitoring-update", handleSSEUpdate);
+const faviconUrl = computed(() => {
+  const domain = new URL(props.site.url).hostname;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 });
 
-onUnmounted(() => {
-  window.removeEventListener("monitoring-update", handleSSEUpdate);
-});
+const { results } = useMonitoring();
 
-const lastResult = computed(
-  () => lastCheck.value || props.site.lastCheck || null,
-);
+const lastResult = computed(() => {
+  return results.value[siteId]?.[0] || props.site.lastCheck || null;
+});
 </script>
 
 <template>
@@ -32,6 +22,12 @@ const lastResult = computed(
     @click="navigateTo(`/sites/${siteId}`)"
   >
     <div class="flex items-center gap-3 flex-wrap">
+      <img
+        :src="faviconUrl"
+        :alt="site.name"
+        class="w-5 h-5 rounded"
+        @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+      />
       <span class="font-semibold">{{ site.name }}</span>
       <span class="text-[10px] bg-black text-white px-1.5 rounded">{{
         site.check_type === "text" ? "Text" : "HTTP"

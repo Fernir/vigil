@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Line } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
 } from "chart.js";
 
 ChartJS.register(
@@ -23,28 +24,58 @@ ChartJS.register(
   Filler,
 );
 
-const props = defineProps({
-  data: Array,
-});
+const props = defineProps<{
+  id: number;
+  height?: number;
+}>();
+
+const siteId = Number(props.id);
+
+const { speedResults } = useMonitoring();
+
+const data = computed(() =>
+  (speedResults.value[siteId] || []).slice().reverse(),
+);
+
+const defaultSettings = {
+  borderWidth: 2,
+  pointRadius: 4,
+  pointHoverRadius: 6,
+  pointBorderColor: "transparent",
+  tension: 0.3,
+  fill: true,
+};
 
 const chartData = computed(() => ({
-  labels: props.data.map((d) => {
-    const date = new Date(d.checked_at);
+  labels: data.value.map((d) => {
+    const date = new Date(d.checked_at as string);
+
     return `${date.getDate()}.${date.getMonth() + 1}`; // short format "DD.MM"
   }),
   datasets: [
     {
-      label: "Load time (ms)",
-      data: props.data.map((d) => d.loadTime),
-      borderColor: "rgb(14, 165, 233)", // primary-500
+      ...defaultSettings,
+      label: "DOM loading time (ms)",
+      data: data.value.map((d) => d.domContentLoaded ?? 0),
+      borderColor: "rgb(14, 165, 233)",
       backgroundColor: "rgba(14, 165, 233, 0.05)",
-      borderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
       pointBackgroundColor: "rgb(14, 165, 233)",
-      pointBorderColor: "transparent",
-      tension: 0.3,
-      fill: true,
+    },
+    {
+      ...defaultSettings,
+      label: "TTFB (ms)",
+      data: data.value.map((d) => d.ttfb ?? 0),
+      borderColor: "orange",
+      backgroundColor: "rgba(14, 165, 233, 0.05)",
+      pointBackgroundColor: "orange",
+    },
+    {
+      ...defaultSettings,
+      label: "Load time (ms)",
+      data: data.value.map((d) => d.loadTime ?? 0),
+      borderColor: "orangered",
+      backgroundColor: "rgba(14, 165, 233, 0.05)",
+      pointBackgroundColor: "orangered",
     },
   ],
 }));
@@ -53,7 +84,7 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: false },
+    legend: { display: true, position: "bottom" },
     tooltip: {
       backgroundColor: "rgba(0,0,0,0.8)",
       titleColor: "#fff",
@@ -62,7 +93,7 @@ const chartOptions = {
       cornerRadius: 4,
       displayColors: false,
       callbacks: {
-        label: (ctx) => `${ctx.raw} ms`,
+        label: (ctx: { raw: number }) => `${ctx.raw} ms`,
       },
     },
   },
@@ -80,7 +111,7 @@ const chartOptions = {
       beginAtZero: true,
       grid: { color: "rgba(0,0,0,0.05)" },
       ticks: {
-        callback: (val) => `${val}ms`,
+        callback: (val: number) => `${val}ms`,
         color: "#6b7280",
       },
     },
@@ -88,19 +119,11 @@ const chartOptions = {
   elements: {
     line: { borderJoinStyle: "round" },
   },
-};
-
-const chartKey = ref(0);
-watch(
-  () => props.data,
-  () => {
-    chartKey.value += 1;
-  },
-);
+} as ChartOptions<"line">;
 </script>
 
 <template>
-  <div :key="chartKey">
+  <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
     <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
     <div v-else class="h-full flex items-center justify-center text-gray-500">
       No data available

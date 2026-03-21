@@ -24,26 +24,29 @@ ChartJS.register(
   Filler,
 );
 
-const props = defineProps<{
-  data: Array<{ checked_at: string; responseTime: number; status: string }>;
-  height?: number;
-}>();
+const props = defineProps<{ id: number; height?: number }>();
+
+const siteId = Number(props.id);
+
+const { results } = useMonitoring();
+
+const data = computed(() => (results.value[siteId] || []).slice().reverse());
 
 const chartData = computed(() => ({
-  labels: props.data.map((d) => {
+  labels: data.value.map((d) => {
     const date = new Date(d.checked_at);
     return `${date.getDate()}.${date.getMonth() + 1} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`; // short format "DD.MM HH:MM"
   }),
   datasets: [
     {
       label: "Response Time (ms)",
-      data: props.data.map((d) => d.responseTime),
+      data: data.value.map((d) => d.responseTime),
       borderColor: "rgb(14, 165, 233)", // primary-500
       backgroundColor: "rgba(14, 165, 233, 0.05)",
       borderWidth: 2,
       pointRadius: 4,
       pointHoverRadius: 6,
-      pointBackgroundColor: props.data.map((d) =>
+      pointBackgroundColor: data.value.map((d) =>
         d.status === "down"
           ? "#ef4444"
           : d.status === "degraded"
@@ -72,7 +75,7 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
       callbacks: {
         label: (context) => {
           const value = context.raw as number;
-          const status = props.data[context.dataIndex]?.status;
+          const status = data.value[context.dataIndex]?.status;
           return [`${value} ms`, `Status: ${status}`];
         },
       },
@@ -104,24 +107,11 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
     intersect: false,
   },
 }));
-
-const chartKey = ref(0);
-watch(
-  () => props.data,
-  () => {
-    chartKey.value += 1;
-  },
-);
 </script>
 
 <template>
   <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
-    <Line
-      :key="chartKey"
-      v-if="data.length"
-      :data="chartData"
-      :options="chartOptions"
-    />
+    <Line v-if="data.length" :data="chartData" :options="chartOptions" />
     <div
       v-else
       class="h-full flex items-center justify-center text-gray-500 text-sm"

@@ -12,14 +12,13 @@ useHead({ title: "Edit Site" });
 const showModal = ref(false);
 
 const {
+  results,
   getLatestSSL,
   getLatestSpeed,
   getLatestScreenshot,
-  speedResults,
   fetchSpeedHistory,
   fetchSSLHistory,
   fetchScreenshotData,
-  results,
   fetchSiteHistory,
 } = useMonitoring();
 
@@ -103,14 +102,6 @@ const handleSubmit = async () => {
   if (result) router.push("/");
 };
 
-const chartDataUptime = computed(() =>
-  (results.value[siteId] || []).slice().reverse(),
-);
-
-const chartDataSpeedResults = computed(() =>
-  (speedResults.value[siteId] || []).slice().reverse(),
-);
-
 const lastResult = computed(() => results.value[siteId]?.[0] || null);
 </script>
 
@@ -183,18 +174,20 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
                 </div>
               </div>
 
-              <div class="flex gap-2 pt-2">
-                <UButton
-                  type="submit"
-                  color="primary"
-                  :loading="loading"
-                  size="sm"
-                >
-                  Save
-                </UButton>
-                <UButton color="gray" variant="ghost" to="/" size="sm">
-                  Cancel
-                </UButton>
+              <div class="flex gap-2 pt-2 justify-between">
+                <div>
+                  <UButton
+                    type="submit"
+                    color="primary"
+                    :loading="loading"
+                    size="sm"
+                  >
+                    Save
+                  </UButton>
+                  <UButton color="gray" variant="ghost" to="/" size="sm">
+                    Cancel
+                  </UButton>
+                </div>
 
                 <UButton
                   color="red"
@@ -252,7 +245,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <!-- Chart of response times -->
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Response Time History</h3>
-            <UptimeChart :data="chartDataUptime" :height="250" />
+            <UptimeChart :id="siteId" :height="200" />
           </div>
 
           <!-- Last Check -->
@@ -351,9 +344,9 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
 
           <!-- Load Time Trend (if data is available) -->
-          <div class="card p-5" v-if="chartDataSpeedResults?.length > 1">
-            <h3 class="text-md font-semibold mb-3">Load Time Trend</h3>
-            <SpeedChart :data="chartDataSpeedResults" :height="200" />
+          <div class="card p-5">
+            <h3 class="text-md font-semibold mb-3">Speed Trend</h3>
+            <SpeedChart :id="siteId" :height="200" />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import prisma from "~~/lib/prisma";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 

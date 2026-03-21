@@ -5,25 +5,25 @@ import type {
   ScreenshotResultInterface,
 } from "~~/types";
 
+// HTTP results
+const results = ref<Record<number, CheckResultInterface[]>>({});
+const latestResults = ref<Record<number, CheckResultInterface>>({});
+
+// Speed results
+const speedResults = ref<Record<number, SpeedResultInterface[]>>({});
+const latestSpeedResults = ref<Record<number, SpeedResultInterface>>({});
+
+// SSL results
+const sslResults = ref<Record<number, SSLResultInterface[]>>({});
+const latestSSLResults = ref<Record<number, SSLResultInterface>>({});
+
+// Screenshot results
+const screenshotResults = ref<Record<number, ScreenshotResultInterface>>({});
+
+const sseConnected = ref(false);
+const eventSource = ref<EventSource | null>(null);
+
 export const useMonitoring = () => {
-  // HTTP results
-  const results = ref<Record<number, CheckResultInterface[]>>({});
-  const latestResults = ref<Record<number, CheckResultInterface>>({});
-
-  // Speed results
-  const speedResults = ref<Record<number, SpeedResultInterface[]>>({});
-  const latestSpeedResults = ref<Record<number, SpeedResultInterface>>({});
-
-  // SSL results
-  const sslResults = ref<Record<number, SSLResultInterface[]>>({});
-  const latestSSLResults = ref<Record<number, SSLResultInterface>>({});
-
-  // Screenshot results
-  const screenshotResults = ref<Record<number, ScreenshotResultInterface>>({});
-
-  const sseConnected = ref(false);
-  const eventSource = ref<EventSource | null>(null);
-
   const connectToSSE = () => {
     if (process.client && !eventSource.value) {
       try {
@@ -79,13 +79,6 @@ export const useMonitoring = () => {
                 [siteId]: data,
               };
             }
-
-            // Dispatch custom event for components
-            window.dispatchEvent(
-              new CustomEvent("monitoring-update", {
-                detail: data,
-              }),
-            );
           } catch (e) {
             console.error("Failed to parse SSE data", e);
           }
