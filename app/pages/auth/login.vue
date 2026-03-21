@@ -45,6 +45,7 @@ const handleSubmit = async () => {
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Error message -->
       <UAlert
+        data-test="error"
         v-if="error"
         color="red"
         variant="soft"

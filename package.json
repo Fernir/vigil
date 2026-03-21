@@ -16,7 +16,12 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
-    "prisma:pull": "prisma db pull"
+    "prisma:pull": "prisma db pull",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report"
   },
   "dependencies": {
     "@nuxt/ui": "^2.20.0",
@@ -40,6 +45,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.13.4",
     "@types/puppeteer": "^7.0.4",
     "tsx": "^4.19.2",

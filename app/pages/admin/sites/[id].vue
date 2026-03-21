@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { SiteInterface } from "~~/types";
+
 definePageMeta({ middleware: "admin" });
 
 const route = useRoute();
@@ -6,9 +8,11 @@ const router = useRouter();
 const siteId = Number(route.params.id);
 const toast = useToast();
 
-const { data: site, refresh } = await useFetch(`/api/admin/sites/${siteId}`);
+const { data: site } = await useFetch(`/api/admin/sites/${siteId}`);
 
-const form = reactive({
+const form = reactive<
+  Omit<SiteInterface, "id" | "lastCheck" | "updated_at" | "created_at">
+>({
   name: "",
   url: "",
   checkInterval: 5,
@@ -25,7 +29,7 @@ watchEffect(() => {
   if (site.value) {
     form.name = site.value.name;
     form.url = site.value.url;
-    form.checkInterval = site.value.checkInterval;
+    form.checkInterval = site.value.checkInterval ?? 30;
     form.isActive = !!site.value.isActive;
     form.check_type = site.value.check_type || "http";
     form.expected_text = site.value.expected_text || "";
@@ -41,7 +45,7 @@ const validate = () => {
   else if (!form.url.match(/^https?:\/\/.+/)) {
     newErrors.url = "URL must start with http:// or https://";
   }
-  if (form.checkInterval < 1 || form.checkInterval > 60) {
+  if (Number(form?.checkInterval) < 1 || Number(form?.checkInterval) > 60) {
     newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
   }
   if (form.check_type === "text" && !form.expected_text) {
@@ -90,7 +94,7 @@ const save = async () => {
           />
           <UInput
             v-model="form.url"
-            placeholder="https://..."
+            placeholder="https://example.com"
             :error="errors.url"
           />
           <UInput

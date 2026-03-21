@@ -136,7 +136,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               />
               <UInput
                 v-model="form.url"
-                placeholder="https://..."
+                placeholder="https://example.com"
                 :error="errors.url"
               />
               <UInput
@@ -192,7 +192,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
                 >
                   Save
                 </UButton>
-                <UButton color="gray" variant="ghost" to="/dashboard" size="sm">
+                <UButton color="gray" variant="ghost" to="/" size="sm">
                   Cancel
                 </UButton>
 

@@ -8,7 +8,7 @@ export interface CheckResultDataInterface {
 export async function checkSite(
   url: string,
   expectedText?: string | null,
-  condition: "contains" | "not_contains" = "contains",
+  condition: string = "contains",
 ): Promise<CheckResultDataInterface> {
   const startTime = Date.now();
 

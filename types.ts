@@ -16,11 +16,11 @@ export interface SiteInterface {
   name: string;
   url: string;
   checkInterval: number;
-  isActive: boolean;
-  userId?: number;
-  check_type?: "http" | "text";
+  isActive?: boolean;
+  userId?: number | null;
+  check_type?: string;
   expected_text?: string | number | undefined;
-  text_condition?: "contains" | "not_contains";
+  text_condition?: string;
   created_at: string;
   updated_at: string;
   lastCheck?: {

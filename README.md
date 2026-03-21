@@ -42,15 +42,15 @@ yarn db:init
 yarn dev
 ```
 
-Environment Variables
+## Environment Variables
 
 Modify a .env file in the root (see .env.example):
 
 ```
 DATABASE_URL="file:./db/data.sqlite3"
 JWT_SECRET=your-super-secret-key
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=admin@admin.com
+ADMIN_PASSWORD=111111
 ```
 
 Open http://localhost:3000
@@ -96,7 +96,7 @@ yarn db:reset
 yarn prisma:studio
 ```
 
-Built with
+## Built with
 
 - [Nuxt 3](https://nuxt.com/) – Vue framework with SSR
 - [Nuxt UI](https://ui.nuxt.com/) – beautiful components
@@ -110,7 +110,7 @@ Built with
 
 ## Contributing
 
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md).
+We welcome contributions!
 
 ## License
 

@@ -52,3 +52,33 @@ prisma/migrations/*.sqlite-journal
 !prisma/migrations/**/*.sql
 prisma/schema.prisma
 prisma/seed.ts
+
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+test-results/
+test-output/
+*.test-results/
+*.playwright-report/
+
+# Screenshots and videos from failed tests
+**/test-results/**/*.png
+**/test-results/**/*.webm
+**/test-results/**/*.mp4
+**/test-results/**/*.zip
+
+# Playwright trace files
+**/test-results/**/*.trace
+**/test-results/**/*.zip
+
+# Playwright HTML report
+playwright-report/
+**/playwright-report/**/*.html
+**/playwright-report/**/*.css
+**/playwright-report/**/*.js
+
+# Debug logs
+playwright/.cache/
+*.log

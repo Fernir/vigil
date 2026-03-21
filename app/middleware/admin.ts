@@ -1,4 +1,3 @@
-// app/middleware/admin.ts
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const { user, sessionLoaded } = useUserSession();
 
@@ -35,7 +34,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     };
 
     // Connect to DB and check if user is admin
-    const prisma = (await import("~~/server/utils/prisma")).default;
+    const prisma = (await import("~~/lib/prisma")).default;
 
     const user = await prisma.users.findUnique({
       where: { id: decoded.userId },

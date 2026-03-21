@@ -38,7 +38,7 @@ export default defineNitroPlugin(() => {
           const httpResult = await checkSite(
             site.url,
             site.expected_text,
-            site.text_condition || "contains",
+            site.text_condition ?? "contains",
           );
 
           const prevResult = await prisma.check_results.findFirst({

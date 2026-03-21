@@ -53,7 +53,8 @@ const userMenuItems = [
                   color="gray"
                   variant="ghost"
                   icon="heroicons:user-circle-20-solid"
-                />
+                  >Profile</UButton
+                >
               </UDropdown>
             </UTooltip>
 
@@ -64,7 +65,8 @@ const userMenuItems = [
                   variant="ghost"
                   to="/admin"
                   icon="heroicons:shield-check-20-solid"
-                />
+                  >Admin</UButton
+                >
               </UTooltip>
             </template>
           </div>

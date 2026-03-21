@@ -18,8 +18,8 @@ const form = reactive<
     "id" | "userId" | "created_at" | "updated_at" | "isActive"
   >
 >({
-  name: "google.com (Example)",
-  url: "https://www.google.com",
+  name: "",
+  url: "",
   check_type: "http",
   expected_text: "",
   text_condition: "contains",
@@ -85,7 +85,7 @@ const handleSubmit = async () => {
             </label>
             <UInput
               v-model="form.name"
-              placeholder="e.g., My Website, API Server"
+              placeholder="Site Name"
               :error="errors.name"
             />
             <p v-if="errors.name" class="mt-1 text-sm text-error-600">

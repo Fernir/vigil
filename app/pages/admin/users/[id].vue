@@ -115,6 +115,7 @@ const addSite = async () => {
               <div>
                 <label class="block text-sm font-medium mb-2">Max Sites</label>
                 <UInput
+                  placeholder="Max Sites"
                   v-model.number="form.max_sites"
                   type="number"
                   min="1"
@@ -237,7 +238,10 @@ const addSite = async () => {
           </h3>
           <form @submit.prevent="addSite" class="space-y-4">
             <UInput v-model="newSiteForm.name" placeholder="Site name" />
-            <UInput v-model="newSiteForm.url" placeholder="https://..." />
+            <UInput
+              v-model="newSiteForm.url"
+              placeholder="https://example.com"
+            />
             <UInput
               v-model.number="newSiteForm.checkInterval"
               type="number"

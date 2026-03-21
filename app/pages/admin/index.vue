@@ -1,3 +1,4 @@
+<!-- app/pages/admin/index.vue -->
 <script setup lang="ts">
 definePageMeta({
   middleware: "admin",
@@ -5,15 +6,15 @@ definePageMeta({
 
 useHead({ title: "Admin Dashboard" });
 
-const { data: users, refresh } = await useFetch("/api/admin/users");
+const { data: users } = await useFetch("/api/admin/users");
 
-// Состояние сортировки для UTable
-const sort = ref({
+// Sort state with proper types
+const sort = ref<{ column: string; direction: "asc" | "desc" }>({
   column: "id",
   direction: "asc",
 });
 
-// Колонки таблицы
+// Columns definition
 const columns = [
   { key: "id", label: "ID", sortable: true },
   { key: "email", label: "Email", sortable: true },
@@ -22,7 +23,6 @@ const columns = [
     key: "banned_at",
     label: "Banned",
     sortable: true,
-    // Кастомная сортировка для булевых значений через колонку banned_at
     sortFn: (rowA: any, rowB: any) => {
       const a = rowA.banned_at ? 1 : 0;
       const b = rowB.banned_at ? 1 : 0;
@@ -41,51 +41,89 @@ const columns = [
   },
   { key: "actions", label: "Actions", sortable: false },
 ];
+
+// Helper to toggle sort
+const toggleSort = (column: string) => {
+  if (sort.value.column === column) {
+    sort.value.direction = sort.value.direction === "asc" ? "desc" : "asc";
+  } else {
+    sort.value.column = column;
+    sort.value.direction = "asc";
+  }
+};
+
+const getSortIcon = (column: string) => {
+  if (sort.value.column !== column) return "heroicons:arrows-up-down-20-solid";
+  return sort.value.direction === "asc"
+    ? "heroicons:arrow-up-20-solid"
+    : "heroicons:arrow-down-20-solid";
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">
-          Back
-        </UButton>
-      </div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">
         Admin Dashboard
       </h1>
 
       <div class="card p-6">
         <h2 class="text-xl font-semibold mb-4">Users</h2>
-        <UTable
-          :rows="users || []"
-          :columns="columns"
-          v-model:sort="sort"
-          class="w-full"
-        >
-          <!-- Кастомный рендеринг для колонки banned -->
-          <template #banned_at-data="{ row }">
-            <span v-if="row.banned_at" class="text-red-600">Yes</span>
-            <span v-else class="text-green-600">No</span>
-          </template>
-
-          <!-- Кастомный рендеринг для колонки admin -->
-          <template #is_admin-data="{ row }">
-            <span v-if="row.is_admin" class="text-green-600">Yes</span>
-            <span v-else>No</span>
-          </template>
-
-          <!-- Кастомный рендеринг для действий -->
-          <template #actions-data="{ row }">
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="heroicons:pencil-square-20-solid"
-              :to="`/admin/users/${row.id}`"
-              size="xs"
-            />
-          </template>
-        </UTable>
+        <div class="overflow-x-auto">
+          <table
+            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+          >
+            <thead>
+              <tr>
+                <th
+                  v-for="col in columns.filter((c) => c.key !== 'actions')"
+                  :key="col.key"
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  @click="col.sortable !== false ? toggleSort(col.key) : null"
+                >
+                  <div class="flex items-center gap-1">
+                    {{ col.label }}
+                    <UIcon
+                      v-if="col.sortable !== false"
+                      :name="getSortIcon(col.key)"
+                      class="w-4 h-4"
+                    />
+                  </div>
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="user in users" :key="user.id">
+                <td class="px-4 py-2">{{ user.id }}</td>
+                <td class="px-4 py-2">{{ user.email }}</td>
+                <td class="px-4 py-2">{{ user.max_sites }}</td>
+                <td class="px-4 py-2">
+                  <span v-if="user.banned_at" class="text-red-600">Yes</span>
+                  <span v-else class="text-green-600">No</span>
+                </td>
+                <td class="px-4 py-2">
+                  <span v-if="user.is_admin" class="text-green-600">Yes</span>
+                  <span v-else>No</span>
+                </td>
+                <td class="px-4 py-2">
+                  <UButton
+                    color="gray"
+                    variant="ghost"
+                    data-test="Edit User"
+                    icon="heroicons:pencil-square-20-solid"
+                    :to="`/admin/users/${user.id}`"
+                    size="xs"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
