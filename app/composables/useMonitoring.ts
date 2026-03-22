@@ -1,9 +1,4 @@
-import type {
-  CheckResultInterface,
-  SpeedResultInterface,
-  SSLResultInterface,
-  ScreenshotResultInterface,
-} from "~~/types";
+import type { CheckResultInterface, SpeedResultInterface, SSLResultInterface, ScreenshotResultInterface } from '~~/types';
 
 const sseConnected = ref(false);
 const eventSource = ref<EventSource | null>(null);
@@ -12,64 +7,40 @@ const maxRetries = 5;
 
 export const useMonitoring = () => {
   // HTTP results
-  const results = useState<Record<number, CheckResultInterface[]>>(
-    "monitoring-results",
-    () => ({}),
-  );
-  const latestResults = useState<Record<number, CheckResultInterface>>(
-    "monitoring-latest-results",
-    () => ({}),
-  );
+  const results = useState<Record<number, CheckResultInterface[]>>('monitoring-results', () => ({}));
+  const latestResults = useState<Record<number, CheckResultInterface>>('monitoring-latest-results', () => ({}));
 
   // Speed results
-  const speedResults = useState<Record<number, SpeedResultInterface[]>>(
-    "monitoring-speed-results",
-    () => ({}),
-  );
-  const latestSpeedResults = useState<Record<number, SpeedResultInterface>>(
-    "monitoring-latest-speed-results",
-    () => ({}),
-  );
+  const speedResults = useState<Record<number, SpeedResultInterface[]>>('monitoring-speed-results', () => ({}));
+  const latestSpeedResults = useState<Record<number, SpeedResultInterface>>('monitoring-latest-speed-results', () => ({}));
 
   // SSL results
-  const sslResults = useState<Record<number, SSLResultInterface[]>>(
-    "monitoring-ssl-results",
-    () => ({}),
-  );
-  const latestSSLResults = useState<Record<number, SSLResultInterface>>(
-    "monitoring-latest-ssl-results",
-    () => ({}),
-  );
+  const sslResults = useState<Record<number, SSLResultInterface[]>>('monitoring-ssl-results', () => ({}));
+  const latestSSLResults = useState<Record<number, SSLResultInterface>>('monitoring-latest-ssl-results', () => ({}));
 
   // Screenshot results
-  const screenshotResults = useState<Record<number, ScreenshotResultInterface>>(
-    "monitoring-screenshot-results",
-    () => ({}),
-  );
+  const screenshotResults = useState<Record<number, ScreenshotResultInterface>>('monitoring-screenshot-results', () => ({}));
 
   // Anomaly results
-  const anomalyResults = useState<Record<number, any[]>>(
-    "monitoring-anomaly-results",
-    () => [],
-  );
+  const anomalyResults = useState<Record<number, any[]>>('monitoring-anomaly-results', () => []);
 
   const connectToSSE = () => {
     if (process.client && !eventSource.value) {
       try {
-        const source = new EventSource("/api/sse");
+        const source = new EventSource('/api/sse');
 
         source.onopen = () => {
-          console.log("SSE connected");
+          console.log('SSE connected');
           sseConnected.value = true;
           retryCount.value = 0; // Reset on successful connection
         };
 
-        source.addEventListener("check-result", (event: MessageEvent) => {
+        source.addEventListener('check-result', (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data);
             // console.log("SSE received:", data);
 
-            if (data.type === "http" && data.siteId) {
+            if (data.type === 'http' && data.siteId) {
               const siteId = data.siteId;
               const currentResults = results.value[siteId] || [];
               results.value = {
@@ -80,7 +51,7 @@ export const useMonitoring = () => {
                 ...latestResults.value,
                 [siteId]: data,
               };
-            } else if (data.type === "speed" && data.siteId) {
+            } else if (data.type === 'speed' && data.siteId) {
               const siteId = data.siteId;
               const currentResults = speedResults.value[siteId] || [];
               speedResults.value = {
@@ -91,7 +62,7 @@ export const useMonitoring = () => {
                 ...latestSpeedResults.value,
                 [siteId]: data,
               };
-            } else if (data.type === "ssl" && data.siteId) {
+            } else if (data.type === 'ssl' && data.siteId) {
               const siteId = data.siteId;
               const currentResults = sslResults.value[siteId] || [];
               sslResults.value = {
@@ -102,13 +73,13 @@ export const useMonitoring = () => {
                 ...latestSSLResults.value,
                 [siteId]: data,
               };
-            } else if (data.type === "screenshot" && data.siteId) {
+            } else if (data.type === 'screenshot' && data.siteId) {
               const siteId = data.siteId;
               screenshotResults.value = {
                 ...screenshotResults.value,
                 [siteId]: data,
               };
-            } else if (data.type === "anomaly" && data.siteId) {
+            } else if (data.type === 'anomaly' && data.siteId) {
               const siteId = data.siteId;
               const currentAnomalies = anomalyResults.value[siteId] || [];
               anomalyResults.value = {
@@ -117,7 +88,7 @@ export const useMonitoring = () => {
               };
             }
           } catch (e) {
-            console.error("Failed to parse SSE data", e);
+            console.error('Failed to parse SSE data', e);
           }
         });
 
@@ -129,13 +100,13 @@ export const useMonitoring = () => {
             const delay = Math.min(1000 * Math.pow(2, retryCount.value), 30000); // Exponential backoff, max 30s
             setTimeout(connectToSSE, delay);
           } else {
-            console.error("SSE max retries reached, giving up");
+            console.error('SSE max retries reached, giving up');
           }
         };
 
         eventSource.value = source;
       } catch (e) {
-        console.error("Failed to connect to SSE", e);
+        console.error('Failed to connect to SSE', e);
         sseConnected.value = false;
       }
     }
@@ -153,9 +124,7 @@ export const useMonitoring = () => {
   const fetchSiteHistory = async (siteId: number, days = 10) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<CheckResultInterface[]>(
-        `/api/sites/${siteId}/stats?days=${days}`,
-      );
+      const data = await $fetch<CheckResultInterface[]>(`/api/sites/${siteId}/stats?days=${days}`);
       if (data) {
         results.value = { ...results.value, [siteId]: data };
         if (data[0]) {
@@ -163,7 +132,7 @@ export const useMonitoring = () => {
         }
       }
     } catch (e) {
-      console.error("Failed to fetch history", e);
+      console.error('Failed to fetch history', e);
     }
   };
 
@@ -171,9 +140,7 @@ export const useMonitoring = () => {
   const fetchSpeedHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<SpeedResultInterface[]>(
-        `/api/sites/${siteId}/speed`,
-      );
+      const data = await $fetch<SpeedResultInterface[]>(`/api/sites/${siteId}/speed`);
       if (data) {
         speedResults.value = { ...speedResults.value, [siteId]: data };
         if (data[0]) {
@@ -184,7 +151,7 @@ export const useMonitoring = () => {
         }
       }
     } catch (e) {
-      console.error("Failed to fetch speed history", e);
+      console.error('Failed to fetch speed history', e);
     }
   };
 
@@ -192,9 +159,7 @@ export const useMonitoring = () => {
   const fetchSSLHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<SSLResultInterface[]>(
-        `/api/sites/${siteId}/ssl`,
-      );
+      const data = await $fetch<SSLResultInterface[]>(`/api/sites/${siteId}/ssl`);
       if (data) {
         sslResults.value = { ...sslResults.value, [siteId]: data };
         if (data[0]) {
@@ -205,7 +170,7 @@ export const useMonitoring = () => {
         }
       }
     } catch (e) {
-      console.error("Failed to fetch SSL history", e);
+      console.error('Failed to fetch SSL history', e);
     }
   };
 
@@ -213,9 +178,7 @@ export const useMonitoring = () => {
   const fetchScreenshotData = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<ScreenshotResultInterface>(
-        `/api/sites/${siteId}/screenshot`,
-      );
+      const data = await $fetch<ScreenshotResultInterface>(`/api/sites/${siteId}/screenshot`);
       if (data) {
         screenshotResults.value = {
           ...screenshotResults.value,
@@ -223,19 +186,15 @@ export const useMonitoring = () => {
         };
       }
     } catch (e) {
-      console.error("Failed to fetch screenshot", e);
+      console.error('Failed to fetch screenshot', e);
     }
   };
 
   // Getters
-  const getLatestResult = (siteId: number) =>
-    latestResults.value[siteId] || null;
-  const getLatestSpeed = (siteId: number) =>
-    latestSpeedResults.value[siteId] || null;
-  const getLatestSSL = (siteId: number) =>
-    latestSSLResults.value[siteId] || null;
-  const getLatestScreenshot = (siteId: number) =>
-    screenshotResults.value[siteId] || null;
+  const getLatestResult = (siteId: number) => latestResults.value[siteId] || null;
+  const getLatestSpeed = (siteId: number) => latestSpeedResults.value[siteId] || null;
+  const getLatestSSL = (siteId: number) => latestSSLResults.value[siteId] || null;
+  const getLatestScreenshot = (siteId: number) => screenshotResults.value[siteId] || null;
 
   onUnmounted(() => {
     disconnectSSE();

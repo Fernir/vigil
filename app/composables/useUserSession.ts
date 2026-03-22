@@ -1,7 +1,6 @@
-// app/composables/useUserSession.ts
-import { computed } from "vue";
-import { navigateTo } from "#app";
-import type { UserInterface } from "~~/types";
+import { computed } from 'vue';
+import { navigateTo } from '#app';
+import type { UserInterface } from '~~/types';
 
 interface LoginResponse {
   user: UserInterface;
@@ -13,18 +12,18 @@ interface SessionResponse {
 }
 
 export const useUserSession = () => {
-  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined;
+  const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
 
   const {
     data: sessionData,
     pending: sessionPending,
     refresh,
   } = useAsyncData<SessionResponse>(
-    "user-session",
+    'user-session',
     () =>
-      $fetch<SessionResponse>("/api/auth/session", {
+      $fetch<SessionResponse>('/api/auth/session', {
         headers,
-        credentials: "include",
+        credentials: 'include',
       }),
     {
       default: () => ({ user: null }),
@@ -39,16 +38,16 @@ export const useUserSession = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      await $fetch<LoginResponse>("/api/auth/login", {
-        method: "POST",
+      await $fetch<LoginResponse>('/api/auth/login', {
+        method: 'POST',
         body: { email, password },
-        credentials: "include",
+        credentials: 'include',
       });
 
       // Refresh session data
       await refresh();
 
-      await navigateTo("/");
+      await navigateTo('/');
 
       return { success: true };
     } catch (e: any) {
@@ -58,32 +57,32 @@ export const useUserSession = () => {
 
   const logout = async () => {
     try {
-      await $fetch("/api/auth/logout", { method: "POST" });
+      await $fetch('/api/auth/logout', { method: 'POST' });
 
       // Clear cookie on client
       if (process.client) {
-        document.cookie = "auth_token=; path=/; max-age=0";
+        document.cookie = 'auth_token=; path=/; max-age=0';
       }
 
       // Refresh session data
       await refresh();
 
-      await navigateTo("/auth/login");
+      await navigateTo('/auth/login');
     } catch (e: any) {
-      console.error("Logout error:", e);
+      console.error('Logout error:', e);
     }
   };
 
   const register = async (email: string, password: string) => {
     try {
-      await $fetch("/api/auth/register", {
-        method: "POST",
+      await $fetch('/api/auth/register', {
+        method: 'POST',
         body: { email, password },
       });
 
-      await navigateTo("/auth/login");
+      await navigateTo('/auth/login');
     } catch (e: any) {
-      throw new Error(e.message || "Registration failed");
+      throw new Error(e.message || 'Registration failed');
     }
   };
 

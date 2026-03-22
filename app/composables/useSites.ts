@@ -1,7 +1,7 @@
-import type { SiteInterface } from "~~/types";
+import type { SiteInterface } from '~~/types';
 
 export const useSites = () => {
-  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined;
+  const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
 
   const {
     data: sites,
@@ -9,13 +9,10 @@ export const useSites = () => {
     error: fetchError,
     refresh,
   } = useAsyncData<SiteInterface[]>(
-    "sites",
+    'sites',
     async () => {
       try {
-        return await $fetch<SiteInterface[]>("/api/status", {
-          headers,
-          credentials: "include",
-        });
+        return await $fetch<SiteInterface[]>('/api/status', { headers, credentials: 'include' });
       } catch (e: any) {
         if (e?.status === 401) {
           return [];
@@ -37,53 +34,53 @@ export const useSites = () => {
 
   const addSite = async (siteData: Partial<SiteInterface>) => {
     try {
-      const data = await $fetch("/api/sites", {
-        method: "POST",
+      const data = await $fetch('/api/sites', {
+        method: 'POST',
         body: siteData,
-        credentials: "include",
+        credentials: 'include',
       });
       if (data) {
         await refresh();
         return data;
       }
     } catch (e: any) {
-      throw new Error(e?.data?.message || "Failed to add site");
+      throw new Error(e?.data?.message || 'Failed to add site');
     }
   };
 
   const updateSite = async (id: number, siteData: Partial<SiteInterface>) => {
     try {
       const data = await $fetch(`/api/sites/${id}`, {
-        method: "PATCH",
+        method: 'PATCH',
         body: siteData,
-        credentials: "include",
+        credentials: 'include',
       });
       if (data) {
         await refresh();
         return data;
       }
     } catch (e: any) {
-      throw new Error(e?.data?.message || "Failed to update site");
+      throw new Error(e?.data?.message || 'Failed to update site');
     }
   };
 
   const deleteSite = async (id: number) => {
     try {
       await $fetch(`/api/sites/${id}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE',
+        credentials: 'include',
       });
       // Since sites is reactive from useAsyncData, refresh to update
       await refresh();
     } catch (e: any) {
-      throw new Error(e?.data?.message || "Failed to delete site");
+      throw new Error(e?.data?.message || 'Failed to delete site');
     }
   };
 
   return {
     sites,
-    loading,
     error,
+    loading,
     refresh,
     fetchSites,
     addSite,
