@@ -84,3 +84,20 @@ export interface ScreenshotResultInterface {
   siteUrl?: string;
   image_base64?: string;
 }
+
+export interface AnomalyPoint {
+  timestamp: string;
+  responseTime: number;
+  isAnomaly: boolean;
+  zScore: number;
+}
+
+export interface AnomalyResult {
+  anomalies: AnomalyPoint[];
+  anomalyCount: number;
+  averageResponseTime: number;
+  prediction: {
+    nextHourRisk: number;
+    trend: "improving" | "stable" | "degrading";
+  };
+}

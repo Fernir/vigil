@@ -9,6 +9,9 @@ export default defineNuxtPlugin(() => {
           description: response._data?.message || "Something went wrong",
           color: "red",
         });
+      } else if (response.status === 401) {
+        // Ignore auth checks here (middleware handles redirects)
+        return;
       } else if (response.status >= 400) {
         toast.add({
           title: "Error",

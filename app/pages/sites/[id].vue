@@ -30,6 +30,7 @@ const { sites, fetchSites, updateSite, loading } = useSites();
 const { formatDateTime } = useDate();
 
 const site = computed(() => sites.value.find((s) => s.id === siteId));
+const siteNotFound = ref(false);
 
 const form = reactive<Partial<SiteInterface>>({
   name: "",
@@ -43,24 +44,43 @@ const form = reactive<Partial<SiteInterface>>({
 
 const errors = ref<Record<string, string>>({});
 
-onMounted(async () => {
-  await fetchSites();
+const loadData = async () => {
   await fetchSiteHistory(siteId);
   await fetchSpeedHistory(siteId);
   await fetchSSLHistory(siteId);
   await fetchScreenshotData(siteId);
+};
 
-  if (site.value) {
-    form.name = site.value.name;
-    form.url = site.value.url;
-    form.checkInterval = site.value.checkInterval;
-    form.isActive = !!site.value.isActive;
-    form.check_type = site.value.check_type || "http";
-    form.expected_text = site.value.expected_text || "";
-    form.text_condition = site.value.text_condition || "contains";
-  } else {
-    router.push("/");
+onServerPrefetch(async () => {
+  await fetchSites();
+
+  if (!site.value) {
+    siteNotFound.value = true;
+    return navigateTo("/");
   }
+
+  await loadData();
+});
+
+onMounted(async () => {
+  if (!site.value) {
+    await fetchSites();
+  }
+
+  if (!site.value) {
+    siteNotFound.value = true;
+    return;
+  }
+
+  await loadData();
+
+  form.name = site.value.name;
+  form.url = site.value.url;
+  form.checkInterval = site.value.checkInterval;
+  form.isActive = !!site.value.isActive;
+  form.check_type = site.value.check_type || "http";
+  form.expected_text = site.value.expected_text || "";
+  form.text_condition = site.value.text_condition || "contains";
 });
 
 const validate = () => {
@@ -114,7 +134,20 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
         </UButton>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <template v-if="siteNotFound">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-2">Site not found</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            We could not find a site with this ID. Please go back to the
+            dashboard.
+          </p>
+          <UButton to="/" class="mt-4" color="primary" size="sm">
+            Go to dashboard
+          </UButton>
+        </div>
+      </template>
+
+      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left column: editing form -->
         <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
@@ -347,6 +380,11 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Speed Trend</h3>
             <SpeedChart :id="siteId" :height="200" />
+          </div>
+
+          <!-- AI Anomaly Detection -->
+          <div class="card p-5">
+            <AnomalyChart :id="siteId" :height="300" />
           </div>
         </div>
       </div>

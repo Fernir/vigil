@@ -9,8 +9,6 @@ let isRunning = false;
 const RETENTION_LIMIT = 20;
 
 export default defineNitroPlugin(() => {
-  console.log("[Monitoring] Unified monitor started (check every minute)");
-
   const runUnifiedMonitor = async () => {
     if (isRunning) return;
     isRunning = true;
@@ -26,14 +24,11 @@ export default defineNitroPlugin(() => {
       });
 
       if (sites.length === 0) {
-        console.log("[Monitoring] No active sites to monitor");
         isRunning = false;
         return;
       }
 
       for (const site of sites) {
-        console.log(`[Monitoring] Checking ${site.name} (${site.url})...`);
-
         try {
           const httpResult = await checkSite(
             site.url,
@@ -58,16 +53,52 @@ export default defineNitroPlugin(() => {
             },
           });
 
-          console.log(
-            `  HTTP: ${httpResult.status} (${httpResult.responseTime}ms)`,
-          );
-
           broadcastCheckResult({
             type: "http",
             ...httpRecord,
             siteName: site.name,
             siteUrl: site.url,
           });
+
+          // AI Anomaly Detection
+          try {
+            const recentResults = await prisma.check_results.findMany({
+              where: { siteId: site.id },
+              orderBy: { checked_at: "desc" },
+              take: 100, // Last 100 checks for analysis
+              select: { responseTime: true },
+            });
+
+            if (recentResults.length >= 10) {
+              const responseTimes = recentResults.map((r) => r.responseTime);
+              const mean =
+                responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+              const variance =
+                responseTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
+                responseTimes.length;
+              const stdDev = Math.sqrt(variance);
+
+              const zScore =
+                stdDev > 0 ? (httpResult.responseTime - mean) / stdDev : 0;
+              const isAnomaly = Math.abs(zScore) > 2;
+
+              if (isAnomaly) {
+                broadcastCheckResult({
+                  type: "anomaly",
+                  siteId: site.id,
+                  responseTime: httpResult.responseTime,
+                  zScore,
+                  mean,
+                  stdDev,
+                  checked_at: httpRecord.checked_at,
+                  siteName: site.name,
+                  siteUrl: site.url,
+                });
+              }
+            }
+          } catch (error) {
+            // Silent fail for anomaly detection
+          }
 
           if (
             httpResult.status === "down" &&
@@ -136,9 +167,7 @@ export default defineNitroPlugin(() => {
             }
 
             console.log(`  SSL: ${sslInfo.daysLeft} days left`);
-          } catch (error) {
-            console.error(`  SSL error:`, error);
-          }
+          } catch (error) {}
 
           // 3. Unified browser check (speed + screenshot)
           try {
@@ -169,10 +198,6 @@ export default defineNitroPlugin(() => {
                 siteUrl: site.url,
               });
 
-              console.log(
-                `  Speed: ${unifiedResult.loadTime}ms, Size: ${unifiedResult.pageSize}KB`,
-              );
-
               await prisma.screenshots.deleteMany({
                 where: { siteId: site.id },
               });
@@ -197,25 +222,15 @@ export default defineNitroPlugin(() => {
                 siteName: site.name,
                 siteUrl: site.url,
               });
-
-              console.log(
-                `  Screenshot: ${unifiedResult.width}x${unifiedResult.height}`,
-              );
             } else {
-              console.log(
-                `  Unified check failed: ${unifiedResult?.error || "Unknown error"}`,
-              );
             }
-          } catch (error) {
-            console.error(`  Unified check error:`, error);
-          }
+          } catch (error) {}
         } catch (error) {
           console.error(`Error processing site ${site.url}:`, error);
         }
       }
 
       // Cleanup old records
-      console.log("[Monitoring] Cleaning old records...");
 
       const allSites = await prisma.sites.findMany({
         where: { isActive: true },
@@ -274,10 +289,6 @@ export default defineNitroPlugin(() => {
           });
         }
       }
-
-      console.log("[Monitoring] Unified monitoring cycle completed");
-    } catch (error) {
-      console.error("[Monitoring] Error in unified monitor:", error);
     } finally {
       isRunning = false;
     }

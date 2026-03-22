@@ -110,13 +110,15 @@ const chartOptions = computed<ChartOptions<"line">>(() => ({
 </script>
 
 <template>
-  <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
-    <Line v-if="data.length" :data="chartData" :options="chartOptions" />
-    <div
-      v-else
-      class="h-full flex items-center justify-center text-gray-500 text-sm"
-    >
-      No data available
+  <ClientOnly>
+    <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
+      <Line v-if="data.length" :data="chartData" :options="chartOptions" />
+      <div
+        v-else
+        class="h-full flex items-center justify-center text-gray-500 text-sm"
+      >
+        No data available
+      </div>
     </div>
-  </div>
+  </ClientOnly>
 </template>

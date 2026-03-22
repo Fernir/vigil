@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const colorMode = useColorMode();
+useColorMode();
 </script>
 
 <template>

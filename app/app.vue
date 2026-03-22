@@ -3,12 +3,20 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <UNotifications />
+    <ClientOnly>
+      <UNotifications />
+    </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
+const colorMode = useColorMode();
 const cookie = useCookie("color-mode");
+
+const themeClass = computed(() => {
+  const mode = cookie.value || colorMode.value;
+  return mode === "dark" ? "dark" : "";
+});
 
 useHead({
   titleTemplate: (title) =>
@@ -19,7 +27,7 @@ useHead({
   ],
   htmlAttrs: {
     lang: "en",
-    class: cookie.value === "dark" ? "dark" : "",
+    class: themeClass,
   },
 });
 </script>

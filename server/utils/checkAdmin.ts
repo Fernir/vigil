@@ -3,7 +3,8 @@ import prisma from "~~/lib/prisma";
 export async function checkAdmin(event: any) {
   const userId = event.context.auth?.userId;
 
-  if (!userId) throw createError({ statusCode: 401, message: "Unauthorized" });
+  if (!userId)
+    throw createError({ statusCode: 401, message: "Authentication required" });
 
   const user = await prisma.users.findUnique({
     where: { id: userId },
@@ -11,5 +12,8 @@ export async function checkAdmin(event: any) {
   });
 
   if (!user?.is_admin)
-    throw createError({ statusCode: 403, message: "Admin access required" });
+    throw createError({
+      statusCode: 403,
+      message: "Admin privileges required",
+    });
 }

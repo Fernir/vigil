@@ -1,28 +1,41 @@
 import type { SiteInterface } from "~~/types";
 
 export const useSites = () => {
-  const sites = ref<SiteInterface[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined;
+
+  const {
+    data: sites,
+    pending: loading,
+    error: fetchError,
+    refresh,
+  } = useAsyncData<SiteInterface[]>(
+    "sites",
+    async () => {
+      try {
+        return await $fetch<SiteInterface[]>("/api/status", {
+          headers,
+          credentials: "include",
+        });
+      } catch (e: any) {
+        if (e?.status === 401) {
+          return [];
+        }
+        throw e;
+      }
+    },
+    {
+      default: () => [],
+      server: true,
+    },
+  );
+
+  const error = computed(() => fetchError.value?.message || null);
 
   const fetchSites = async () => {
-    if (!process.client) return;
-    loading.value = true;
-    error.value = null;
-    try {
-      const data = await $fetch<SiteInterface[]>("/api/status");
-      sites.value = data || [];
-    } catch (e) {
-      console.error("Failed to load sites:", e);
-      error.value = "Failed to load sites";
-    } finally {
-      loading.value = false;
-    }
+    await refresh();
   };
 
   const addSite = async (siteData: Partial<SiteInterface>) => {
-    loading.value = true;
-    error.value = null;
     try {
       const data = await $fetch("/api/sites", {
         method: "POST",
@@ -30,20 +43,15 @@ export const useSites = () => {
         credentials: "include",
       });
       if (data) {
-        await fetchSites();
+        await refresh();
         return data;
       }
     } catch (e: any) {
-      error.value = e?.data?.message || "Failed to add site";
-      console.error(e);
-    } finally {
-      loading.value = false;
+      throw new Error(e?.data?.message || "Failed to add site");
     }
   };
 
   const updateSite = async (id: number, siteData: Partial<SiteInterface>) => {
-    loading.value = true;
-    error.value = null;
     try {
       const data = await $fetch(`/api/sites/${id}`, {
         method: "PATCH",
@@ -51,42 +59,32 @@ export const useSites = () => {
         credentials: "include",
       });
       if (data) {
-        await fetchSites();
+        await refresh();
         return data;
       }
     } catch (e: any) {
-      error.value = e?.data?.message || "Failed to update site";
-      console.error(e);
-    } finally {
-      loading.value = false;
+      throw new Error(e?.data?.message || "Failed to update site");
     }
   };
 
   const deleteSite = async (id: number) => {
-    loading.value = true;
-    error.value = null;
     try {
       await $fetch(`/api/sites/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
-      sites.value = sites.value.filter((s) => s.id !== id);
+      // Since sites is reactive from useAsyncData, refresh to update
+      await refresh();
     } catch (e: any) {
-      error.value = e?.data?.message || "Failed to delete site";
-      console.error(e);
-    } finally {
-      loading.value = false;
+      throw new Error(e?.data?.message || "Failed to delete site");
     }
   };
-
-  if (process.server) {
-    fetchSites();
-  }
 
   return {
     sites,
     loading,
     error,
+    refresh,
     fetchSites,
     addSite,
     updateSite,

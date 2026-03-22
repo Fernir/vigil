@@ -5,25 +5,54 @@ import type {
   ScreenshotResultInterface,
 } from "~~/types";
 
-// HTTP results
-const results = ref<Record<number, CheckResultInterface[]>>({});
-const latestResults = ref<Record<number, CheckResultInterface>>({});
-
-// Speed results
-const speedResults = ref<Record<number, SpeedResultInterface[]>>({});
-const latestSpeedResults = ref<Record<number, SpeedResultInterface>>({});
-
-// SSL results
-const sslResults = ref<Record<number, SSLResultInterface[]>>({});
-const latestSSLResults = ref<Record<number, SSLResultInterface>>({});
-
-// Screenshot results
-const screenshotResults = ref<Record<number, ScreenshotResultInterface>>({});
-
 const sseConnected = ref(false);
 const eventSource = ref<EventSource | null>(null);
+const retryCount = ref(0);
+const maxRetries = 5;
 
 export const useMonitoring = () => {
+  // HTTP results
+  const results = useState<Record<number, CheckResultInterface[]>>(
+    "monitoring-results",
+    () => ({}),
+  );
+  const latestResults = useState<Record<number, CheckResultInterface>>(
+    "monitoring-latest-results",
+    () => ({}),
+  );
+
+  // Speed results
+  const speedResults = useState<Record<number, SpeedResultInterface[]>>(
+    "monitoring-speed-results",
+    () => ({}),
+  );
+  const latestSpeedResults = useState<Record<number, SpeedResultInterface>>(
+    "monitoring-latest-speed-results",
+    () => ({}),
+  );
+
+  // SSL results
+  const sslResults = useState<Record<number, SSLResultInterface[]>>(
+    "monitoring-ssl-results",
+    () => ({}),
+  );
+  const latestSSLResults = useState<Record<number, SSLResultInterface>>(
+    "monitoring-latest-ssl-results",
+    () => ({}),
+  );
+
+  // Screenshot results
+  const screenshotResults = useState<Record<number, ScreenshotResultInterface>>(
+    "monitoring-screenshot-results",
+    () => ({}),
+  );
+
+  // Anomaly results
+  const anomalyResults = useState<Record<number, any[]>>(
+    "monitoring-anomaly-results",
+    () => [],
+  );
+
   const connectToSSE = () => {
     if (process.client && !eventSource.value) {
       try {
@@ -32,6 +61,7 @@ export const useMonitoring = () => {
         source.onopen = () => {
           console.log("SSE connected");
           sseConnected.value = true;
+          retryCount.value = 0; // Reset on successful connection
         };
 
         source.addEventListener("check-result", (event: MessageEvent) => {
@@ -78,6 +108,13 @@ export const useMonitoring = () => {
                 ...screenshotResults.value,
                 [siteId]: data,
               };
+            } else if (data.type === "anomaly" && data.siteId) {
+              const siteId = data.siteId;
+              const currentAnomalies = anomalyResults.value[siteId] || [];
+              anomalyResults.value = {
+                ...anomalyResults.value,
+                [siteId]: [data, ...currentAnomalies].slice(0, 20),
+              };
             }
           } catch (e) {
             console.error("Failed to parse SSE data", e);
@@ -87,7 +124,13 @@ export const useMonitoring = () => {
         source.onerror = () => {
           sseConnected.value = false;
           eventSource.value = null;
-          setTimeout(connectToSSE, 5000);
+          if (retryCount.value < maxRetries) {
+            retryCount.value++;
+            const delay = Math.min(1000 * Math.pow(2, retryCount.value), 30000); // Exponential backoff, max 30s
+            setTimeout(connectToSSE, delay);
+          } else {
+            console.error("SSE max retries reached, giving up");
+          }
         };
 
         eventSource.value = source;
@@ -221,6 +264,9 @@ export const useMonitoring = () => {
     screenshotResults,
     fetchScreenshotData,
     getLatestScreenshot,
+
+    // Anomalies
+    anomalyResults,
 
     // SSE
     sseConnected,

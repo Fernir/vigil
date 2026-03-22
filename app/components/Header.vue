@@ -20,76 +20,55 @@ const userMenuItems = [
 </script>
 
 <template>
-  <ClientOnly>
-    <header
-      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
-    >
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between">
-        <div class="flex justify-between items-center h-16 w-full">
-          <!-- Logo (always leads to the main page) -->
-          <NuxtLink to="/" class="flex items-center gap-2">
-            <img src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
-            <span class="text-xl font-bold text-gray-900 dark:text-white"
-              >Vigil</span
+  <header
+    class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between">
+      <div class="flex justify-between items-center h-16 w-full">
+        <!-- Logo (always leads to the main page) -->
+        <NuxtLink to="/" class="flex items-center gap-2">
+          <img src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
+          <span class="text-xl font-bold text-gray-900 dark:text-white"
+            >Vigil</span
+          >
+        </NuxtLink>
+
+        <!-- Right side: theme + sign in/sign out buttons -->
+        <div class="flex items-center gap-2">
+          <UTooltip text="Account">
+            <UButton
+              v-if="!loggedIn"
+              color="primary"
+              variant="solid"
+              to="/auth/login"
             >
-          </NuxtLink>
+              Sign In
+            </UButton>
 
-          <!-- Right side: theme + sign in/sign out buttons -->
-          <div class="flex items-center gap-2">
-            <UTooltip text="Account">
+            <UDropdown v-else :items="userMenuItems">
               <UButton
-                v-if="!loggedIn"
-                color="primary"
-                variant="solid"
-                to="/auth/login"
+                color="gray"
+                variant="ghost"
+                icon="heroicons:user-circle-20-solid"
+                >Profile</UButton
               >
-                Sign In
-              </UButton>
+            </UDropdown>
+          </UTooltip>
 
-              <UDropdown v-else :items="userMenuItems">
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  icon="heroicons:user-circle-20-solid"
-                  >Profile</UButton
-                >
-              </UDropdown>
+          <template v-if="loggedIn && user?.is_admin">
+            <UTooltip text="Admin Dashboard">
+              <UButton
+                color="gray"
+                variant="ghost"
+                to="/admin"
+                icon="heroicons:shield-check-20-solid"
+                >Admin</UButton
+              >
             </UTooltip>
-
-            <template v-if="loggedIn && user?.is_admin">
-              <UTooltip text="Admin Dashboard">
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  to="/admin"
-                  icon="heroicons:shield-check-20-solid"
-                  >Admin</UButton
-                >
-              </UTooltip>
-            </template>
-          </div>
+          </template>
         </div>
-        <ThemeToggle />
       </div>
-    </header>
-    <template #fallback>
-      <!-- Fallback for server (no buttons, only logo) -->
-      <header
-        class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16"
-      >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div class="flex justify-between items-center h-16">
-            <NuxtLink to="/" class="flex items-center gap-2">
-              <img src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
-              <span class="text-xl font-bold text-gray-900 dark:text-white"
-                >Vigil</span
-              >
-            </NuxtLink>
-            <div class="w-20 h-8" />
-            <!-- empty space -->
-          </div>
-        </div>
-      </header>
-    </template>
-  </ClientOnly>
+      <ThemeToggle />
+    </div>
+  </header>
 </template>

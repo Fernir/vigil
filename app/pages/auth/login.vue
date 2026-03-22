@@ -8,7 +8,6 @@ useHead({
   title: "Sign In",
 });
 
-const router = useRouter();
 const { login } = useUserSession();
 
 const form = reactive({
@@ -25,11 +24,11 @@ const handleSubmit = async () => {
 
   const result = await login(form.email, form.password);
 
-  if (result.success) {
+  if (result?.success) {
     // Take time for the cookie to be set
     setTimeout(() => navigateTo("/"));
   } else {
-    error.value = result.error || "Login failed";
+    error.value = "Login failed";
   }
 
   loading.value = false;

@@ -1,5 +1,5 @@
 // app/composables/useUserSession.ts
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { navigateTo } from "#app";
 import type { UserInterface } from "~~/types";
 
@@ -12,60 +12,65 @@ interface SessionResponse {
   user: UserInterface | null;
 }
 
-let sessionPromise: Promise<void> | null = null;
-let sessionLoaded = ref(false);
-
-const user = ref<UserInterface | null>(null);
-const token = ref<string | null>(null);
-
 export const useUserSession = () => {
-  const fetchSession = async () => {
-    if (!process.client) return;
+  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined;
 
-    // Return existing promise if already fetching
-    if (sessionPromise) {
-      await sessionPromise;
-      return;
-    }
+  const {
+    data: sessionData,
+    pending: sessionPending,
+    refresh,
+  } = useAsyncData<SessionResponse>(
+    "user-session",
+    () =>
+      $fetch<SessionResponse>("/api/auth/session", {
+        headers,
+        credentials: "include",
+      }),
+    {
+      default: () => ({ user: null }),
+      server: true,
+      lazy: false,
+    },
+  );
 
-    sessionPromise = (async () => {
-      try {
-        const session = await $fetch<SessionResponse>("/api/auth/session");
-        user.value = session?.user || null;
-      } catch (e) {
-        console.error("Failed to fetch session", e);
-        user.value = null;
-      } finally {
-        sessionLoaded.value = true;
-        sessionPromise = null;
-      }
-    })();
-
-    await sessionPromise;
-  };
-
+  const user = computed(() => sessionData.value?.user || null);
   const loggedIn = computed(() => !!user.value);
+  const sessionLoaded = computed(() => !sessionPending.value);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await $fetch<LoginResponse>("/api/auth/login", {
+      await $fetch<LoginResponse>("/api/auth/login", {
         method: "POST",
         body: { email, password },
+        credentials: "include",
       });
 
-      if (response?.user) {
-        user.value = response.user;
-        token.value = response.token || null;
-        sessionLoaded.value = true;
-        return { success: true };
+      // Refresh session data
+      await refresh();
+
+      await navigateTo("/");
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await $fetch("/api/auth/logout", { method: "POST" });
+
+      // Clear cookie on client
+      if (process.client) {
+        document.cookie = "auth_token=; path=/; max-age=0";
       }
-      return { success: false, error: "No data received" };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      return {
-        success: false,
-        error: error.data?.message || error.message || "Login failed",
-      };
+
+      // Refresh session data
+      await refresh();
+
+      await navigateTo("/auth/login");
+    } catch (e: any) {
+      console.error("Logout error:", e);
     }
   };
 
@@ -75,41 +80,21 @@ export const useUserSession = () => {
         method: "POST",
         body: { email, password },
       });
-      return { success: true };
-    } catch (error: any) {
-      console.error("Register error:", error);
-      return {
-        success: false,
-        error: error.data?.message || error.message || "Registration failed",
-      };
+
+      await navigateTo("/auth/login");
+    } catch (e: any) {
+      throw new Error(e.message || "Registration failed");
     }
   };
-
-  const logout = async () => {
-    try {
-      await $fetch("/api/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.error("Logout error:", e);
-    }
-    user.value = null;
-    token.value = null;
-    sessionLoaded.value = false;
-    await navigateTo("/auth/login");
-  };
-
-  // Initialize only once
-  if (process.client && !sessionLoaded.value && !sessionPromise) {
-    fetchSession();
-  }
 
   return {
     user,
-    token,
     loggedIn,
     sessionLoaded,
     login,
-    register,
     logout,
-    fetchSession,
+    register,
+    loading: sessionPending,
+    refresh,
   };
 };

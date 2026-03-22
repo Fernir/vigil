@@ -1,8 +1,6 @@
-import { defineNuxtPlugin } from "#app";
-import { useCookie } from "#app";
+import { defineNuxtPlugin, useCookie } from "#app";
 
 export default defineNuxtPlugin(() => {
-  // Set long-lived cookie on client-side startup
   const colorMode = useColorMode();
   const cookie = useCookie("color-mode", {
     maxAge: 60 * 60 * 24 * 365,
@@ -10,7 +8,12 @@ export default defineNuxtPlugin(() => {
     sameSite: "lax",
   });
 
-  // When the color mode changes, update the cookie
+  // Prefer the persisted cookie on server and client during initial setup
+  if (cookie.value && colorMode.value !== cookie.value) {
+    colorMode.preference = cookie.value as "light" | "dark" | "system";
+  }
+
+  // When the color mode changes, keep the cookie in sync
   watchEffect(() => {
     cookie.value = colorMode.value;
   });

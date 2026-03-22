@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { user, sessionLoaded } = useUserSession();
-
   if (process.client) {
+    const { user, sessionLoaded } = useUserSession();
+
     if (!sessionLoaded.value) {
       await new Promise((resolve) => {
         const unwatch = watch(sessionLoaded, (val) => {

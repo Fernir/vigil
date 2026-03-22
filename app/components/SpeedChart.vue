@@ -93,7 +93,7 @@ const chartOptions = {
       cornerRadius: 4,
       displayColors: false,
       callbacks: {
-        label: (ctx: { raw: number }) => `${ctx.raw} ms`,
+        label: (ctx) => `${ctx.raw} ms`,
       },
     },
   },
@@ -123,10 +123,12 @@ const chartOptions = {
 </script>
 
 <template>
-  <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
-    <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
-    <div v-else class="h-full flex items-center justify-center text-gray-500">
-      No data available
+  <ClientOnly>
+    <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
+      <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
+      <div v-else class="h-full flex items-center justify-center text-gray-500">
+        No data available
+      </div>
     </div>
-  </div>
+  </ClientOnly>
 </template>

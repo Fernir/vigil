@@ -15,19 +15,16 @@ export default defineEventHandler(async (event) => {
       decoded = jwt.verify(token, useRuntimeConfig().jwtSecret) as {
         userId: number;
       };
-      console.log("Session check - Token valid for userId:", decoded.userId);
     } catch (error: unknown) {
-      // Manage different types of JWT errors
       if (error instanceof jwt.JsonWebTokenError) {
-        console.log("Session check - JWT Error:", error.message);
+        return { user: null, error: { message: error.message } };
       } else if (error instanceof jwt.TokenExpiredError) {
-        console.log("Session check - Token expired");
+        return { user: null, error: { message: "Token expired" } };
       } else if (error instanceof Error) {
-        console.log("Session check - Error:", error.message);
+        return { user: null, error: { message: error.message } };
       } else {
-        console.log("Session check - Unknown error");
+        return { user: null, error: { message: "Unknown error" } };
       }
-      return { user: null };
     }
 
     const user = await prisma.users.findUnique({
@@ -42,7 +39,6 @@ export default defineEventHandler(async (event) => {
     });
 
     if (!user) {
-      console.log("Session check - User not found");
       return { user: null };
     }
 

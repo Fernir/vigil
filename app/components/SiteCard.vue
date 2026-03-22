@@ -10,6 +10,7 @@ const faviconUrl = computed(() => {
 });
 
 const { results } = useMonitoring();
+const { formatDateTime } = useDate();
 
 const lastResult = computed(() => {
   return results.value[siteId]?.[0] || props.site.lastCheck || null;
@@ -58,7 +59,7 @@ const lastResult = computed(() => {
         <span class="text-gray-500">Last:</span>
         <span class="font-medium">{{
           lastResult?.checked_at
-            ? new Date(lastResult.checked_at).toLocaleString()
+            ? formatDateTime(lastResult.checked_at)
             : "Never"
         }}</span>
       </span>
