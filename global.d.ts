@@ -1,4 +1,4 @@
-declare module "prisma/config";
+declare module 'prisma/config';
 
 interface Window {
   useNuxtApp?: () => any;

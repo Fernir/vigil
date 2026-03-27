@@ -1,9 +1,11 @@
+import { ref, onMounted, onUnmounted } from 'vue';
 import type { CheckResultInterface, SpeedResultInterface, SSLResultInterface, ScreenshotResultInterface } from '~~/types';
 
 const sseConnected = ref(false);
 const eventSource = ref<EventSource | null>(null);
 const retryCount = ref(0);
 const maxRetries = 5;
+const subscriberCount = ref(0);
 
 export const useMonitoring = () => {
   // HTTP results
@@ -28,6 +30,7 @@ export const useMonitoring = () => {
     if (process.client && !eventSource.value) {
       try {
         const source = new EventSource('/api/sse');
+        sseConnected.value = false;
 
         source.onopen = () => {
           console.log('SSE connected');
@@ -196,8 +199,30 @@ export const useMonitoring = () => {
   const getLatestSSL = (siteId: number) => latestSSLResults.value[siteId] || null;
   const getLatestScreenshot = (siteId: number) => screenshotResults.value[siteId] || null;
 
+  const registerSSEConsumer = () => {
+    subscriberCount.value += 1;
+    if (subscriberCount.value === 1) {
+      connectToSSE();
+    }
+  };
+
+  const unregisterSSEConsumer = () => {
+    subscriberCount.value = Math.max(0, subscriberCount.value - 1);
+    if (subscriberCount.value === 0) {
+      disconnectSSE();
+    }
+  };
+
+  onMounted(() => {
+    if (process.client) {
+      registerSSEConsumer();
+    }
+  });
+
   onUnmounted(() => {
-    disconnectSSE();
+    if (process.client) {
+      unregisterSSEConsumer();
+    }
   });
 
   return {

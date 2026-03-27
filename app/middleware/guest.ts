@@ -4,7 +4,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
     // If the user is already logged in, redirect to the dashboard
     if (loggedIn.value) {
-      return navigateTo("/");
+      return navigateTo('/');
     }
   }
 });

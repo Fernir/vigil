@@ -1,4 +1,4 @@
-import { formatDate, formatTime, formatDateTime } from "~/utils/date";
+import { formatDate, formatTime, formatDateTime } from '~/utils/date';
 
 export const useDate = () => {
   return {

@@ -7,20 +7,16 @@ interface Stats {
 }
 
 export const useStats = () => {
-  const { data, pending, error } = useAsyncData<Stats>(
-    "stats",
-    () => $fetch<Stats>("/api/stats"),
-    {
-      default: () => ({
-        total: 0,
-        operational: 0,
-        degraded: 0,
-        down: 0,
-        overallUptime: 100,
-      }),
-      server: true, // must for SSR
-    },
-  );
+  const { data, pending, error } = useAsyncData<Stats>('stats', () => $fetch<Stats>('/api/stats'), {
+    default: () => ({
+      total: 0,
+      operational: 0,
+      degraded: 0,
+      down: 0,
+      overallUptime: 100,
+    }),
+    server: true, // must for SSR
+  });
 
   return {
     stats: data,

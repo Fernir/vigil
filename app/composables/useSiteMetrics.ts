@@ -1,4 +1,4 @@
-import { useMonitoring } from "./useMonitoring";
+import { useMonitoring } from './useMonitoring';
 
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {
   const idRef = toRef(siteId);
@@ -7,8 +7,8 @@ export const useSiteMetrics = (siteId: MaybeRef<number>) => {
 
   const uptimePercentage = computed(() => {
     const data = results.value[idRef.value] || [];
-    if (!data.length) return "0";
-    const up = data.filter((r) => r.status === "up").length;
+    if (!data.length) return '0';
+    const up = data.filter((r) => r.status === 'up').length;
     return ((up / data.length) * 100).toFixed(2);
   });
 

@@ -1,26 +1,17 @@
 <script setup lang="ts">
-import type { SiteInterface } from "~~/types";
+import type { SiteInterface } from '~~/types';
 
-definePageMeta({ middleware: "auth" });
+definePageMeta({ middleware: 'auth' });
 
 const route = useRoute();
 const router = useRouter();
 const siteId = Number(route.params.id);
 
-useHead({ title: "Edit Site" });
+useHead({ title: 'Edit Site' });
 
 const showModal = ref(false);
 
-const {
-  results,
-  getLatestSSL,
-  getLatestSpeed,
-  getLatestScreenshot,
-  fetchSpeedHistory,
-  fetchSSLHistory,
-  fetchScreenshotData,
-  fetchSiteHistory,
-} = useMonitoring();
+const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchScreenshotData, fetchSiteHistory } = useMonitoring();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
@@ -33,13 +24,13 @@ const site = computed(() => sites.value.find((s) => s.id === siteId));
 const siteNotFound = ref(false);
 
 const form = reactive<Partial<SiteInterface>>({
-  name: "",
-  url: "",
+  name: '',
+  url: '',
   checkInterval: 5,
   isActive: true,
-  check_type: "http",
-  expected_text: "",
-  text_condition: "contains",
+  check_type: 'http',
+  expected_text: '',
+  text_condition: 'contains',
 });
 
 const errors = ref<Record<string, string>>({});
@@ -56,7 +47,7 @@ onServerPrefetch(async () => {
 
   if (!site.value) {
     siteNotFound.value = true;
-    return navigateTo("/");
+    return navigateTo('/');
   }
 
   await loadData();
@@ -78,40 +69,36 @@ onMounted(async () => {
   form.url = site.value.url;
   form.checkInterval = site.value.checkInterval;
   form.isActive = !!site.value.isActive;
-  form.check_type = site.value.check_type || "http";
-  form.expected_text = site.value.expected_text || "";
-  form.text_condition = site.value.text_condition || "contains";
+  form.check_type = site.value.check_type || 'http';
+  form.expected_text = site.value.expected_text || '';
+  form.text_condition = site.value.text_condition || 'contains';
 });
 
 const validate = () => {
   const newErrors: Record<string, string> = {};
-  if (!form.name) newErrors.name = "Name is required";
-  if (!form.url) newErrors.url = "URL is required";
+  if (!form.name) newErrors.name = 'Name is required';
+  if (!form.url) newErrors.url = 'URL is required';
   else if (!form.url.match(/^https?:\/\/.+/)) {
-    newErrors.url = "URL must start with http:// or https://";
+    newErrors.url = 'URL must start with http:// or https://';
   }
   if (Number(form.checkInterval) < 1 || Number(form.checkInterval) > 60) {
-    newErrors.checkInterval = "Interval must be between 1 and 60 minutes";
+    newErrors.checkInterval = 'Interval must be between 1 and 60 minutes';
   }
-  if (form.check_type === "text" && !form.expected_text) {
-    newErrors.expected_text = "Expected text is required for text check";
+  if (form.check_type === 'text' && !form.expected_text) {
+    newErrors.expected_text = 'Expected text is required for text check';
   }
   errors.value = newErrors;
   return Object.keys(newErrors).length === 0;
 };
 
 const handleDelete = async () => {
-  if (
-    confirm(
-      "Are you sure you want to delete this site? This action cannot be undone.",
-    )
-  ) {
+  if (confirm('Are you sure you want to delete this site? This action cannot be undone.')) {
     try {
       const { deleteSite } = useSites();
       await deleteSite(siteId);
-      router.push("/");
+      router.push('/');
     } catch (error) {
-      console.error("Failed to delete site:", error);
+      console.error('Failed to delete site:', error);
     }
   }
 };
@@ -119,7 +106,7 @@ const handleDelete = async () => {
 const handleSubmit = async () => {
   if (!validate()) return;
   const result = await updateSite(siteId, form);
-  if (result) router.push("/");
+  if (result) router.push('/');
 };
 
 const lastResult = computed(() => results.value[siteId]?.[0] || null);
@@ -129,21 +116,14 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">
-          Back
-        </UButton>
+        <UButton to="/" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
       </div>
 
       <template v-if="siteNotFound">
         <div class="card p-6">
           <h2 class="text-lg font-semibold mb-2">Site not found</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-300">
-            We could not find a site with this ID. Please go back to the
-            dashboard.
-          </p>
-          <UButton to="/" class="mt-4" color="primary" size="sm">
-            Go to dashboard
-          </UButton>
+          <p class="text-sm text-gray-600 dark:text-gray-300">We could not find a site with this ID. Please go back to the dashboard.</p>
+          <UButton to="/" class="mt-4" color="primary" size="sm"> Go to dashboard </UButton>
         </div>
       </template>
 
@@ -153,24 +133,9 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
             <form @submit.prevent="handleSubmit" class="space-y-4">
-              <UInput
-                v-model="form.name"
-                placeholder="Site name"
-                :error="errors.name"
-              />
-              <UInput
-                v-model="form.url"
-                placeholder="https://example.com"
-                :error="errors.url"
-              />
-              <UInput
-                v-model="form.checkInterval"
-                type="number"
-                min="30"
-                max="3600"
-                placeholder="Interval (sec)"
-                :error="errors.checkInterval"
-              />
+              <UInput v-model="form.name" placeholder="Site name" :error="errors.name" />
+              <UInput v-model="form.url" placeholder="https://example.com" :error="errors.url" />
+              <UInput v-model="form.checkInterval" type="number" min="30" max="3600" placeholder="Interval (sec)" :error="errors.checkInterval" />
               <div class="flex items-center gap-2">
                 <UToggle v-model="form.isActive" />
                 <span class="text-sm">Active monitoring</span>
@@ -187,21 +152,14 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               </div>
 
               <div v-if="form.check_type === 'text'" class="space-y-2">
-                <UInput
-                  v-model="form.expected_text"
-                  placeholder="Expected text"
-                  :error="errors.expected_text"
-                />
+                <UInput v-model="form.expected_text" placeholder="Expected text" :error="errors.expected_text" />
                 <div class="flex gap-3 text-sm">
                   <label class="flex items-center gap-1">
                     <URadio v-model="form.text_condition" value="contains" />
                     <span>contains</span>
                   </label>
                   <label class="flex items-center gap-1">
-                    <URadio
-                      v-model="form.text_condition"
-                      value="not_contains"
-                    />
+                    <URadio v-model="form.text_condition" value="not_contains" />
                     <span>not contains</span>
                   </label>
                 </div>
@@ -209,28 +167,11 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
 
               <div class="flex gap-2 pt-2 justify-between">
                 <div>
-                  <UButton
-                    type="submit"
-                    color="primary"
-                    :loading="loading"
-                    size="sm"
-                  >
-                    Save
-                  </UButton>
-                  <UButton color="gray" variant="ghost" to="/" size="sm">
-                    Cancel
-                  </UButton>
+                  <UButton type="submit" color="primary" :loading="loading" size="sm"> Save </UButton>
+                  <UButton color="gray" variant="ghost" to="/" size="sm"> Cancel </UButton>
                 </div>
 
-                <UButton
-                  color="red"
-                  variant="soft"
-                  icon="heroicons:trash-20-solid"
-                  size="sm"
-                  @click="handleDelete"
-                >
-                  Delete
-                </UButton>
+                <UButton color="red" variant="soft" icon="heroicons:trash-20-solid" size="sm" @click="handleDelete"> Delete </UButton>
               </div>
             </form>
           </div>
@@ -249,28 +190,12 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               class="w-full max-h-64 object-cover border rounded-lg shadow-sm cursor-pointer"
               @click="showModal = true"
             />
-            <p class="text-xs text-gray-500 mt-2 text-center">
-              Click to enlarge
-            </p>
+            <p class="text-xs text-gray-500 mt-2 text-center">Click to enlarge</p>
             <!-- Modal window for enlarged view -->
-            <UModal
-              v-model="showModal"
-              centered
-              :ui="{ width: 'w-fit sm:max-w-none' }"
-            >
-              <UButton
-                variant="link"
-                color="white"
-                size="lg"
-                class="fixed top-4 right-4"
-                icon="heroicons:x-mark-solid"
-                @click.stop="showModal = false"
-              />
+            <UModal v-model="showModal" centered :ui="{ width: 'w-fit sm:max-w-none' }">
+              <UButton variant="link" color="white" size="lg" class="fixed top-4 right-4" icon="heroicons:x-mark-solid" @click.stop="showModal = false" />
               <div class="p-4 flex items-center justify-center h-full">
-                <img
-                  :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
-                  class="max-h-full rounded-lg"
-                />
+                <img :src="`data:image/png;base64,${lastScreenshot.image_base64}`" class="max-h-full rounded-lg" />
               </div>
             </UModal>
           </div>
@@ -296,16 +221,14 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
                   >{{ lastResult.status }}</span
                 >
               </div>
-              <div v-if="lastResult.errorMessage" class="text-red-500 text-sm">
-                Error: {{ lastResult.errorMessage }}
-              </div>
+              <div v-if="lastResult.errorMessage" class="text-red-500 text-sm">Error: {{ lastResult.errorMessage }}</div>
               <div class="flex justify-between">
                 <span class="text-gray-500">Response Time</span>
                 <span>{{ lastResult.responseTime }} ms</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-500">Status Code</span>
-                <span>{{ lastResult.statusCode || "—" }}</span>
+                <span>{{ lastResult.statusCode || '—' }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-500">Checked at</span>
@@ -320,10 +243,8 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div>
                 <span class="text-gray-500 block">Status</span>
-                <span
-                  :class="lastSSL.valid ? 'text-green-600' : 'text-red-600'"
-                >
-                  {{ lastSSL.valid ? "Valid" : "Invalid" }}
+                <span :class="lastSSL.valid ? 'text-green-600' : 'text-red-600'">
+                  {{ lastSSL.valid ? 'Valid' : 'Invalid' }}
                 </span>
               </div>
               <div>
@@ -331,8 +252,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
                 <span
                   :class="{
                     'text-green-600': lastSSL.daysLeft > 30,
-                    'text-yellow-600':
-                      lastSSL.daysLeft <= 30 && lastSSL.daysLeft > 7,
+                    'text-yellow-600': lastSSL.daysLeft <= 30 && lastSSL.daysLeft > 7,
                     'text-red-600': lastSSL.daysLeft <= 7,
                   }"
                   >{{ lastSSL.daysLeft }}</span
@@ -340,11 +260,11 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
               </div>
               <div>
                 <span class="text-gray-500 block">Issuer</span>
-                <span class="truncate">{{ lastSSL.issuer || "—" }}</span>
+                <span class="truncate">{{ lastSSL.issuer || '—' }}</span>
               </div>
               <div>
                 <span class="text-gray-500 block">Expires</span>
-                <span>{{ formatDateTime(lastSSL.validTo).split(" ")[0] }}</span>
+                <span>{{ formatDateTime(lastSSL.validTo).split(' ')[0] }}</span>
               </div>
             </div>
           </div>
@@ -353,26 +273,11 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-              <div>
-                <span class="text-gray-500 block">Load</span
-                >{{ lastSpeed.loadTime }}ms
-              </div>
-              <div>
-                <span class="text-gray-500 block">TTFB</span
-                >{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms
-              </div>
-              <div>
-                <span class="text-gray-500 block">DOM</span
-                >{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms
-              </div>
-              <div>
-                <span class="text-gray-500 block">Size</span
-                >{{ ((lastSpeed?.pageSize ?? 0) / 1024).toFixed(0) }} KB
-              </div>
-              <div>
-                <span class="text-gray-500 block">Req</span
-                >{{ lastSpeed?.requestCount }}
-              </div>
+              <div><span class="text-gray-500 block">Load</span>{{ lastSpeed.loadTime }}ms</div>
+              <div><span class="text-gray-500 block">TTFB</span>{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms</div>
+              <div><span class="text-gray-500 block">DOM</span>{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms</div>
+              <div><span class="text-gray-500 block">Size</span>{{ ((lastSpeed?.pageSize ?? 0) / 1024).toFixed(0) }} KB</div>
+              <div><span class="text-gray-500 block">Req</span>{{ lastSpeed?.requestCount }}</div>
             </div>
           </div>
 

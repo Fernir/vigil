@@ -1,26 +1,8 @@
 <script setup lang="ts">
-import { Line } from "vue-chartjs";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  type ChartOptions,
-} from "chart.js";
+import { Line } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, type ChartOptions } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const props = defineProps<{ id: number; height?: number }>();
 
@@ -40,24 +22,24 @@ const chartData = computed(() => {
     labels,
     datasets: [
       {
-        label: "Response Time (ms)",
+        label: 'Response Time (ms)',
         data: responseTimes,
-        borderColor: "rgb(59, 130, 246)",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         pointRadius: 2, // Smaller points
-        pointBackgroundColor: "#3b82f6",
-        pointBorderColor: "transparent",
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: 'transparent',
         tension: 0.3, // Less tension for performance
         fill: false, // No fill for performance
       },
       {
-        label: "Anomalies",
+        label: 'Anomalies',
         data: anomalyPoints,
-        borderColor: "rgb(239, 68, 68)",
-        backgroundColor: "rgba(239, 68, 68, 0.2)",
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.2)',
         pointRadius: 4,
-        pointBackgroundColor: "#ef4444",
-        pointBorderColor: "#ef4444",
+        pointBackgroundColor: '#ef4444',
+        pointBorderColor: '#ef4444',
         showLine: false,
         fill: false,
       },
@@ -69,7 +51,7 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: true, position: "bottom" },
+    legend: { display: true, position: 'bottom' },
     tooltip: {
       callbacks: {
         afterLabel: (context) => {
@@ -78,7 +60,7 @@ const chartOptions = {
           if (data?.isAnomaly) {
             return `Anomaly detected! Z-score: ${data.zScore.toFixed(2)}`;
           }
-          return "";
+          return '';
         },
       },
     },
@@ -86,10 +68,10 @@ const chartOptions = {
   scales: {
     y: {
       beginAtZero: true,
-      title: { display: true, text: "Response Time (ms)" },
+      title: { display: true, text: 'Response Time (ms)' },
     },
   },
-} as ChartOptions<"line">;
+} as ChartOptions<'line'>;
 
 onMounted(() => {
   fetchAnomalies(siteId);
@@ -137,20 +119,11 @@ onMounted(() => {
         </div>
       </div>
       <ClientOnly>
-        <div
-          :style="{ height: height ? `${height}px` : '300px' }"
-          class="w-full"
-        >
-          <Line
-            :data="chartData"
-            :options="chartOptions"
-            :height="height ?? 300"
-          />
+        <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
+          <Line :data="chartData" :options="chartOptions" :height="height ?? 300" />
         </div>
       </ClientOnly>
     </div>
-    <div v-else class="h-full flex items-center justify-center text-gray-500">
-      No anomaly data available
-    </div>
+    <div v-else class="h-full flex items-center justify-center text-gray-500">No anomaly data available</div>
   </div>
 </template>

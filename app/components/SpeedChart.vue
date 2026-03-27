@@ -1,28 +1,8 @@
 <script setup lang="ts">
-import { Line } from "vue-chartjs";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  type ChartOptions,
-} from "chart.js";
+import { Line } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, type ChartOptions } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const props = defineProps<{
   id: number;
@@ -33,15 +13,13 @@ const siteId = Number(props.id);
 
 const { speedResults } = useMonitoring();
 
-const data = computed(() =>
-  (speedResults.value[siteId] || []).slice().reverse(),
-);
+const data = computed(() => (speedResults.value[siteId] || []).slice().reverse());
 
 const defaultSettings = {
   borderWidth: 2,
   pointRadius: 4,
   pointHoverRadius: 6,
-  pointBorderColor: "transparent",
+  pointBorderColor: 'transparent',
   tension: 0.3,
   fill: true,
 };
@@ -55,27 +33,27 @@ const chartData = computed(() => ({
   datasets: [
     {
       ...defaultSettings,
-      label: "DOM loading time (ms)",
+      label: 'DOM loading time (ms)',
       data: data.value.map((d) => d.domContentLoaded ?? 0),
-      borderColor: "rgb(14, 165, 233)",
-      backgroundColor: "rgba(14, 165, 233, 0.05)",
-      pointBackgroundColor: "rgb(14, 165, 233)",
+      borderColor: 'rgb(14, 165, 233)',
+      backgroundColor: 'rgba(14, 165, 233, 0.05)',
+      pointBackgroundColor: 'rgb(14, 165, 233)',
     },
     {
       ...defaultSettings,
-      label: "TTFB (ms)",
+      label: 'TTFB (ms)',
       data: data.value.map((d) => d.ttfb ?? 0),
-      borderColor: "orange",
-      backgroundColor: "rgba(14, 165, 233, 0.05)",
-      pointBackgroundColor: "orange",
+      borderColor: 'orange',
+      backgroundColor: 'rgba(14, 165, 233, 0.05)',
+      pointBackgroundColor: 'orange',
     },
     {
       ...defaultSettings,
-      label: "Load time (ms)",
+      label: 'Load time (ms)',
       data: data.value.map((d) => d.loadTime ?? 0),
-      borderColor: "orangered",
-      backgroundColor: "rgba(14, 165, 233, 0.05)",
-      pointBackgroundColor: "orangered",
+      borderColor: 'orangered',
+      backgroundColor: 'rgba(14, 165, 233, 0.05)',
+      pointBackgroundColor: 'orangered',
     },
   ],
 }));
@@ -84,11 +62,11 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: true, position: "bottom" },
+    legend: { display: true, position: 'bottom' },
     tooltip: {
-      backgroundColor: "rgba(0,0,0,0.8)",
-      titleColor: "#fff",
-      bodyColor: "#ddd",
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      titleColor: '#fff',
+      bodyColor: '#ddd',
       padding: 8,
       cornerRadius: 4,
       displayColors: false,
@@ -104,31 +82,29 @@ const chartOptions = {
         maxRotation: 0,
         autoSkip: true,
         maxTicksLimit: 6,
-        color: "#6b7280", // gray-500
+        color: '#6b7280', // gray-500
       },
     },
     y: {
       beginAtZero: true,
-      grid: { color: "rgba(0,0,0,0.05)" },
+      grid: { color: 'rgba(0,0,0,0.05)' },
       ticks: {
         callback: (val: number) => `${val}ms`,
-        color: "#6b7280",
+        color: '#6b7280',
       },
     },
   },
   elements: {
-    line: { borderJoinStyle: "round" },
+    line: { borderJoinStyle: 'round' },
   },
-} as ChartOptions<"line">;
+} as ChartOptions<'line'>;
 </script>
 
 <template>
   <ClientOnly>
     <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
       <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
-      <div v-else class="h-full flex items-center justify-center text-gray-500">
-        No data available
-      </div>
+      <div v-else class="h-full flex items-center justify-center text-gray-500">No data available</div>
     </div>
   </ClientOnly>
 </template>

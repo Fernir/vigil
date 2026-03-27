@@ -36,7 +36,12 @@ export const useUserSession = () => {
   const loggedIn = computed(() => !!user.value);
   const sessionLoaded = computed(() => !sessionPending.value);
 
-  const login = async (email: string, password: string) => {
+  interface AuthResult {
+    success: boolean;
+    error?: string;
+  }
+
+  const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
       await $fetch<LoginResponse>('/api/auth/login', {
         method: 'POST',
@@ -51,7 +56,7 @@ export const useUserSession = () => {
 
       return { success: true };
     } catch (e: any) {
-      return { success: false };
+      return { success: false, error: e?.message || 'Login failed' };
     }
   };
 
@@ -73,16 +78,16 @@ export const useUserSession = () => {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string): Promise<AuthResult> => {
     try {
       await $fetch('/api/auth/register', {
         method: 'POST',
         body: { email, password },
       });
 
-      await navigateTo('/auth/login');
+      return { success: true };
     } catch (e: any) {
-      throw new Error(e.message || 'Registration failed');
+      return { success: false, error: e?.message || 'Registration failed' };
     }
   };
 
