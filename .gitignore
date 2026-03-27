@@ -50,7 +50,6 @@ prisma/migrations/*.sqlite-journal
 
 # Но коммитим сами миграции
 !prisma/migrations/**/*.sql
-prisma/schema.prisma
 prisma/seed.ts
 
 

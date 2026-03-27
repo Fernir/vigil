@@ -10,7 +10,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
-    "postinstall": "nuxt prepare && npx prisma generate",
+    "postinstall": "nuxt prepare",
     "db:init": "node scripts/init-db.js",
     "db:reset": "rm -f db/data.sqlite3 && node scripts/init-db.js",
     "db:migrate": "prisma migrate dev",
