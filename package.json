@@ -11,9 +11,9 @@
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
-    "db:init": "node db/init.js",
-    "db:reset": "rm -f db/data.sqlite3 && node db/init.js",
-    "db:migrate": "prisma migrate dev",
+    "db:init": "mkdir -p db && node db/init.js",
+    "db:reset": "rm -f db/data.sqlite3 && mkdir -p db && npx prisma migrate reset --force --schema prisma/schema.prisma && node db/init.js",
+    "db:migrate": "npx prisma migrate dev --schema prisma/schema.prisma",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
@@ -24,7 +24,7 @@
     "test:report": "playwright show-report"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@nuxt/ui": "^2.20.0",
