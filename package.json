@@ -9,7 +9,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "start": "node .output/server/index.mjs",
+    "start": "mkdir -p /tmp/vigil/db && npx prisma migrate deploy --schema prisma/schema.prisma && node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
     "db:init": "mkdir -p db && node db/init.js",
     "db:reset": "rm -f db/data.sqlite3 && mkdir -p db && npx prisma migrate reset --force --schema prisma/schema.prisma && node db/init.js",
