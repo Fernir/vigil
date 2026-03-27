@@ -54,23 +54,30 @@ async function initDatabase() {
 
     console.log('Data cleared');
 
-    // Создаём администратора
+    // Создаём администратора, если нет
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    const admin = await prisma.users.create({
-      data: {
-        email: adminEmail,
-        password: hashedPassword,
-        is_admin: true,
-        max_sites: 100,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
+    const existingAdmin = await prisma.users.findUnique({
+      where: { email: adminEmail },
     });
 
-    console.log(`Admin created: ${adminEmail}`);
+    if (!existingAdmin) {
+      const admin = await prisma.users.create({
+        data: {
+          email: adminEmail,
+          password: hashedPassword,
+          is_admin: true,
+          max_sites: 100,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      console.log(`Admin created: ${adminEmail}`);
+    } else {
+      console.log(`Admin already exists: ${adminEmail}`);
+    }
 
     console.log('Database initialization complete!');
   } catch (error) {
