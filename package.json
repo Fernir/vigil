@@ -10,7 +10,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
-    "postinstall": "prisma generate",
+    "postinstall": "nuxt prepare && npx prisma generate",
     "db:init": "node scripts/init-db.js",
     "db:reset": "rm -f db/data.sqlite3 && node scripts/init-db.js",
     "db:migrate": "prisma migrate dev",
@@ -22,6 +22,9 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "@nuxt/ui": "^2.20.0",
