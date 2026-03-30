@@ -48,7 +48,6 @@ Modify a .env file in the root (see .env.example):
 
 ```
 DATABASE_URL="file:./db/data.sqlite3"
-JWT_SECRET=your-super-secret-key
 ADMIN_EMAIL=admin@admin.com
 ADMIN_PASSWORD=111111
 ```

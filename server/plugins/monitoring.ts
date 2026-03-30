@@ -149,8 +149,6 @@ export default defineNitroPlugin(() => {
                 timestamp: new Date().toISOString(),
               });
             }
-
-            console.log(`  SSL: ${sslInfo.daysLeft} days left`);
           } catch (error) {}
 
           // 3. Unified browser check (speed + screenshot)
