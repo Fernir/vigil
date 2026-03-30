@@ -1,9 +1,9 @@
-import prisma from "~~/lib/prisma";
-import { checkSite } from "~~/server/utils/httpChecker";
-import { checkSSL } from "~~/server/utils/sslChecker";
-import { checkSiteUnified } from "~~/server/utils/puppeeterChecks";
-import { broadcastCheckResult } from "~~/server/api/sse";
-import { sendWebhook } from "~~/server/utils/webhook";
+import prisma from '~~/lib/prisma';
+import { checkSite } from '~~/server/utils/httpChecker';
+import { checkSSL } from '~~/server/utils/sslChecker';
+import { checkSiteUnified } from '~~/server/utils/puppeeterChecks';
+import { broadcastCheckResult } from '~~/server/api/sse';
+import { sendWebhook } from '~~/server/utils/webhook';
 
 let isRunning = false;
 const RETENTION_LIMIT = 20;
@@ -30,15 +30,11 @@ export default defineNitroPlugin(() => {
 
       for (const site of sites) {
         try {
-          const httpResult = await checkSite(
-            site.url,
-            site.expected_text,
-            site.text_condition ?? "contains",
-          );
+          const httpResult = await checkSite(site.url, site.expected_text, site.text_condition ?? 'contains');
 
           const prevResult = await prisma.check_results.findFirst({
             where: { siteId: site.id },
-            orderBy: { checked_at: "desc" },
+            orderBy: { checked_at: 'desc' },
           });
           const prevStatus = prevResult?.status;
 
@@ -54,7 +50,7 @@ export default defineNitroPlugin(() => {
           });
 
           broadcastCheckResult({
-            type: "http",
+            type: 'http',
             ...httpRecord,
             siteName: site.name,
             siteUrl: site.url,
@@ -64,27 +60,23 @@ export default defineNitroPlugin(() => {
           try {
             const recentResults = await prisma.check_results.findMany({
               where: { siteId: site.id },
-              orderBy: { checked_at: "desc" },
+              orderBy: { checked_at: 'desc' },
               take: 100, // Last 100 checks for analysis
               select: { responseTime: true },
             });
 
             if (recentResults.length >= 10) {
-              const responseTimes = recentResults.map((r) => r.responseTime);
-              const mean =
-                responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-              const variance =
-                responseTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
-                responseTimes.length;
+              const responseTimes = recentResults.map((r) => r.responseTime ?? 0);
+              const mean = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+              const variance = responseTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / responseTimes.length;
               const stdDev = Math.sqrt(variance);
 
-              const zScore =
-                stdDev > 0 ? (httpResult.responseTime - mean) / stdDev : 0;
+              const zScore = stdDev > 0 ? (httpResult.responseTime - mean) / stdDev : 0;
               const isAnomaly = Math.abs(zScore) > 2;
 
               if (isAnomaly) {
                 broadcastCheckResult({
-                  type: "anomaly",
+                  type: 'anomaly',
                   siteId: site.id,
                   responseTime: httpResult.responseTime,
                   zScore,
@@ -100,13 +92,9 @@ export default defineNitroPlugin(() => {
             // Silent fail for anomaly detection
           }
 
-          if (
-            httpResult.status === "down" &&
-            prevStatus !== "down" &&
-            site.users?.webhook_url
-          ) {
+          if (httpResult.status === 'down' && prevStatus !== 'down' && site.users?.webhook_url) {
             await sendWebhook(site.users.webhook_url, {
-              event: "down",
+              event: 'down',
               site: { id: site.id, name: site.name, url: site.url },
               status: httpResult.status,
               responseTime: httpResult.responseTime,
@@ -116,13 +104,9 @@ export default defineNitroPlugin(() => {
             });
           }
 
-          if (
-            (httpResult.status === "up" || httpResult.status === "degraded") &&
-            prevStatus === "down" &&
-            site.users?.webhook_url
-          ) {
+          if ((httpResult.status === 'up' || httpResult.status === 'degraded') && prevStatus === 'down' && site.users?.webhook_url) {
             await sendWebhook(site.users.webhook_url, {
-              event: "up",
+              event: 'up',
               site: { id: site.id, name: site.name, url: site.url },
               status: httpResult.status,
               responseTime: httpResult.responseTime,
@@ -150,7 +134,7 @@ export default defineNitroPlugin(() => {
             });
 
             broadcastCheckResult({
-              type: "ssl",
+              type: 'ssl',
               ...sslRecord,
               siteName: site.name,
               siteUrl: site.url,
@@ -158,7 +142,7 @@ export default defineNitroPlugin(() => {
 
             if (sslInfo.daysLeft <= 14 && site.users?.webhook_url) {
               await sendWebhook(site.users.webhook_url, {
-                event: "ssl_warning",
+                event: 'ssl_warning',
                 site: { id: site.id, name: site.name, url: site.url },
                 daysLeft: sslInfo.daysLeft,
                 validTo: sslInfo.validTo,
@@ -192,7 +176,7 @@ export default defineNitroPlugin(() => {
               });
 
               broadcastCheckResult({
-                type: "speed",
+                type: 'speed',
                 ...speedRecord,
                 siteName: site.name,
                 siteUrl: site.url,
@@ -213,12 +197,13 @@ export default defineNitroPlugin(() => {
               });
 
               broadcastCheckResult({
-                type: "screenshot",
+                type: 'screenshot',
                 id: screenshotRecord.id,
                 siteId: screenshotRecord.siteId,
                 width: screenshotRecord.width,
                 height: screenshotRecord.height,
                 checked_at: screenshotRecord.checked_at,
+                image_base64: screenshotRecord.image_data?.toString?.('base64'),
                 siteName: site.name,
                 siteUrl: site.url,
               });
@@ -240,7 +225,7 @@ export default defineNitroPlugin(() => {
       for (const site of allSites) {
         const row = await prisma.check_results.findFirst({
           where: { siteId: site.id },
-          orderBy: { checked_at: "desc" },
+          orderBy: { checked_at: 'desc' },
           skip: RETENTION_LIMIT - 1,
           take: 1,
           select: { id: true },
@@ -257,7 +242,7 @@ export default defineNitroPlugin(() => {
 
         const speedRow = await prisma.speed_results.findFirst({
           where: { siteId: site.id },
-          orderBy: { checked_at: "desc" },
+          orderBy: { checked_at: 'desc' },
           skip: RETENTION_LIMIT - 1,
           take: 1,
           select: { id: true },
@@ -274,7 +259,7 @@ export default defineNitroPlugin(() => {
 
         const sslRow = await prisma.ssl_results.findFirst({
           where: { siteId: site.id },
-          orderBy: { checked_at: "desc" },
+          orderBy: { checked_at: 'desc' },
           skip: RETENTION_LIMIT - 1,
           take: 1,
           select: { id: true },

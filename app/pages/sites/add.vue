@@ -72,7 +72,7 @@ const handleSubmit = async () => {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
+        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Add New Site</h1>

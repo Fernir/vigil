@@ -94,7 +94,7 @@ const addSite = async () => {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton to="/admin" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
+        <UButton to="/admin" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

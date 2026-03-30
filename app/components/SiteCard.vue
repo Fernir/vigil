@@ -9,11 +9,11 @@ const faviconUrl = computed(() => {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 });
 
-const { results } = useMonitoring();
+const { results } = useMonitoringStore();
 const { formatDateTime } = useDate();
 
 const lastResult = computed(() => {
-  return results.value[siteId]?.[0] || props.site.lastCheck || null;
+  return results[siteId]?.[0] || props.site.lastCheck || null;
 });
 </script>
 

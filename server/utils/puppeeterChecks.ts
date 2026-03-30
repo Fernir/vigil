@@ -1,5 +1,5 @@
-import puppeteer from "puppeteer";
-import { Buffer } from "node:buffer";
+import { chromium, type Page, type Response } from 'playwright';
+import { Buffer } from 'node:buffer';
 
 export interface UnifiedMetrics {
   loadTime: number;
@@ -22,104 +22,94 @@ export async function checkSiteUnified(
     timeout?: number;
   } = {},
 ): Promise<UnifiedMetrics | null> {
-  const browser = await puppeteer.launch({
+  // Запуск с вашими флагами оптимизации
+  const browser = await chromium.launch({
     headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--disable-gpu",
-    ],
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
   });
 
   try {
-    const page = await browser.newPage();
-    const viewportWidth = options.viewportWidth || 1280;
-    const viewportHeight = options.viewportHeight || 800;
-
-    await page.setViewport({
-      width: viewportWidth,
-      height: viewportHeight,
-      deviceScaleFactor: 1,
+    const context = await browser.newContext({
+      viewport: {
+        width: options.viewportWidth || 1280,
+        height: options.viewportHeight || 800,
+      },
     });
+
+    const page = await context.newPage();
 
     let requestCount = 0;
     let totalPageSize = 0;
 
-    page.on("request", () => {
+    // Логика подсчета запросов
+    page.on('request', () => {
       requestCount++;
     });
 
-    page.on("response", async (response) => {
+    // Логика подсчета размера страницы (аналог вашего buffer.length)
+    page.on('response', async (response: Response) => {
       try {
-        const buffer = await response.buffer();
-        totalPageSize += buffer.length;
+        const body = await response.body();
+        totalPageSize += body.length;
       } catch (e) {
-        // Ignore errors for individual responses
+        // Игнорируем ошибки (например, для редиректов или заблокированных запросов)
       }
     });
 
     const navigationStart = Date.now();
+
+    // Переход (networkidle в Playwright заменяет networkidle2)
     await page.goto(url, {
-      waitUntil: "networkidle2",
+      waitUntil: 'load',
       timeout: options.timeout || 30000,
     });
+
     const loadTime = Date.now() - navigationStart;
 
-    const ttfb = await page
+    // Метрики через Performance API
+    const metrics = await page
       .evaluate(() => {
-        const navEntry = performance.getEntriesByType(
-          "navigation",
-        )[0] as PerformanceNavigationTiming;
-        return navEntry ? navEntry.responseStart : 0;
+        const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        return {
+          ttfb: navEntry ? navEntry.responseStart : 0,
+          domContentLoaded: navEntry ? navEntry.domContentLoadedEventEnd : 0,
+          width: document.documentElement.scrollWidth,
+          height: document.documentElement.scrollHeight,
+        };
       })
-      .catch(() => 0);
+      .catch(() => ({ ttfb: 0, domContentLoaded: 0, width: 0, height: 0 }));
 
-    const domContentLoaded = await page
-      .evaluate(() => {
-        const navEntry = performance.getEntriesByType(
-          "navigation",
-        )[0] as PerformanceNavigationTiming;
-        return navEntry ? navEntry.domContentLoadedEventEnd : 0;
-      })
-      .catch(() => 0);
-
-    const screenshotBuffer = (await page.screenshot({
+    // Скриншот
+    const screenshotBuffer = await page.screenshot({
       fullPage: options.fullPage || false,
-      type: "png",
-    })) as Buffer;
-
-    const dimensions = await page.evaluate(() => ({
-      width: document.documentElement.scrollWidth,
-      height: document.documentElement.scrollHeight,
-    }));
-
-    await browser.close();
+      type: 'png',
+    });
 
     return {
       loadTime,
-      ttfb,
-      domContentLoaded,
+      ttfb: metrics.ttfb,
+      domContentLoaded: metrics.domContentLoaded,
       pageSize: Math.round(totalPageSize / 1024),
       requestCount,
       screenshotBuffer,
-      width: options.fullPage ? dimensions.width : viewportWidth,
-      height: options.fullPage ? dimensions.height : viewportHeight,
+      width: options.fullPage ? metrics.width : options.viewportWidth || 1280,
+      height: options.fullPage ? metrics.height : options.viewportHeight || 800,
     };
   } catch (error: any) {
     console.error(`Unified check failed for ${url}:`, error.message);
-    await browser.close().catch(() => {});
     return {
       loadTime: 0,
       ttfb: 0,
       domContentLoaded: 0,
       pageSize: 0,
       requestCount: 0,
-      screenshotBuffer: Buffer.from(""),
+      screenshotBuffer: Buffer.from(''),
       width: 0,
       height: 0,
       error: error.message,
     };
+  } finally {
+    // Гарантированно закрываем браузер
+    await browser.close();
   }
 }

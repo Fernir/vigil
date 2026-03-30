@@ -31,7 +31,7 @@ const columns = [
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Admin Dashboard</h1>
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
+        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
       <div class="card p-6">
         <h2 class="text-xl font-semibold mb-4">Users</h2>

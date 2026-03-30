@@ -72,7 +72,7 @@ const save = async () => {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton :to="`/admin/users/${form.userId}`" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
+        <UButton :to="`/admin/users/${form.userId}`" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
 
       <div class="card p-6">

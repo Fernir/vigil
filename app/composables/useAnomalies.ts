@@ -5,7 +5,7 @@ export const useAnomalies = (siteId: number) => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const { anomalyResults } = useMonitoring();
+  const { anomalyResults } = useMonitoringStore();
 
   const fetchAnomalies = async (siteId: number) => {
     if (!siteId) return;
@@ -25,7 +25,7 @@ export const useAnomalies = (siteId: number) => {
   };
 
   // Real-time anomalies from SSE
-  const realtimeAnomalies = computed(() => anomalyResults.value[siteId] || []);
+  const realtimeAnomalies = computed(() => anomalyResults[siteId] || []);
 
   // Auto-fetch on mount if siteId provided
   if (process.server) {

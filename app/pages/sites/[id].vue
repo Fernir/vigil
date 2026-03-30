@@ -11,7 +11,7 @@ useHead({ title: 'Edit Site' });
 
 const showModal = ref(false);
 
-const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchScreenshotData, fetchSiteHistory } = useMonitoring();
+const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoringStore();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
@@ -51,7 +51,6 @@ const loadData = async () => {
   await fetchSiteHistory(siteId);
   await fetchSpeedHistory(siteId);
   await fetchSSLHistory(siteId);
-  await fetchScreenshotData(siteId);
 };
 
 onServerPrefetch(async () => {
@@ -125,14 +124,18 @@ const handleSubmit = async () => {
   if (result) router.push('/');
 };
 
-const lastResult = computed(() => results.value[siteId]?.[0] || null);
+const lastResult = computed(() => results[siteId]?.[0] || null);
+
+const screenshotUrl = computed(() =>
+  lastScreenshot.value?.image_base64 ? `data:image/png;base64,${lastScreenshot.value.image_base64}` : `/api/sites/${siteId}/screenshot`,
+);
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
+        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
 
       <template v-if="siteNotFound">
@@ -198,20 +201,21 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
 
         <!-- Right column: all metrics and charts -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="card p-5" v-if="lastScreenshot?.image_base64">
+          <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
             <img
-              :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
+              :src="screenshotUrl"
               alt="Website screenshot"
               class="w-full max-h-64 object-cover border rounded-lg shadow-sm cursor-pointer"
               @click="showModal = true"
             />
+
             <p class="text-xs text-gray-500 mt-2 text-center">Click to enlarge</p>
             <!-- Modal window for enlarged view -->
             <UModal v-model="showModal" centered :ui="{ width: 'w-fit sm:max-w-none' }">
               <UButton variant="link" color="white" size="lg" class="fixed top-4 right-4" icon="heroicons:x-mark-solid" @click.stop="showModal = false" />
               <div class="p-4 flex items-center justify-center h-full">
-                <img :src="`data:image/png;base64,${lastScreenshot.image_base64}`" class="max-h-full rounded-lg" />
+                <img :src="screenshotUrl" class="max-h-full rounded-lg" />
               </div>
             </UModal>
           </div>

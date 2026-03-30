@@ -8,9 +8,9 @@ const props = defineProps<{ id: number }>();
 
 const siteId = Number(props.id);
 
-const { speedResults } = useMonitoring();
+const { speedResults } = useMonitoringStore();
 
-const data = computed(() => (speedResults.value[siteId] || []).slice().reverse());
+const data = computed(() => (speedResults[siteId] || []).slice().reverse());
 
 const defaultSettings = {
   borderWidth: 2,

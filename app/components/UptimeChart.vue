@@ -8,9 +8,9 @@ const props = defineProps<{ id: number }>();
 
 const siteId = Number(props.id);
 
-const { results } = useMonitoring();
+const { results } = useMonitoringStore();
 
-const data = computed(() => (results.value[siteId] || []).slice().reverse());
+const data = computed(() => (results[siteId] || []).slice().reverse());
 
 const chartData = computed(() => ({
   labels: data.value.map((d) => {

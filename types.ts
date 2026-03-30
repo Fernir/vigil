@@ -24,7 +24,7 @@ export interface SiteInterface {
   created_at: string;
   updated_at: string;
   lastCheck?: {
-    status: "up" | "down" | "degraded";
+    status: 'up' | 'down' | 'degraded';
     responseTime: number;
     statusCode?: number;
     errorMessage?: string;
@@ -35,7 +35,7 @@ export interface SiteInterface {
 export interface CheckResultInterface {
   id: number;
   siteId: number;
-  status: "up" | "down" | "degraded" | "pending";
+  status: 'up' | 'down' | 'degraded' | 'pending';
   responseTime: number;
   statusCode?: number;
   errorMessage?: string;
@@ -52,7 +52,7 @@ export interface SpeedResultInterface {
   requestCount?: number;
   error?: string | null;
   checked_at?: string;
-  type?: "speed";
+  type?: 'speed';
   siteName?: string;
   siteUrl?: string;
 }
@@ -68,7 +68,7 @@ export interface SSLResultInterface {
   issuer: string | null;
   error: string | null;
   checked_at: string;
-  type?: "ssl";
+  type?: 'ssl';
   siteName?: string;
   siteUrl?: string;
 }
@@ -79,10 +79,10 @@ export interface ScreenshotResultInterface {
   width: number;
   height: number;
   checked_at: string;
-  type?: "screenshot";
+  type?: 'screenshot';
   siteName?: string;
   siteUrl?: string;
-  image_base64?: string;
+  image_base64: string;
 }
 
 export interface AnomalyPoint {
@@ -98,6 +98,6 @@ export interface AnomalyResult {
   averageResponseTime: number;
   prediction: {
     nextHourRisk: number;
-    trend: "improving" | "stable" | "degrading";
+    trend: 'improving' | 'stable' | 'degrading';
   };
 }
