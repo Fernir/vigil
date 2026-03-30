@@ -4,7 +4,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const props = defineProps<{ id: number; height?: number }>();
+const props = defineProps<{ id: number }>();
 
 const siteId = Number(props.id);
 
@@ -79,51 +79,53 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full">
-    <div v-if="anomalies" class="overflow-hidden">
-      <h3 class="font-semibold mb-2">AI Anomaly Analysis</h3>
-      <div class="grid grid-cols-2 gap-4 text-sm pb-4">
-        <div class="flex gap-2">
-          <span class="text-gray-500">Anomalies detected:</span>
-          <span class="font-medium">{{ anomalies.anomalyCount }}</span>
+  <div class="card p-5">
+    <div class="w-full">
+      <div v-if="anomalies" class="overflow-hidden">
+        <h3 class="font-semibold mb-2">AI Anomaly Analysis</h3>
+        <div class="grid grid-cols-2 gap-4 text-sm pb-4">
+          <div class="flex gap-2">
+            <span class="text-gray-500">Anomalies detected:</span>
+            <span class="font-medium">{{ anomalies.anomalyCount }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-gray-500">Avg Response Time:</span>
+            <span class="font-medium">{{ anomalies.averageResponseTime }}ms</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-gray-500">Trend:</span>
+            <span
+              class="font-medium"
+              :class="{
+                'text-green-600': anomalies.prediction.trend === 'improving',
+                'text-red-600': anomalies.prediction.trend === 'degrading',
+                'text-gray-600': anomalies.prediction.trend === 'stable',
+              }"
+            >
+              {{ anomalies.prediction.trend }}
+            </span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-gray-500">Next hour risk:</span>
+            <span
+              class="font-medium"
+              :class="{
+                'text-red-600': anomalies.prediction.nextHourRisk > 0.5,
+                'text-yellow-600': anomalies.prediction.nextHourRisk > 0.2,
+                'text-green-600': anomalies.prediction.nextHourRisk <= 0.2,
+              }"
+            >
+              {{ Math.round(anomalies.prediction.nextHourRisk * 100) }}%
+            </span>
+          </div>
         </div>
-        <div class="flex gap-2">
-          <span class="text-gray-500">Avg Response Time:</span>
-          <span class="font-medium">{{ anomalies.averageResponseTime }}ms</span>
-        </div>
-        <div class="flex gap-2">
-          <span class="text-gray-500">Trend:</span>
-          <span
-            class="font-medium"
-            :class="{
-              'text-green-600': anomalies.prediction.trend === 'improving',
-              'text-red-600': anomalies.prediction.trend === 'degrading',
-              'text-gray-600': anomalies.prediction.trend === 'stable',
-            }"
-          >
-            {{ anomalies.prediction.trend }}
-          </span>
-        </div>
-        <div class="flex gap-2">
-          <span class="text-gray-500">Next hour risk:</span>
-          <span
-            class="font-medium"
-            :class="{
-              'text-red-600': anomalies.prediction.nextHourRisk > 0.5,
-              'text-yellow-600': anomalies.prediction.nextHourRisk > 0.2,
-              'text-green-600': anomalies.prediction.nextHourRisk <= 0.2,
-            }"
-          >
-            {{ Math.round(anomalies.prediction.nextHourRisk * 100) }}%
-          </span>
-        </div>
+        <ClientOnly>
+          <div class="w-full h-32 md:h-52">
+            <Line :data="chartData" :options="chartOptions" />
+          </div>
+        </ClientOnly>
       </div>
-      <ClientOnly>
-        <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
-          <Line :data="chartData" :options="chartOptions" :height="height ?? 300" />
-        </div>
-      </ClientOnly>
+      <div v-else class="h-full flex items-center justify-center text-gray-500">No anomaly data available</div>
     </div>
-    <div v-else class="h-full flex items-center justify-center text-gray-500">No anomaly data available</div>
   </div>
 </template>

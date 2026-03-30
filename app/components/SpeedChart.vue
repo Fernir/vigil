@@ -4,10 +4,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const props = defineProps<{
-  id: number;
-  height?: number;
-}>();
+const props = defineProps<{ id: number }>();
 
 const siteId = Number(props.id);
 
@@ -101,10 +98,13 @@ const chartOptions = {
 </script>
 
 <template>
-  <ClientOnly>
-    <div :style="{ height: height ? `${height}px` : '300px' }" class="w-full">
-      <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
-      <div v-else class="h-full flex items-center justify-center text-gray-500">No data available</div>
-    </div>
-  </ClientOnly>
+  <div class="card p-5">
+    <h3 class="text-md font-semibold mb-3">Speed Trend</h3>
+    <ClientOnly>
+      <div class="w-full h-32 md:h-52">
+        <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
+        <div v-else class="h-full flex items-center justify-center text-gray-500">No data available</div>
+      </div>
+    </ClientOnly>
+  </div>
 </template>

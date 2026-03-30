@@ -23,12 +23,24 @@ const form = reactive<Omit<SiteInterface, 'id' | 'userId' | 'created_at' | 'upda
 
 const errors = ref<Record<string, string>>({});
 
+const normalizeUrl = (url: string): string => {
+  if (!url) return url;
+
+  let normalizedUrl = url.trim();
+
+  if (normalizedUrl.match(/^https?:\/\//i)) {
+    return normalizedUrl;
+  }
+
+  return `https://${normalizedUrl}`;
+};
+
 const validate = () => {
   const newErrors: Record<string, string> = {};
 
   if (!form.name) newErrors.name = 'Name is required';
   if (!form.url) newErrors.url = 'URL is required';
-  if (!form.url.match(/^https?:\/\/.+/)) {
+  else if (!form.url.match(/^https?:\/\/.+/)) {
     newErrors.url = 'URL must start with http:// or https://';
   }
   if (form.check_type === 'text' && !form.expected_text) {
@@ -43,6 +55,10 @@ const validate = () => {
 };
 
 const handleSubmit = async () => {
+  if (form.url) {
+    form.url = normalizeUrl(form.url);
+  }
+
   if (!validate()) return;
 
   const result = await addSite(form);

@@ -26,7 +26,7 @@ const siteNotFound = ref(false);
 const form = reactive<Partial<SiteInterface>>({
   name: '',
   url: '',
-  checkInterval: 5,
+  checkInterval: 30,
   isActive: true,
   check_type: 'http',
   expected_text: '',
@@ -34,6 +34,18 @@ const form = reactive<Partial<SiteInterface>>({
 });
 
 const errors = ref<Record<string, string>>({});
+
+const normalizeUrl = (url: string): string => {
+  if (!url) return url;
+
+  let normalizedUrl = url.trim();
+
+  if (normalizedUrl.match(/^https?:\/\//i)) {
+    return normalizedUrl;
+  }
+
+  return `https://${normalizedUrl}`;
+};
 
 const loadData = async () => {
   await fetchSiteHistory(siteId);
@@ -104,6 +116,10 @@ const handleDelete = async () => {
 };
 
 const handleSubmit = async () => {
+  if (form.url) {
+    form.url = normalizeUrl(form.url);
+  }
+
   if (!validate()) return;
   const result = await updateSite(siteId, form);
   if (result) router.push('/');
@@ -182,7 +198,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
 
         <!-- Right column: all metrics and charts -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="card p-5" v-if="lastScreenshot">
+          <div class="card p-5" v-if="lastScreenshot?.image_base64">
             <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
             <img
               :src="`data:image/png;base64,${lastScreenshot.image_base64}`"
@@ -201,10 +217,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
 
           <!-- Chart of response times -->
-          <div class="card p-5">
-            <h3 class="text-md font-semibold mb-3">Response Time History</h3>
-            <UptimeChart :id="siteId" :height="200" />
-          </div>
+          <UptimeChart :id="siteId" />
 
           <!-- Last Check -->
           <div class="card p-5" v-if="lastResult">
@@ -272,7 +285,7 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           <!-- Block Performance (horizontal metrics) -->
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 gap-y-2 text-sm">
               <div><span class="text-gray-500 block">Load</span>{{ lastSpeed.loadTime }}ms</div>
               <div><span class="text-gray-500 block">TTFB</span>{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms</div>
               <div><span class="text-gray-500 block">DOM</span>{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms</div>
@@ -282,15 +295,10 @@ const lastResult = computed(() => results.value[siteId]?.[0] || null);
           </div>
 
           <!-- Load Time Trend (if data is available) -->
-          <div class="card p-5">
-            <h3 class="text-md font-semibold mb-3">Speed Trend</h3>
-            <SpeedChart :id="siteId" :height="200" />
-          </div>
+          <SpeedChart :id="siteId" />
 
           <!-- AI Anomaly Detection -->
-          <div class="card p-5">
-            <AnomalyChart :id="siteId" :height="300" />
-          </div>
+          <AnomalyChart :id="siteId" />
         </div>
       </div>
     </div>

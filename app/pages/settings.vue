@@ -45,28 +45,9 @@ const saveWebhookSettings = async () => {
         <UButton to="/" variant="ghost" icon="heroicons:arrow-left"> Back </UButton>
       </div>
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-        <p class="text-gray-600 dark:text-gray-400">Manage your account and notification preferences</p>
-      </div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
 
       <div class="space-y-6">
-        <!-- Profile Section -->
-        <div class="card p-6">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Profile</h2>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> Email </label>
-            <!-- Use ClientOnly for fallback on server where placeholder is shown,
-                 and real value on client, avoiding hydration issues -->
-            <ClientOnly>
-              <UInput :model-value="user?.email" disabled class="bg-gray-50" />
-              <template #fallback>
-                <UInput disabled class="bg-gray-50" placeholder="Loading..." />
-              </template>
-            </ClientOnly>
-          </div>
-        </div>
-
         <!-- Webhook Section -->
         <div class="card p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Webhook Notifications</h2>

@@ -1,23 +1,7 @@
-import fs from 'fs';
-import path from 'path';
 import { execSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
-
-// derive database path from env or defaults
-const sqliteUrl = process.env.DATABASE_URL || (process.env.RAILWAY_ENV ? 'file:/tmp/vigil/db/data.sqlite3' : 'file:./db/data.sqlite3');
-let dbPath = sqliteUrl.startsWith('file:') ? sqliteUrl.slice(5) : sqliteUrl;
-if (!path.isAbsolute(dbPath)) {
-  dbPath = path.resolve(process.cwd(), dbPath);
-}
-process.env.DATABASE_URL = `file:${dbPath}`;
-
-// Ensure directory exists
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
 
 async function safeDelete(modelName, action) {
   try {

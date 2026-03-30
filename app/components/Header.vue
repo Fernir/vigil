@@ -44,9 +44,10 @@ const userMenuItems = [
               <UButton color="gray" variant="ghost" to="/admin" icon="heroicons:shield-check-20-solid">Admin</UButton>
             </UTooltip>
           </template>
+
+          <ThemeToggle />
         </div>
       </div>
-      <ThemeToggle />
     </div>
   </header>
 </template>
