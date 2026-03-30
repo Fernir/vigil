@@ -11,7 +11,7 @@ useHead({ title: 'Edit Site' });
 
 const showModal = ref(false);
 
-const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoringStore();
+const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoring();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
@@ -124,7 +124,7 @@ const handleSubmit = async () => {
   if (result) router.push('/');
 };
 
-const lastResult = computed(() => results[siteId]?.[0] || null);
+const lastResult = computed(() => results.value[siteId]?.[0] || null);
 
 const screenshotUrl = computed(() =>
   lastScreenshot.value?.image_base64 ? `data:image/png;base64,${lastScreenshot.value.image_base64}` : `/api/sites/${siteId}/screenshot`,

@@ -13,7 +13,7 @@ const isDark = computed({
     return colorMode.value === 'dark';
   },
   set: (value: boolean) => {
-    colorMode.preference = value ? 'dark' : 'light';
+    colorMode.value = value ? 'dark' : 'light';
   },
 });
 

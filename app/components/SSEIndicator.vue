@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMonitoring } from '../composables/useMonitoring';
 
-const { sseConnected, connectToSSE } = useMonitoringStore();
+const { sseConnected, connectToSSE } = useMonitoring();
 const isClient = ref(false);
 
 onMounted(() => {
