@@ -14,16 +14,16 @@ const confirm = useConfirm();
 
   <UModal v-model="confirm.isOpen.value">
     <UCard>
-      <div class="p-4">
-        <h3 class="text-lg font-bold">{{ confirm.config.value.title }}</h3>
-        <p class="text-gray-500 mt-2">{{ confirm.config.value.description }}</p>
-        <div class="flex justify-end gap-3 mt-6">
+      <template #header>{{ confirm.config.value.title }}</template>
+      <p class="text-gray-500 mt-2">{{ confirm.config.value.description }}</p>
+      <template #footer>
+        <div class="flex justify-end gap-4">
           <UButton color="gray" variant="ghost" @click="confirm.cancel">Cancel</UButton>
           <UButton color="red" @click="confirm.confirm">
             {{ confirm.config.value.confirmText }}
           </UButton>
         </div>
-      </div>
+      </template>
     </UCard>
   </UModal>
 </template>

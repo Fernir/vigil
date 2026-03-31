@@ -37,6 +37,18 @@ watchEffect(() => {
   }
 });
 
+const checkOptions = [
+  { label: 'HTTP Status', value: 'http', icon: 'i-heroicons-globe-alt' },
+  { label: 'Text on page', value: 'text', icon: 'i-heroicons-document-text' },
+];
+
+const selectedOption = computed({
+  get: () => checkOptions.find((opt) => opt.value === form.check_type) || checkOptions[0],
+  set: (val: Ref<string>) => {
+    form.check_type = val.value;
+  },
+});
+
 const normalizeUrl = (url: string): string => {
   const trimmed = url.trim();
   if (!trimmed) return '';
@@ -92,13 +104,7 @@ const handleSubmit = () => {
         </UFormGroup>
 
         <UFormGroup label="Check Type">
-          <USelect
-            v-model="form.check_type"
-            :options="[
-              { label: 'HTTP Status', value: 'http' },
-              { label: 'Text on page', value: 'text' },
-            ]"
-          />
+          <USelectMenu v-model="selectedOption" :options="checkOptions" />
         </UFormGroup>
       </div>
 
