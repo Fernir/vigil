@@ -41,8 +41,7 @@ const sizeClasses = {
 
 const currentConfig = computed(() => statusConfig[props.status]);
 
-// Animation only on client
-const showAnimation = computed(() => props.animated && process.client);
+const showAnimation = computed(() => props.animated);
 </script>
 
 <template>

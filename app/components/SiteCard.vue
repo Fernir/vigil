@@ -26,7 +26,7 @@ const lastResult = computed(() => {
       <img :src="faviconUrl" :alt="site.name" class="w-5 h-5 rounded" @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')" />
       <span class="font-semibold">{{ site.name }}</span>
       <span class="inline-block w-fit text-[10px] bg-black text-white px-1.5 rounded">{{ site.check_type === 'text' ? 'Text' : 'HTTP' }}</span>
-      <StatusBadge :status="lastResult?.status ?? 'pending'" size="sm" />
+      <StatusBadge :status="lastResult?.status ?? 'pending'" size="sm" :animated="true" />
       <span v-if="!site.isActive" class="text-[10px] bg-gray-100 text-gray-600 px-1.5 rounded">Paused</span>
 
       <a :href="site.url" target="_blank" class="text-gray-500 hover:text-primary-600 flex items-center gap-0.5" @click.stop>
