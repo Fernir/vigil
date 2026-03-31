@@ -6,7 +6,6 @@ let usageCount = 0;
 let cleanupTimer: NodeJS.Timeout | null = null;
 
 export default defineNitroPlugin(async () => {
-  // Запускаем браузер при старте приложения
   browser = await chromium.launch({
     headless: true,
     args: [
@@ -21,7 +20,6 @@ export default defineNitroPlugin(async () => {
     ],
   });
 
-  // Создаем один контекст для всех запросов
   context = await browser.newContext({
     viewport: { width: 1280, height: 800 },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -29,7 +27,6 @@ export default defineNitroPlugin(async () => {
 
   console.log('Browser launched and ready');
 
-  // Закрываем при завершении
   process.on('beforeExit', async () => {
     await closeBrowser();
   });
@@ -68,7 +65,6 @@ const scheduleCleanup = () => {
     clearTimeout(cleanupTimer);
   }
 
-  // Закрываем браузер через 5 минут без использования
   cleanupTimer = setTimeout(
     async () => {
       if (usageCount === 0 && browser) {

@@ -1,4 +1,3 @@
-// server/utils/checkSiteUnified.ts
 import { type Page, type Response } from 'playwright';
 import { Buffer } from 'node:buffer';
 import { useBrowser } from '../plugins/browser';
@@ -75,13 +74,11 @@ export async function checkSiteUnified(
       })
       .catch(() => ({ ttfb: 0, domContentLoaded: 0, width: 0, height: 0 }));
 
-    // Скриншот
     const screenshotBuffer = await page.screenshot({
       fullPage: options.fullPage || false,
       type: 'png',
     });
 
-    // Очищаем слушатели
     page.off('request', onRequest);
     page.off('response', onResponse);
 

@@ -33,8 +33,8 @@ export const useUserSession = () => {
   );
 
   const user = computed(() => sessionData.value?.user || null);
-  const loggedIn = computed(() => !!user.value);
   const sessionLoaded = computed(() => !sessionPending.value);
+  const loggedIn = computed(() => !!user.value);
 
   interface AuthResult {
     success: boolean;

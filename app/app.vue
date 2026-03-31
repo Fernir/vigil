@@ -15,6 +15,7 @@ const cookie = useCookie('color-mode');
 
 const themeClass = computed(() => {
   const mode = cookie.value || colorMode.value;
+
   return mode === 'dark' ? 'dark' : '';
 });
 

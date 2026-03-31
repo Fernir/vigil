@@ -1,16 +1,13 @@
-import prisma from "~~/lib/prisma";
+import prisma from '~~/lib/prisma';
 
 export default defineEventHandler(async (event) => {
-  // Пропускаем публичные маршруты
-  const publicRoutes = [
-    "/api/auth/login",
-    "/api/auth/register",
-    "/api/auth/session",
-  ];
+  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/session'];
+
   if (publicRoutes.some((route) => event.path.startsWith(route))) return;
 
   const userId = event.context.auth?.userId;
-  if (!userId) return; // неавторизованные уже отсеяны в auth.ts
+
+  if (!userId) return;
 
   const user = await prisma.users.findUnique({
     where: { id: userId },
@@ -20,7 +17,7 @@ export default defineEventHandler(async (event) => {
   if (user?.banned_at) {
     throw createError({
       statusCode: 200,
-      message: "Your account has been banned",
+      message: 'Your account has been banned',
     });
   }
 });

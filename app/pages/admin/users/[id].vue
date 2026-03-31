@@ -11,7 +11,6 @@ const userId = Number(route.params.id);
 
 const isLoading = ref(true);
 
-// Загружаем данные пользователя и его сайты
 const { data: user, refresh: refreshUser } = await useFetch<UserInterface>(`/api/admin/users/${userId}`);
 const { data: sites, refresh: refreshSites } = await useFetch<SiteInterface[]>(`/api/admin/users/${userId}/sites`);
 

@@ -1,15 +1,14 @@
-import prisma from "~~/lib/prisma";
+import prisma from '~~/lib/prisma';
 
 export default defineEventHandler(async () => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Получаем все активные сайты с последними проверками
   const sites = await prisma.sites.findMany({
     where: { isActive: true },
     include: {
       check_results: {
-        orderBy: { checked_at: "desc" },
+        orderBy: { checked_at: 'desc' },
         take: 1,
         where: {
           checked_at: { gte: thirtyDaysAgo },
@@ -18,7 +17,6 @@ export default defineEventHandler(async () => {
     },
   });
 
-  // Считаем статусы
   let operational = 0;
   let degraded = 0;
   let down = 0;
@@ -26,23 +24,21 @@ export default defineEventHandler(async () => {
   let sitesWithData = 0;
 
   for (const site of sites) {
-    // Статус последней проверки
     const lastCheck = site.check_results[0];
     if (lastCheck) {
       switch (lastCheck.status) {
-        case "up":
+        case 'up':
           operational++;
           break;
-        case "degraded":
+        case 'degraded':
           degraded++;
           break;
-        case "down":
+        case 'down':
           down++;
           break;
       }
     }
 
-    // Считаем аптайм за 30 дней
     const allChecks = await prisma.check_results.count({
       where: {
         siteId: site.id,
@@ -54,7 +50,7 @@ export default defineEventHandler(async () => {
       where: {
         siteId: site.id,
         checked_at: { gte: thirtyDaysAgo },
-        status: "up",
+        status: 'up',
       },
     });
 
@@ -65,8 +61,7 @@ export default defineEventHandler(async () => {
     }
   }
 
-  const overallUptime =
-    sitesWithData > 0 ? Math.round(totalUptimeSum / sitesWithData) : 100;
+  const overallUptime = sitesWithData > 0 ? Math.round(totalUptimeSum / sitesWithData) : 100;
 
   return {
     total: sites.length,

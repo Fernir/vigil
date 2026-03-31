@@ -30,10 +30,7 @@ export default defineEventHandler(async (event) => {
     throw error;
   }
 
-  // Проверяем существование сайта
-  const existing = await prisma.sites.findUnique({
-    where: { id: id },
-  });
+  const existing = await prisma.sites.findUnique({ where: { id: id } });
 
   if (!existing) {
     throw createError({ statusCode: 404, message: 'Site not found' });

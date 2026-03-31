@@ -27,7 +27,6 @@ async function initDatabase() {
 
     prisma = new PrismaClient();
 
-    // Очищаем таблицы в правильном порядке (из-за внешних ключей)
     console.log('Clearing existing data...');
     await safeDelete('speed_results', () => prisma.speed_results.deleteMany());
     await safeDelete('screenshots', () => prisma.screenshots.deleteMany());
@@ -38,7 +37,6 @@ async function initDatabase() {
 
     console.log('Data cleared');
 
-    // Создаём администратора, если нет
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     const hashedPassword = await bcrypt.hash(adminPassword, 10);

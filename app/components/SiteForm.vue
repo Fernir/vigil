@@ -6,10 +6,8 @@ const props = defineProps<{
   loading?: boolean;
 }>();
 
-// Передаем данные обратно при сабмите
 const emit = defineEmits(['submit', 'cancel']);
 
-// Внутреннее реактивное состояние формы
 const form = reactive({
   name: '',
   url: '',
@@ -21,17 +19,14 @@ const form = reactive({
   text_condition: 'contains',
 });
 
-// Ошибки валидации
 const errors = ref<Record<string, string>>({});
 
-// Синхронизируем внутреннюю форму с входящими данными (например, после useFetch)
 watchEffect(() => {
   if (props.initialData) {
     Object.assign(form, {
       ...props.initialData,
-      // Гарантируем дефолтные значения для корректной работы UI
       checkInterval: props.initialData.checkInterval ?? 30,
-      isActive: props.initialData.isActive !== false, // дефолт true, если не пришло false
+      isActive: props.initialData.isActive !== false,
       userId: props.initialData.userId ?? 0,
     });
   }
@@ -81,7 +76,6 @@ const validate = () => {
 const handleSubmit = () => {
   form.url = normalizeUrl(form.url);
   if (validate()) {
-    // Отправляем копию состояния формы родителю
     emit('submit', { ...form });
   }
 };
