@@ -34,20 +34,6 @@ const form = reactive<Partial<SiteInterface>>({
   text_condition: 'contains',
 });
 
-const errors = ref<Record<string, string>>({});
-
-const normalizeUrl = (url: string): string => {
-  if (!url) return url;
-
-  let normalizedUrl = url.trim();
-
-  if (normalizedUrl.match(/^https?:\/\//i)) {
-    return normalizedUrl;
-  }
-
-  return `https://${normalizedUrl}`;
-};
-
 const loadData = async () => {
   await fetchSiteHistory(siteId);
   await fetchSpeedHistory(siteId);
@@ -86,23 +72,6 @@ onMounted(async () => {
   form.text_condition = site.value.text_condition || 'contains';
 });
 
-const validate = () => {
-  const newErrors: Record<string, string> = {};
-  if (!form.name) newErrors.name = 'Name is required';
-  if (!form.url) newErrors.url = 'URL is required';
-  else if (!form.url.match(/^https?:\/\/.+/)) {
-    newErrors.url = 'URL must start with http:// or https://';
-  }
-  if (Number(form.checkInterval) < 1 || Number(form.checkInterval) > 60) {
-    newErrors.checkInterval = 'Interval must be between 1 and 60 minutes';
-  }
-  if (form.check_type === 'text' && !form.expected_text) {
-    newErrors.expected_text = 'Expected text is required for text check';
-  }
-  errors.value = newErrors;
-  return Object.keys(newErrors).length === 0;
-};
-
 const handleDelete = async () => {
   if (confirm('Are you sure you want to delete this site? This action cannot be undone.')) {
     try {
@@ -116,12 +85,6 @@ const handleDelete = async () => {
 };
 
 const handleSubmit = async () => {
-  if (form.url) {
-    form.url = normalizeUrl(form.url);
-  }
-
-  if (!validate()) return;
-
   const result = await updateSite(siteId, form);
 
   if (result) router.push('/');
@@ -150,39 +113,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
         <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
-            <form @submit.prevent="handleSubmit" class="space-y-4">
-              <UInput v-model="form.name" placeholder="Site name" :error="errors.name" />
-              <UInput v-model="form.url" placeholder="https://example.com" :error="errors.url" />
-              <UInput v-model="form.checkInterval" type="number" min="30" max="3600" placeholder="Interval (sec)" :error="errors.checkInterval" />
-              <div class="flex items-center gap-2">
-                <UToggle v-model="form.isActive" />
-                <span class="text-sm">Active monitoring</span>
-              </div>
-
-              <div>
-                <USelect
-                  v-model="form.check_type"
-                  :options="[
-                    { label: 'HTTP Status', value: 'http' },
-                    { label: 'Text on page', value: 'text' },
-                  ]"
-                />
-              </div>
-
-              <div v-if="form.check_type === 'text'" class="space-y-2">
-                <UInput v-model="form.expected_text" placeholder="Expected text" :error="errors.expected_text" />
-                <div class="flex gap-3 text-sm">
-                  <label class="flex items-center gap-1">
-                    <URadio v-model="form.text_condition" value="contains" />
-                    <span>contains</span>
-                  </label>
-                  <label class="flex items-center gap-1">
-                    <URadio v-model="form.text_condition" value="not_contains" />
-                    <span>not contains</span>
-                  </label>
-                </div>
-              </div>
-
+            <SiteForm v-model="form" @submit="handleSubmit">
               <div class="flex gap-2 pt-2 justify-between">
                 <div>
                   <UButton type="submit" color="primary" :loading="loading" size="sm"> Save </UButton>
@@ -191,7 +122,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
 
                 <UButton color="red" variant="soft" icon="heroicons:trash-20-solid" size="sm" @click="handleDelete"> Delete </UButton>
               </div>
-            </form>
+            </SiteForm>
           </div>
           <div class="card p-5">
             <SSEIndicator />
