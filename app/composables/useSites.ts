@@ -1,4 +1,5 @@
 import type { SiteInterface } from '~~/types';
+import { FetchError } from 'ofetch'; // Импортируем тип ошибки
 
 export const useSites = () => {
   const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
@@ -12,9 +13,13 @@ export const useSites = () => {
     'sites',
     async () => {
       try {
-        return await $fetch<SiteInterface[]>('/api/status', { headers, credentials: 'include' });
-      } catch (e: any) {
-        if (e?.status === 401) {
+        return await $fetch<SiteInterface[]>('/api/status', {
+          headers,
+          credentials: 'include',
+        });
+      } catch (e: unknown) {
+        // Проверяем, является ли ошибка объектом FetchError
+        if (e instanceof FetchError && e.status === 401) {
           return [];
         }
         throw e;
@@ -26,61 +31,64 @@ export const useSites = () => {
     },
   );
 
-  const error = computed(() => fetchError.value?.message || null);
+  const error = computed<string | null>(() => fetchError.value?.message || null);
 
-  const fetchSites = async () => {
+  const fetchSites = async (): Promise<void> => {
     await refresh();
+  };
+
+  // Вспомогательная функция для обработки ошибок в методах
+  const handleError = (e: unknown, defaultMsg: string): never => {
+    if (e instanceof FetchError) {
+      throw new Error(e.data?.message || e.message || defaultMsg);
+    }
+    throw new Error(defaultMsg);
   };
 
   const addSite = async (siteData: Partial<SiteInterface>) => {
     try {
-      const data = await $fetch('/api/sites', {
+      const data = await $fetch<SiteInterface>('/api/sites', {
         method: 'POST',
         body: siteData,
         credentials: 'include',
       });
-      if (data) {
-        await refresh();
-        return data;
-      }
-    } catch (e: any) {
-      throw new Error(e?.data?.message || 'Failed to add site');
+      await refresh();
+      return data;
+    } catch (e: unknown) {
+      handleError(e, 'Failed to add site');
     }
   };
 
   const updateSite = async (id: number, siteData: Partial<SiteInterface>) => {
     try {
-      const data = await $fetch(`/api/sites/${id}`, {
+      const data = await $fetch<SiteInterface>(`/api/sites/${id}`, {
         method: 'PATCH',
         body: siteData,
         credentials: 'include',
       });
-      if (data) {
-        await refresh();
-        return data;
-      }
-    } catch (e: any) {
-      throw new Error(e?.data?.message || 'Failed to update site');
+      await refresh();
+      return data;
+    } catch (e: unknown) {
+      handleError(e, 'Failed to update site');
     }
   };
 
-  const deleteSite = async (id: number) => {
+  const deleteSite = async (id: number): Promise<void> => {
     try {
       await $fetch(`/api/sites/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      // Since sites is reactive from useAsyncData, refresh to update
       await refresh();
-    } catch (e: any) {
-      throw new Error(e?.data?.message || 'Failed to delete site');
+    } catch (e: unknown) {
+      handleError(e, 'Failed to delete site');
     }
   };
 
   return {
-    sites,
+    sites: sites as Ref<SiteInterface[]>,
     error,
-    loading,
+    loading: loading as Ref<boolean>,
     refresh,
     fetchSites,
     addSite,

@@ -1,4 +1,5 @@
 import type { AnomalyResult } from '~~/types';
+import { FetchError } from 'ofetch'; // Импортируем тип ошибки
 
 export const useAnomalies = (siteId: number) => {
   const anomalies = ref<AnomalyResult | null>(null);
@@ -16,8 +17,8 @@ export const useAnomalies = (siteId: number) => {
     try {
       const data = await $fetch<AnomalyResult>(`/api/sites/${siteId}/anomalies`);
       anomalies.value = data;
-    } catch (e: any) {
-      error.value = e.message || 'Failed to fetch anomalies';
+    } catch (e: unknown) {
+      error.value = e instanceof FetchError ? e.message : 'Failed to fetch anomalies';
       console.error('Anomaly fetch error:', e);
     } finally {
       loading.value = false;

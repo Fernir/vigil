@@ -1,6 +1,7 @@
 import { computed } from 'vue';
 import { navigateTo } from '#app';
 import type { UserInterface } from '~~/types';
+import { FetchError } from 'ofetch'; // Импортируем тип ошибки
 
 interface LoginResponse {
   user: UserInterface;
@@ -55,8 +56,8 @@ export const useUserSession = () => {
       await navigateTo('/');
 
       return { success: true };
-    } catch (e: any) {
-      return { success: false, error: e?.message || 'Login failed' };
+    } catch (e: unknown) {
+      return { success: false, error: e instanceof FetchError ? e.message : 'Login failed' };
     }
   };
 
@@ -73,7 +74,7 @@ export const useUserSession = () => {
       await refresh();
 
       await navigateTo('/auth/login');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Logout error:', e);
     }
   };
@@ -86,8 +87,8 @@ export const useUserSession = () => {
       });
 
       return { success: true };
-    } catch (e: any) {
-      return { success: false, error: e?.message || 'Registration failed' };
+    } catch (e: unknown) {
+      return { success: false, error: e instanceof FetchError ? e.message : 'Registration failed' };
     }
   };
 

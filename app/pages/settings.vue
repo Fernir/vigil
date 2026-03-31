@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { FetchError } from 'ofetch'; // Импортируем тип ошибки
+
 definePageMeta({
   middleware: 'auth',
 });
@@ -30,8 +32,8 @@ const saveWebhookSettings = async () => {
     if (user.value) {
       user.value.webhook_url = webhookForm.url;
     }
-  } catch (e: any) {
-    error.value = e?.data?.message || 'Failed to save';
+  } catch (e: unknown) {
+    error.value = e instanceof FetchError ? e.data?.message : 'Failed to save';
   } finally {
     saving.value = false;
   }

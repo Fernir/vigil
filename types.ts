@@ -19,7 +19,7 @@ export interface SiteInterface {
   isActive?: boolean;
   userId: number | null;
   check_type?: string;
-  expected_text?: string | number | undefined;
+  expected_text?: string | null;
   text_condition?: string;
   created_at: string;
   updated_at: string;
