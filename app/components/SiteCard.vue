@@ -6,6 +6,7 @@ const siteId = Number(props.site.id);
 
 const faviconUrl = computed(() => {
   const domain = new URL(props.site.url).hostname;
+
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 });
 
@@ -23,7 +24,12 @@ const lastResult = computed(() => {
     @click="navigateTo(`/sites/${siteId}`)"
   >
     <div class="grid w-fit max-w-fit items-center gap-3 grid-flow-col">
-      <img :src="faviconUrl" :alt="site.name" class="w-5 h-5 rounded" @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')" />
+      <img
+        :src="faviconUrl"
+        :alt="site.name"
+        class="min-w-5 min-h-5 w-5 h-5 rounded aspect-square"
+        @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+      />
       <span class="font-semibold">{{ site.name }}</span>
       <span class="inline-block w-fit text-[10px] bg-black text-white px-1.5 rounded">{{ site.check_type === 'text' ? 'Text' : 'HTTP' }}</span>
       <StatusBadge :status="lastResult?.status ?? 'pending'" size="sm" :animated="true" />
@@ -35,7 +41,7 @@ const lastResult = computed(() => {
       </a>
     </div>
 
-    <div class="items-center gap-x-4 w-fit flex flex-wrap md:grid md:grid-flow-col">
+    <div class="items-center gap-x-4 w-fit md:flex md:flex-wrap hidden">
       <span class="flex items-center gap-1">
         <span class="text-gray-500">Last:</span>
         <span class="font-medium">{{ lastResult?.checked_at ? formatDateTime(lastResult.checked_at) : 'Never' }}</span>

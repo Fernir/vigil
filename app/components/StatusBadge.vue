@@ -56,3 +56,17 @@ const showAnimation = computed(() => props.animated);
     </span>
   </div>
 </template>
+
+<style>
+@keyframes ping-slow {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+</style>

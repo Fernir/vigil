@@ -97,7 +97,7 @@ const addSite = async (newSiteForm: SiteInterface) => {
         <UButton to="/admin" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="stacked gap-6">
         <!-- Левая колонка: информация о пользователе -->
         <div class="lg:col-span-1">
           <div class="card p-6">

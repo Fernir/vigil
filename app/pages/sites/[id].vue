@@ -89,7 +89,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="md:max-w-7xl mx-auto md:p-6 p-2 lg:px-8 max-w-[100dvw] overflow-hidden">
       <div class="mb-4">
         <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
       </div>
@@ -102,7 +102,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
         </div>
       </template>
 
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div v-else class="stacked gap-6">
         <!-- Left column: editing form -->
         <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
@@ -118,13 +118,13 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
               </div>
             </SiteForm>
           </div>
-          <div class="card p-5">
+          <div class="md:card md:p-5 px-5">
             <SSEIndicator />
           </div>
         </div>
 
         <!-- Right column: all metrics and charts -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-6 max-w-[100dvw] overflow-hidden">
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
             <img
@@ -181,7 +181,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
           <!-- Block SSL (horizontal metrics) -->
           <div class="card p-5" v-if="lastSSL">
             <h3 class="text-md font-semibold mb-3">SSL Certificate</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div class="stackedwrap gap-3 text-sm">
               <div>
                 <span class="text-gray-500 block">Status</span>
                 <span :class="lastSSL.valid ? 'text-green-600' : 'text-red-600'">
@@ -213,7 +213,7 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
           <!-- Block Performance (horizontal metrics) -->
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 gap-y-2 text-sm">
+            <div class="stackedwrap gap-3 gap-y-2 text-sm">
               <div><span class="text-gray-500 block">Load</span>{{ lastSpeed.loadTime }}ms</div>
               <div><span class="text-gray-500 block">TTFB</span>{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms</div>
               <div><span class="text-gray-500 block">DOM</span>{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms</div>

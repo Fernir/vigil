@@ -44,30 +44,30 @@ const handleDelete = async (id: number) => {
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Services average status</h1>
 
         <!-- Statistics -->
-        <div v-if="statsLoading" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div v-if="statsLoading" class="stacked gap-4 mb-6">
           <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
             <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
             <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
           </div>
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div class="card p-4">
+        <div v-else class="stacked gap-4 mb-6">
+          <div class="overall">
             <div class="text-sm text-gray-500 dark:text-gray-400">Overall uptime</div>
             <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.overallUptime ?? 100 }}%</div>
           </div>
-          <div class="card p-4">
+          <div class="overall">
             <div class="text-sm text-gray-500 dark:text-gray-400">Operational</div>
             <div class="text-2xl font-bold text-green-600 dark:text-green-400">
               {{ stats?.operational ?? 0 }}
             </div>
           </div>
-          <div class="card p-4">
+          <div class="overall">
             <div class="text-sm text-gray-500 dark:text-gray-400">Degraded</div>
             <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
               {{ stats?.degraded ?? 0 }}
             </div>
           </div>
-          <div class="card p-4">
+          <div class="overall">
             <div class="text-sm text-gray-500 dark:text-gray-400">Downtime</div>
             <div class="text-2xl font-bold text-red-600 dark:text-red-400">
               {{ stats?.down ?? 0 }}
