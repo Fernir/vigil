@@ -3,6 +3,7 @@ definePageMeta({});
 
 useHead({ title: 'Status' });
 
+const { ask } = useConfirm();
 const { formatDateTime } = useDate();
 const { user, loggedIn } = useUserSession();
 const { stats, loading: statsLoading } = useStats();
@@ -24,7 +25,12 @@ watch(
 );
 
 const handleDelete = async (id: number) => {
-  if (confirm('Are you sure you want to delete this site?')) {
+  const confirmed = await ask({
+    title: 'Delete site?',
+    description: 'Are you sure you want to delete this site? This action cannot be undone.',
+  });
+
+  if (confirmed) {
     await deleteSite(id);
   }
 };

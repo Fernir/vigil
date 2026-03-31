@@ -12,16 +12,7 @@ useHead({
 const router = useRouter();
 const { addSite, loading } = useSites();
 
-const form = reactive<Omit<SiteInterface, 'id' | 'userId' | 'created_at' | 'updated_at' | 'isActive'>>({
-  name: '',
-  url: '',
-  check_type: 'http',
-  expected_text: '',
-  text_condition: 'contains',
-  checkInterval: 30,
-});
-
-const handleSubmit = async () => {
+const handleSubmit = async (form: SiteInterface) => {
   const result = await addSite(form);
   if (result) {
     router.push('/');
@@ -41,9 +32,9 @@ const handleSubmit = async () => {
       </div>
 
       <div class="card p-6">
-        <SiteForm @submit="handleSubmit" v-model="form">
+        <SiteForm @submit="handleSubmit" :loading="loading">
           <div class="flex gap-3 pt-4">
-            <UButton type="submit" color="primary" :loading="loading">Add Site</UButton>
+            <UButton type="submit" color="primary">Add Site</UButton>
             <UButton color="gray" variant="ghost" to="/">Cancel</UButton>
           </div>
         </SiteForm>

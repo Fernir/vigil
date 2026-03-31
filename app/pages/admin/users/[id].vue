@@ -4,12 +4,18 @@ import type { UserInterface, SiteInterface } from '~~/types';
 definePageMeta({ middleware: 'admin' });
 
 const route = useRoute();
-const userId = Number(route.params.id);
 const toast = useToast();
+const { ask } = useConfirm();
+
+const userId = Number(route.params.id);
+
+const isLoading = ref(true);
 
 // Загружаем данные пользователя и его сайты
 const { data: user, refresh: refreshUser } = await useFetch<UserInterface>(`/api/admin/users/${userId}`);
 const { data: sites, refresh: refreshSites } = await useFetch<SiteInterface[]>(`/api/admin/users/${userId}/sites`);
+
+isLoading.value = false;
 
 const form = reactive({
   max_sites: user.value?.max_sites || 4,
@@ -17,19 +23,10 @@ const form = reactive({
   banned_at: user.value?.banned_at || null,
 });
 
-const saving = ref(false);
 const showAddSiteModal = ref(false);
-const newSiteForm = reactive({
-  name: '',
-  url: '',
-  checkInterval: 5,
-  check_type: 'http',
-  expected_text: '',
-  text_condition: 'contains',
-});
 
 const save = async () => {
-  saving.value = true;
+  isLoading.value = true;
   try {
     await $fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
@@ -40,7 +37,7 @@ const save = async () => {
   } catch (e) {
     toast.add({ title: 'Failed to update user', color: 'red' });
   } finally {
-    saving.value = false;
+    isLoading.value = false;
   }
 };
 
@@ -53,17 +50,27 @@ const unban = () => {
 };
 
 const deleteSite = async (siteId: number) => {
-  if (!confirm('Are you sure you want to delete this site?')) return;
+  const confirmed = await ask({
+    title: 'Delete site?',
+    description: 'Are you sure you want to delete this site? This action cannot be undone.',
+  });
+
+  if (!confirmed) return;
+
+  isLoading.value = true;
   try {
     await $fetch(`/api/admin/sites/${siteId}`, { method: 'DELETE' });
     toast.add({ title: 'Site deleted', color: 'green' });
     await refreshSites();
   } catch (e) {
     toast.add({ title: 'Failed to delete site', color: 'red' });
+  } finally {
+    isLoading.value = false;
   }
 };
 
-const addSite = async () => {
+const addSite = async (newSiteForm: SiteInterface) => {
+  isLoading.value = true;
   try {
     await $fetch('/api/admin/sites', {
       method: 'POST',
@@ -75,17 +82,10 @@ const addSite = async () => {
     toast.add({ title: 'Site added', color: 'green' });
     showAddSiteModal.value = false;
     await refreshSites();
-    // Reset form
-    Object.assign(newSiteForm, {
-      name: '',
-      url: '',
-      checkInterval: 30,
-      check_type: 'http',
-      expected_text: '',
-      text_condition: 'contains',
-    });
   } catch (e) {
     toast.add({ title: 'Failed to add site', color: 'red' });
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
@@ -120,7 +120,7 @@ const addSite = async () => {
               </div>
 
               <div class="flex gap-2 pt-4">
-                <UButton type="submit" color="primary" :loading="saving">Save Changes</UButton>
+                <UButton type="submit" color="primary" :loading="isLoading">Save Changes</UButton>
               </div>
             </form>
           </div>
@@ -165,40 +165,12 @@ const addSite = async () => {
       <UModal v-model="showAddSiteModal">
         <div class="p-6">
           <h3 class="text-lg font-semibold mb-4">Add Site for {{ user?.email }}</h3>
-          <form @submit.prevent="addSite" class="space-y-4">
-            <UInput v-model="newSiteForm.name" placeholder="Site name" />
-            <UInput v-model="newSiteForm.url" placeholder="https://example.com" />
-            <UInput v-model.number="newSiteForm.checkInterval" type="number" min="30" max="3600" placeholder="Check interval (seconds)" />
-
-            <div>
-              <USelect
-                v-model="newSiteForm.check_type"
-                :options="[
-                  { label: 'HTTP Status', value: 'http' },
-                  { label: 'Text on page', value: 'text' },
-                ]"
-              />
-            </div>
-
-            <div v-if="newSiteForm.check_type === 'text'" class="space-y-2">
-              <UInput v-model="newSiteForm.expected_text" placeholder="Expected text" />
-              <div class="flex gap-3 text-sm">
-                <label class="flex items-center gap-1">
-                  <URadio v-model="newSiteForm.text_condition" value="contains" />
-                  <span>contains</span>
-                </label>
-                <label class="flex items-center gap-1">
-                  <URadio v-model="newSiteForm.text_condition" value="not_contains" />
-                  <span>not contains</span>
-                </label>
-              </div>
-            </div>
-
+          <SiteForm @submit="addSite" class="space-y-4" :loading="isLoading">
             <div class="flex gap-2 pt-4">
               <UButton type="submit" color="primary">Add Site</UButton>
               <UButton color="gray" variant="ghost" @click="showAddSiteModal = false">Cancel</UButton>
             </div>
-          </form>
+          </SiteForm>
         </div>
       </UModal>
     </div>

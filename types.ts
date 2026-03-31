@@ -17,7 +17,7 @@ export interface SiteInterface {
   url: string;
   checkInterval: number;
   isActive?: boolean;
-  userId?: number | null;
+  userId: number | null;
   check_type?: string;
   expected_text?: string | number | undefined;
   text_condition?: string;

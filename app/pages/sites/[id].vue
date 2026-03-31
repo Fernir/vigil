@@ -10,8 +10,10 @@ const siteId = Number(route.params.id);
 useHead({ title: 'Edit Site' });
 
 const showModal = ref(false);
+const isLoading = ref(false);
 
 const { getLatestResult, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoring();
+const { ask } = useConfirm();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
@@ -24,20 +26,12 @@ const { formatDateTime } = useDate();
 const site = computed(() => sites.value.find((s) => s.id === siteId));
 const siteNotFound = ref(false);
 
-const form = reactive<Partial<SiteInterface>>({
-  name: '',
-  url: '',
-  checkInterval: 30,
-  isActive: true,
-  check_type: 'http',
-  expected_text: '',
-  text_condition: 'contains',
-});
-
 const loadData = async () => {
+  isLoading.value = true;
   await fetchSiteHistory(siteId);
   await fetchSpeedHistory(siteId);
   await fetchSSLHistory(siteId);
+  isLoading.value = false;
 };
 
 onServerPrefetch(async () => {
@@ -53,6 +47,7 @@ onServerPrefetch(async () => {
 
 onMounted(async () => {
   if (!site.value) {
+    isLoading.value = true;
     await fetchSites();
   }
 
@@ -63,17 +58,16 @@ onMounted(async () => {
 
   await loadData();
 
-  form.name = site.value.name;
-  form.url = site.value.url;
-  form.checkInterval = site.value.checkInterval;
-  form.isActive = !!site.value.isActive;
-  form.check_type = site.value.check_type || 'http';
-  form.expected_text = site.value.expected_text || '';
-  form.text_condition = site.value.text_condition || 'contains';
+  isLoading.value = false;
 });
 
 const handleDelete = async () => {
-  if (confirm('Are you sure you want to delete this site? This action cannot be undone.')) {
+  const confirmed = await ask({
+    title: 'Delete site?',
+    description: 'Are you sure you want to delete this site? This action cannot be undone.',
+  });
+
+  if (confirmed) {
     try {
       const { deleteSite } = useSites();
       await deleteSite(siteId);
@@ -84,7 +78,7 @@ const handleDelete = async () => {
   }
 };
 
-const handleSubmit = async () => {
+const handleSubmit = async (form: SiteInterface) => {
   const result = await updateSite(siteId, form);
 
   if (result) router.push('/');
@@ -113,14 +107,14 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
         <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
-            <SiteForm v-model="form" @submit="handleSubmit">
+            <SiteForm :initial-data="site" @submit="handleSubmit" :loading="isLoading">
               <div class="flex gap-2 pt-2 justify-between">
                 <div>
                   <UButton type="submit" color="primary" :loading="loading" size="sm"> Save </UButton>
                   <UButton color="gray" variant="ghost" to="/" size="sm"> Cancel </UButton>
                 </div>
 
-                <UButton color="red" variant="soft" icon="heroicons:trash-20-solid" size="sm" @click="handleDelete"> Delete </UButton>
+                <UButton color="red" variant="soft" icon="heroicons:trash-20-solid" size="sm" @click="handleDelete">Delete</UButton>
               </div>
             </SiteForm>
           </div>
