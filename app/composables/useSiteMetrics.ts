@@ -1,5 +1,3 @@
-import { useMonitoring } from './useMonitoring';
-
 export const useSiteMetrics = (siteId: MaybeRef<number>) => {
   const idRef = toRef(siteId);
 

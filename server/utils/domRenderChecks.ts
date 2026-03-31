@@ -1,5 +1,7 @@
-import { chromium, type Page, type Response } from 'playwright';
+// server/utils/checkSiteUnified.ts
+import { type Page, type Response } from 'playwright';
 import { Buffer } from 'node:buffer';
+import { useBrowser } from '../plugins/browser';
 
 export interface UnifiedMetrics {
   loadTime: number;
@@ -22,43 +24,38 @@ export async function checkSiteUnified(
     timeout?: number;
   } = {},
 ): Promise<UnifiedMetrics | null> {
-  // Запуск с вашими флагами оптимизации
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-  });
+  const { context, release } = await useBrowser();
+  let page: Page | null = null;
 
   try {
-    const context = await browser.newContext({
-      viewport: {
-        width: options.viewportWidth || 1280,
-        height: options.viewportHeight || 800,
-      },
-    });
+    page = await context.newPage();
 
-    const page = await context.newPage();
+    if (options.viewportWidth && options.viewportHeight) {
+      await page.setViewportSize({
+        width: options.viewportWidth,
+        height: options.viewportHeight,
+      });
+    }
 
     let requestCount = 0;
     let totalPageSize = 0;
 
-    // Логика подсчета запросов
-    page.on('request', () => {
+    const onRequest = () => {
       requestCount++;
-    });
+    };
 
-    // Логика подсчета размера страницы (аналог вашего buffer.length)
-    page.on('response', async (response: Response) => {
+    const onResponse = async (response: Response) => {
       try {
         const body = await response.body();
         totalPageSize += body.length;
-      } catch (e) {
-        // Игнорируем ошибки (например, для редиректов или заблокированных запросов)
-      }
-    });
+      } catch {}
+    };
+
+    page.on('request', onRequest);
+    page.on('response', onResponse);
 
     const navigationStart = Date.now();
 
-    // Переход (networkidle в Playwright заменяет networkidle2)
     await page.goto(url, {
       waitUntil: 'load',
       timeout: options.timeout || 30000,
@@ -66,7 +63,6 @@ export async function checkSiteUnified(
 
     const loadTime = Date.now() - navigationStart;
 
-    // Метрики через Performance API
     const metrics = await page
       .evaluate(() => {
         const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -84,6 +80,10 @@ export async function checkSiteUnified(
       fullPage: options.fullPage || false,
       type: 'png',
     });
+
+    // Очищаем слушатели
+    page.off('request', onRequest);
+    page.off('response', onResponse);
 
     return {
       loadTime,
@@ -109,7 +109,10 @@ export async function checkSiteUnified(
       error: error.message,
     };
   } finally {
-    // Гарантированно закрываем браузер
-    await browser.close();
+    if (page) {
+      await page.close().catch(console.error);
+    }
+
+    release();
   }
 }

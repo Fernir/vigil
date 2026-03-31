@@ -82,7 +82,7 @@ export interface ScreenshotResultInterface {
   type?: 'screenshot';
   siteName?: string;
   siteUrl?: string;
-  image_base64: string;
+  hash?: string;
 }
 
 export interface AnomalyPoint {

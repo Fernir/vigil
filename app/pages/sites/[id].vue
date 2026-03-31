@@ -11,11 +11,12 @@ useHead({ title: 'Edit Site' });
 
 const showModal = ref(false);
 
-const { results, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoring();
+const { getLatestResult, getLatestSSL, getLatestSpeed, getLatestScreenshot, fetchSpeedHistory, fetchSSLHistory, fetchSiteHistory } = useMonitoring();
 
 const lastSSL = computed(() => getLatestSSL(siteId));
 const lastSpeed = computed(() => getLatestSpeed(siteId));
 const lastScreenshot = computed(() => getLatestScreenshot(siteId));
+const lastResult = computed(() => getLatestResult(siteId));
 
 const { sites, fetchSites, updateSite, loading } = useSites();
 const { formatDateTime } = useDate();
@@ -120,15 +121,13 @@ const handleSubmit = async () => {
   }
 
   if (!validate()) return;
+
   const result = await updateSite(siteId, form);
+
   if (result) router.push('/');
 };
 
-const lastResult = computed(() => results.value[siteId]?.[0] || null);
-
-const screenshotUrl = computed(() =>
-  lastScreenshot.value?.image_base64 ? `data:image/png;base64,${lastScreenshot.value.image_base64}` : `/api/sites/${siteId}/screenshot`,
-);
+const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScreenshot.value?.hash ? `?hash=${lastScreenshot.value.hash}` : ''}`);
 </script>
 
 <template>

@@ -142,8 +142,8 @@ const handleSubmit = async () => {
 
           <!-- Actions -->
           <div class="flex gap-3 pt-4">
-            <UButton type="submit" color="primary" :loading="loading"> Add Site </UButton>
-            <UButton color="gray" variant="ghost" to="/"> Cancel </UButton>
+            <UButton type="submit" color="primary" :loading="loading">Add Site</UButton>
+            <UButton color="gray" variant="ghost" to="/">Cancel</UButton>
           </div>
         </form>
       </div>

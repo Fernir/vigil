@@ -9,7 +9,7 @@ export default defineNuxtConfig({
 
   colorMode: {
     preference: 'system',
-    fallback: 'light',
+    fallback: 'dark',
     storageKey: 'color-mode',
     storage: 'cookie',
   },
@@ -18,7 +18,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'default-secret-change-me',
-    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
     public: {
       siteName: process.env.SITE_NAME || 'Vigil',
       apiBaseUrl: process.env.API_BASE_URL || '/api',

@@ -131,7 +131,7 @@ const addSite = async () => {
           <div class="card p-6">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-xl font-semibold">User Sites</h2>
-              <UButton color="primary" icon="heroicons:plus-20-solid" @click="showAddSiteModal = true"> Add Site </UButton>
+              <UButton color="primary" icon="heroicons:plus-20-solid" @click="showAddSiteModal = true">Add Site</UButton>
             </div>
 
             <div v-if="!sites?.length" class="text-center py-8 text-gray-500">No sites for this user</div>

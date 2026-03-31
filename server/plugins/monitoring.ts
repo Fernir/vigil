@@ -1,12 +1,13 @@
 import prisma from '~~/lib/prisma';
 import { checkSite } from '~~/server/utils/httpChecker';
 import { checkSSL } from '~~/server/utils/sslChecker';
-import { checkSiteUnified } from '~~/server/utils/puppeeterChecks';
+import { checkSiteUnified } from '~~/server/utils/domRenderChecks';
 import { broadcastCheckResult } from '~~/server/api/sse';
 import { sendWebhook } from '~~/server/utils/webhook';
+import crypto from 'node:crypto';
 
 let isRunning = false;
-const RETENTION_LIMIT = 20;
+export const RETENTION_LIMIT = 20;
 
 export default defineNitroPlugin(() => {
   const runUnifiedMonitor = async () => {
@@ -201,7 +202,10 @@ export default defineNitroPlugin(() => {
                 width: screenshotRecord.width,
                 height: screenshotRecord.height,
                 checked_at: screenshotRecord.checked_at,
-                image_base64: screenshotRecord.image_data?.toString?.('base64'),
+                hash: crypto
+                  .createHash('md5')
+                  .update(screenshotRecord.image_data?.toString('base64') ?? '')
+                  .digest('hex'),
                 siteName: site.name,
                 siteUrl: site.url,
               });

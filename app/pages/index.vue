@@ -79,7 +79,7 @@ const handleDelete = async (id: number) => {
       <div v-if="loggedIn && !user?.banned_at" class="mt-8">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">All services</h2>
-          <UButton color="primary" to="/sites/add" icon="heroicons:plus-solid"> Add Site </UButton>
+          <UButton color="primary" to="/sites/add" icon="heroicons:plus-solid">Add Site</UButton>
         </div>
 
         <div v-if="isHydrated && sitesLoading" class="space-y-4">
