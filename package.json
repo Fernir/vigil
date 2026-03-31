@@ -17,12 +17,7 @@
     "db:migrate": "npx prisma migrate dev --schema prisma/schema.prisma",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
-    "prisma:pull": "prisma db pull",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "prisma:pull": "prisma db pull"
   },
   "engines": {
     "node": "24.x"
@@ -50,7 +45,6 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@types/node": "^22.13.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"

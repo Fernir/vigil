@@ -1,7 +1,7 @@
 /**
- * Безопасное форматирование даты и времени в фиксированном формате DD.MM.YYYY HH:MM:SS
- * @param dateString - строка с датой или undefined/null
- * @returns отформатированная дата или 'Never'
+ * Safe date formatting of date and time in a fixed format DD.MM.YYYY HH:MM:SS
+ * @param dateString - string with date or undefined/null
+ * @returns formatted date or 'Never'
  */
 const validateDate = (dateString: string | undefined | null): Date | null => {
   if (!dateString) return null;
