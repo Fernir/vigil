@@ -22,7 +22,6 @@ const error = ref('');
 const success = ref(false);
 
 const handleSubmit = async () => {
-  // Validation
   if (form.password !== form.confirmPassword) {
     error.value = 'Passwords do not match';
     return;
@@ -78,24 +77,24 @@ const handleSubmit = async () => {
 
       <!-- Password -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> Password </label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
         <UInput v-model="form.password" type="password" placeholder="••••••••" required :disabled="success" />
         <p class="mt-1 text-xs text-gray-500">At least 6 characters</p>
       </div>
 
       <!-- Confirm Password -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"> Confirm Password </label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
         <UInput v-model="form.confirmPassword" type="password" placeholder="••••••••" required :disabled="success" />
       </div>
 
       <!-- Submit button -->
-      <UButton type="submit" color="primary" block :loading="loading" :disabled="success"> Sign up </UButton>
+      <UButton type="submit" color="primary" block :loading="loading" :disabled="success">Sign up</UButton>
 
       <!-- Login link -->
       <p class="text-center text-sm text-gray-600 dark:text-gray-400">
         Already have an account?
-        <NuxtLink to="/auth/login" class="text-primary-600 hover:text-primary-500 font-medium"> Sign in </NuxtLink>
+        <NuxtLink to="/auth/login" class="text-primary-600 hover:text-primary-500 font-medium">Sign in</NuxtLink>
       </p>
     </form>
   </div>
