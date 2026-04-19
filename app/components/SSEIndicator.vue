@@ -9,7 +9,6 @@ onMounted(() => {
 const dotClass = computed(() => {
   if (!isClient.value) return 'bg-muted-foreground/50';
 
-  // «Live» — зелёный; обрыв — янтарь (как предупреждение), не нейтральный серый
   return sseConnected.value ? 'bg-success-500' : 'bg-warning-500';
 });
 </script>

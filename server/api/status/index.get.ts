@@ -12,7 +12,6 @@ export default defineEventHandler(async (event) => {
     orderBy: { created_at: "desc" },
   });
 
-  // For each site we get the last result to determine its current status
   const sitesWithStatus = await Promise.all(
     sites.map(async (site) => {
       const lastResult = await prisma.check_results.findFirst({

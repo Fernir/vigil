@@ -10,22 +10,17 @@ const subscriberCount = ref(0);
 export const useMonitoring = () => {
   const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
 
-  // HTTP results
   const results = useState<Record<number, CheckResultInterface[]>>('monitoring-results', () => ({}));
   const latestResults = useState<Record<number, CheckResultInterface>>('monitoring-latest-results', () => ({}));
 
-  // Speed results
   const speedResults = useState<Record<number, SpeedResultInterface[]>>('monitoring-speed-results', () => ({}));
   const latestSpeedResults = useState<Record<number, SpeedResultInterface>>('monitoring-latest-speed-results', () => ({}));
 
-  // SSL results
   const sslResults = useState<Record<number, SSLResultInterface[]>>('monitoring-ssl-results', () => ({}));
   const latestSSLResults = useState<Record<number, SSLResultInterface>>('monitoring-latest-ssl-results', () => ({}));
 
-  // Screenshot results
   const screenshotResults = useState<Record<number, ScreenshotResultInterface>>('monitoring-screenshot-results', () => ({}));
 
-  // Anomaly results
   const anomalyResults = useState<Record<number, any[]>>('monitoring-anomaly-results', () => []);
 
   const connectToSSE = () => {
@@ -37,13 +32,12 @@ export const useMonitoring = () => {
         source.onopen = () => {
           console.log('SSE connected');
           sseConnected.value = true;
-          retryCount.value = 0; // Reset on successful connection
+          retryCount.value = 0;
         };
 
         source.addEventListener('check-result', (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data);
-            // console.log("SSE received:", data);
 
             if (data.type === 'http' && data.siteId) {
               const siteId = data.siteId;
@@ -102,7 +96,7 @@ export const useMonitoring = () => {
           eventSource.value = null;
           if (retryCount.value < maxRetries) {
             retryCount.value++;
-            const delay = Math.min(1000 * Math.pow(2, retryCount.value), 30000); // Exponential backoff, max 30s
+            const delay = Math.min(1000 * Math.pow(2, retryCount.value), 30000);
             setTimeout(connectToSSE, delay);
           } else {
             console.error('SSE max retries reached, giving up');
@@ -125,7 +119,6 @@ export const useMonitoring = () => {
     }
   };
 
-  // HTTP history
   const fetchSiteHistory = async (siteId: number, days = 10) => {
     if (!siteId) return;
     try {
@@ -144,7 +137,6 @@ export const useMonitoring = () => {
     }
   };
 
-  // Speed history
   const fetchSpeedHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
@@ -166,7 +158,6 @@ export const useMonitoring = () => {
     }
   };
 
-  // SSL history
   const fetchSSLHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
@@ -188,7 +179,6 @@ export const useMonitoring = () => {
     }
   };
 
-  // Screenshot
   const fetchScreenshotData = async (siteId: number) => {
     if (!siteId) return;
     try {
@@ -207,7 +197,6 @@ export const useMonitoring = () => {
     }
   };
 
-  // Getters
   const getLatestResult = (siteId: number) => latestResults.value[siteId] || null;
   const getLatestSpeed = (siteId: number) => latestSpeedResults.value[siteId] || null;
   const getLatestSSL = (siteId: number) => latestSSLResults.value[siteId] || null;
@@ -240,33 +229,27 @@ export const useMonitoring = () => {
   });
 
   return {
-    // HTTP
     results,
     latestResults,
     fetchSiteHistory,
     getLatestResult,
 
-    // Speed
     speedResults,
     latestSpeedResults,
     fetchSpeedHistory,
     getLatestSpeed,
 
-    // SSL
     sslResults,
     latestSSLResults,
     fetchSSLHistory,
     getLatestSSL,
 
-    // Screenshot
     screenshotResults,
     fetchScreenshotData,
     getLatestScreenshot,
 
-    // Anomalies
     anomalyResults,
 
-    // SSE
     sseConnected,
     connectToSSE,
     disconnectSSE,

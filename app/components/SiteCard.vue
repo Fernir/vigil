@@ -5,7 +5,6 @@ import type { SiteInterface } from '~~/types';
 const props = defineProps<{ site: SiteInterface }>();
 const siteId = Number(props.site.id);
 
-/** Свой API — без Google s2 и сторонних cookie в браузере */
 const faviconUrl = computed(() => {
   const domain = new URL(props.site.url).hostname;
   return `/api/favicon?host=${encodeURIComponent(domain)}`;
@@ -36,11 +35,19 @@ const lastResult = computed(() => {
         @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
       />
       <span class="font-semibold">{{ site.name }}</span>
-      <span class="inline-block w-fit rounded px-1.5 text-[10px] uppercase tracking-wide bg-secondary text-secondary-foreground ring-1 ring-border">
+      <span
+        class="meta-pill inline-block w-fit bg-secondary text-secondary-foreground ring-border text-[10px] uppercase tracking-wide"
+      >
         {{ site.check_type === 'text' ? 'Text' : 'HTTP' }}
       </span>
       <StatusBadge :status="lastResult?.status ?? 'pending'" size="sm" :animated="true" />
-      <span v-if="!site.isActive" class="rounded bg-muted px-1.5 text-[10px] text-muted-foreground ring-1 ring-border"> Paused </span>
+      <span
+        v-if="site.isActive"
+        class="meta-pill meta-pill-active text-[10px] uppercase tracking-wide"
+      >
+        Active
+      </span>
+      <span v-else class="meta-pill meta-pill-paused text-[10px] uppercase tracking-wide"> Paused </span>
 
       <a
         :href="site.url"

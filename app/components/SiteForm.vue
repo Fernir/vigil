@@ -21,16 +21,20 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({});
 
-watchEffect(() => {
-  if (props.initialData) {
+watch(
+  () => props.initialData?.id ?? null,
+  () => {
+    const d = props.initialData;
+    if (!d || d.id === undefined || d.id === null) return;
     Object.assign(form, {
-      ...props.initialData,
-      checkInterval: props.initialData.checkInterval ?? 30,
-      isActive: props.initialData.isActive !== false,
-      userId: props.initialData.userId ?? 0,
+      ...d,
+      checkInterval: d.checkInterval ?? 30,
+      isActive: d.isActive !== false,
+      userId: d.userId ?? 0,
     });
-  }
-});
+  },
+  { immediate: true },
+);
 
 const normalizeUrl = (url: string): string => {
   const trimmed = url.trim();
@@ -110,9 +114,18 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <div class="flex items-center gap-2 py-2">
+      <div
+        class="flex items-center gap-4 rounded-lg border border-border bg-muted/50 px-4 py-3 dark:bg-muted/30"
+      >
         <Switch id="site-active" v-model="form.isActive" />
-        <Label for="site-active" class="cursor-pointer font-normal">Active monitoring</Label>
+        <div class="flex min-w-0 flex-1 flex-col gap-1">
+          <Label for="site-active" class="cursor-pointer text-base font-medium leading-snug text-foreground">
+            Active monitoring
+          </Label>
+          <p class="text-sm leading-relaxed text-muted-foreground">
+            Turn off to pause checks and stop alerts for this site.
+          </p>
+        </div>
       </div>
 
       <div v-if="form.check_type === 'text'" class="space-y-4 rounded-lg bg-muted/50 p-4">

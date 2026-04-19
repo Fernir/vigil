@@ -1,8 +1,3 @@
-/**
- * Safe date formatting of date and time in a fixed format DD.MM.YYYY HH:MM:SS
- * @param dateString - string with date or undefined/null
- * @returns formatted date or 'Never'
- */
 const validateDate = (dateString: string | undefined | null): Date | null => {
   if (!dateString) return null;
   const d = new Date(dateString);
@@ -23,7 +18,6 @@ export const formatDateTime = (dateString: string | undefined | null): string =>
   return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
 };
 
-// If need only time
 export const formatTime = (dateString: string | undefined | null): string => {
   const d = validateDate(dateString);
   if (!d) return dateString ? 'Invalid date' : 'Never';
@@ -33,7 +27,6 @@ export const formatTime = (dateString: string | undefined | null): string => {
   return `${hours}:${minutes}`;
 };
 
-// If need only date
 export const formatDate = (dateString: string | undefined | null): string => {
   const d = validateDate(dateString);
   if (!d) return dateString ? 'Invalid date' : 'Never';

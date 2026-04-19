@@ -158,16 +158,11 @@ const addSite = async (newSiteForm: SiteInterface) => {
                       class="text-sm text-foreground underline decoration-border underline-offset-4 hover:text-muted-foreground"
                       >{{ site.url }}</a
                     >
-                    <div class="mt-2 flex gap-2 text-xs">
-                      <span class="rounded bg-muted px-2 py-1">Interval: {{ site.checkInterval }}m</span>
-                      <span class="rounded bg-muted px-2 py-1">Type: {{ site.check_type }}</span>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                      <span class="meta-pill meta-pill-muted">Interval: {{ site.checkInterval }}m</span>
+                      <span class="meta-pill meta-pill-muted">Type: {{ site.check_type }}</span>
                       <span
-                        :class="
-                          site.isActive
-                            ? 'bg-secondary text-foreground ring-1 ring-border'
-                            : 'bg-muted text-muted-foreground'
-                        "
-                        class="rounded px-2 py-1"
+                        :class="site.isActive ? 'meta-pill meta-pill-active' : 'meta-pill meta-pill-paused'"
                       >
                         {{ site.isActive ? "Active" : "Paused" }}
                       </span>

@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 export default defineEventHandler(async (event) => {
   const path = event.path;
 
-  // Fully public routes that don't require authentication
   const publicRoutes = [
     "/api/auth/login",
     "/api/auth/register",
@@ -16,7 +15,6 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  // All other API requests require authentication
   if (path.startsWith("/api/")) {
     const token = getCookie(event, "auth_token");
     if (!token) {

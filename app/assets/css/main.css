@@ -1,10 +1,11 @@
 @import "@fontsource-variable/geist/wght.css";
 
+@custom-variant dark (&:is(.dark *));
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Нейтральная база + семантика зелёный/красный/янтарь для статусов и действий */
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -13,7 +14,6 @@
     --card-foreground: 240 6% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 10%;
-    /* Кнопки и акцент — тёмно-серый, не чистый чёрный */
     --primary: 240 5.9% 22%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 5% 94%;
@@ -28,6 +28,10 @@
     --input: 240 6% 88%;
     --ring: 240 5% 52%;
     --radius: 0.5rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
   }
 
   .dark {
@@ -65,7 +69,6 @@
     @apply bg-background font-sans text-foreground antialiased;
   }
 
-  /* Ссылки без «синего браузера» по умолчанию */
   a:not([class]) {
     @apply text-foreground underline decoration-border underline-offset-4 transition-colors hover:text-muted-foreground;
   }
@@ -92,6 +95,22 @@
     @apply bg-warning-100 text-warning-800 ring-1 ring-warning-200 dark:bg-warning-950/55 dark:text-warning-300 dark:ring-warning-800;
   }
 
+  .meta-pill {
+    @apply inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1;
+  }
+
+  .meta-pill-active {
+    @apply bg-success-100 text-success-800 ring-success-200 dark:bg-success-950/55 dark:text-success-300 dark:ring-success-800;
+  }
+
+  .meta-pill-paused {
+    @apply bg-warning-100 text-warning-800 ring-warning-200 dark:bg-warning-950/55 dark:text-warning-300 dark:ring-warning-800;
+  }
+
+  .meta-pill-muted {
+    @apply bg-muted text-muted-foreground ring-border;
+  }
+
   .stacked {
     @apply grid grid-flow-row md:grid-flow-col;
   }
@@ -103,4 +122,8 @@
   .overall {
     @apply card md:p-4 px-4 py-2 md:block grid grid-cols-2 items-center;
   }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
 }

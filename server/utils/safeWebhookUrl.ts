@@ -37,7 +37,8 @@ function validateWebhookUrlCore(urlString: string): string | null {
     if (o.some((n) => n > 255)) {
       return "Invalid webhook URL";
     }
-    const [a, b] = o;
+    const a = o[0]!;
+    const b = o[1]!;
     if (
       a === 10 ||
       a === 0 ||
@@ -54,7 +55,6 @@ function validateWebhookUrlCore(urlString: string): string | null {
   return null;
 }
 
-/** For H3 handlers: throws createError(400) when invalid. */
 export function assertSafeWebhookUrl(urlString: string): void {
   const err = validateWebhookUrlCore(urlString);
   if (err) {
@@ -62,12 +62,10 @@ export function assertSafeWebhookUrl(urlString: string): void {
   }
 }
 
-/** For background jobs: returns false and does not throw. */
 export function isWebhookUrlSafeForSend(urlString: string): boolean {
   return validateWebhookUrlCore(urlString) === null;
 }
 
-/** SSRF-safe hostname for server-side fetch (favicon proxy, etc.). Same rules as webhook host. */
 export function assertSafeFetchHostname(hostname: string): void {
   const raw = hostname.trim();
   if (!raw) {

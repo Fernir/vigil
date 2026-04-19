@@ -15,7 +15,7 @@ export const useStats = () => {
       down: 0,
       overallUptime: 100,
     }),
-    server: true, // must for SSR
+    server: true,
   });
 
   return {

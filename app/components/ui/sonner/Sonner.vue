@@ -13,6 +13,19 @@ import { Toaster as Sonner } from 'vue-sonner'
 import { cn } from '@/lib/utils'
 
 const props = defineProps<ToasterProps>()
+
+const passthrough = computed(() => {
+  const { toastOptions: _, ...rest } = props
+  return rest
+})
+
+const toastOptionsMerged = computed(() => ({
+  ...props.toastOptions,
+  classes: {
+    toast: 'rounded-2xl',
+    ...props.toastOptions?.classes,
+  },
+}))
 </script>
 
 <template>
@@ -24,12 +37,8 @@ const props = defineProps<ToasterProps>()
       '--normal-border': 'var(--border)',
       '--border-radius': 'var(--radius)',
     }"
-    :toast-options="{
-      classes: {
-        toast: 'rounded-2xl',
-      },
-    }"
-    v-bind="props"
+    :toast-options="toastOptionsMerged"
+    v-bind="passthrough"
   >
     <template #success-icon>
       <CircleCheckIcon class="size-4" />

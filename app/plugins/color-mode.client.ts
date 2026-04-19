@@ -9,12 +9,10 @@ export default defineNuxtPlugin(() => {
     sameSite: 'lax',
   });
 
-  // Prefer the persisted cookie on server and client during initial setup
   if (cookie.value && colorMode.value !== cookie.value) {
     colorMode.preference = cookie.value as 'light' | 'dark' | 'system';
   }
 
-  // When the color mode changes, keep the cookie in sync
   watchEffect(() => {
     cookie.value = colorMode.value;
   });

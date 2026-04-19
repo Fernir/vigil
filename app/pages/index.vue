@@ -41,11 +41,9 @@ const handleDelete = async (id: number) => {
 <template>
   <div class="min-h-screen">
     <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <!-- Header -->
       <div class="mb-8">
         <h1 class="mb-4 text-3xl font-bold text-foreground">Services average status</h1>
 
-        <!-- Statistics -->
         <div v-if="statsLoading" class="stacked mb-6 gap-4">
           <div v-for="i in 4" :key="i" class="card animate-pulse p-4">
             <div class="mb-2 h-4 w-1/2 rounded bg-muted"></div>
@@ -82,7 +80,6 @@ const handleDelete = async (id: number) => {
         <SSEIndicator />
       </div>
 
-      <!-- Block with site list – only for authorized users -->
       <div
         v-if="loggedIn && !!user?.banned_at"
         class="card mt-8 border-dashed p-6 text-center text-muted-foreground"

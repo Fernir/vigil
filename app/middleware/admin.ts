@@ -20,7 +20,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     return;
   }
 
-  // On server-side we check the cookie and verify the JWT
   const token = useCookie('auth_token').value;
 
   if (!token) {
@@ -33,7 +32,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       userId: number;
     };
 
-    // Connect to DB and check if user is admin
     const prisma = (await import('~~/lib/prisma')).default;
 
     const user = await prisma.users.findUnique({

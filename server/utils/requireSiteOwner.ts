@@ -2,9 +2,6 @@ import { createError } from "h3";
 import type { H3Event } from "h3";
 import prisma from "~~/lib/prisma";
 
-/**
- * Ensures the request is authenticated and the site belongs to the current user.
- */
 export async function requireSiteOwner(event: H3Event, siteId: number) {
   const userId = event.context.auth?.userId;
   if (!userId) {

@@ -13,7 +13,7 @@ interface AnomalyResult {
   anomalyCount: number;
   averageResponseTime: number;
   prediction: {
-    nextHourRisk: number; // 0-1 probability
+    nextHourRisk: number;
     trend: "improving" | "stable" | "degrading";
   };
 }
@@ -24,7 +24,6 @@ export default defineEventHandler(async (event) => {
 
   await requireSiteOwner(event, id);
 
-  // Get last 7 days of data
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -41,7 +40,6 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  // Filter out any remaining nulls (TypeScript safety)
   const validResults = results.filter(
     (r) => r.responseTime !== null && r.checked_at !== null,
   );
@@ -55,7 +53,6 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  // Calculate mean and standard deviation
   const responseTimes = validResults.map((r) => r.responseTime!);
   const mean = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
   const variance =
@@ -63,7 +60,6 @@ export default defineEventHandler(async (event) => {
     responseTimes.length;
   const stdDev = Math.sqrt(variance);
 
-  // Detect anomalies (Z-score > 2)
   const anomalies: AnomalyPoint[] = validResults.map((result) => {
     const zScore = stdDev > 0 ? (result.responseTime! - mean) / stdDev : 0;
     return {
@@ -76,7 +72,6 @@ export default defineEventHandler(async (event) => {
 
   const anomalyCount = anomalies.filter((a) => a.isAnomaly).length;
 
-  // Simple trend analysis (last 24 hours vs previous)
   const last24h = validResults.filter(
     (r) => r.checked_at! > new Date(Date.now() - 24 * 60 * 60 * 1000),
   );
@@ -99,13 +94,12 @@ export default defineEventHandler(async (event) => {
   if (last24hAvg < prev24hAvg * 0.95) trend = "improving";
   else if (last24hAvg > prev24hAvg * 1.05) trend = "degrading";
 
-  // Risk prediction (simplified)
   const recentAnomalies = anomalies.filter(
     (a) =>
       a.isAnomaly &&
       new Date(a.timestamp) > new Date(Date.now() - 60 * 60 * 1000),
   );
-  const nextHourRisk = Math.min(recentAnomalies.length * 0.2, 1); // 20% per anomaly, max 100%
+  const nextHourRisk = Math.min(recentAnomalies.length * 0.2, 1);
 
   return {
     anomalies,

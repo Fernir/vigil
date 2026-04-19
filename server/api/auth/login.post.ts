@@ -57,9 +57,7 @@ export default defineEventHandler(async (event) => {
       user: userWithoutPassword,
     };
   } catch (error) {
-    // Check if the error is from Zod
     if (error instanceof z.ZodError) {
-      // Safely get the first error message
       const firstError = error.errors[0];
       const errorMessage = firstError?.message || "Validation error";
 
@@ -69,7 +67,6 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // If this is already a createError, just throw it further
     throw error;
   }
 });

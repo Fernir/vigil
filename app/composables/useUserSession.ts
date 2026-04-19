@@ -49,7 +49,6 @@ export const useUserSession = () => {
         credentials: 'include',
       });
 
-      // Refresh session data
       await refresh();
 
       await navigateTo('/');
@@ -64,12 +63,10 @@ export const useUserSession = () => {
     try {
       await $fetch('/api/auth/logout', { method: 'POST' });
 
-      // Clear cookie on client
       if (process.client) {
         document.cookie = 'auth_token=; path=/; max-age=0';
       }
 
-      // Refresh session data
       await refresh();
 
       await navigateTo('/auth/login');

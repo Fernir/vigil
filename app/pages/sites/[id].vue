@@ -121,7 +121,6 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
       </template>
 
       <div v-else class="stacked gap-6">
-        <!-- Left column: editing form -->
         <div class="lg:col-span-1 space-y-6">
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
@@ -149,7 +148,6 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
           </div>
         </div>
 
-        <!-- Right column: all metrics and charts -->
         <div class="lg:col-span-2 space-y-6 max-w-[100dvw] overflow-hidden">
           <div class="card p-5">
             <h3 class="text-md font-semibold mb-3">Last Screenshot</h3>
@@ -163,7 +161,6 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
             />
 
             <p class="mt-2 text-center text-xs text-muted-foreground">Click to enlarge</p>
-            <!-- Modal window for enlarged view -->
             <Dialog v-model:open="showModal">
               <DialogContent class="max-h-[95vh] max-w-[95vw] border-0 bg-transparent p-0 shadow-none">
                 <DialogHeader class="sr-only">
@@ -179,10 +176,8 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
             </Dialog>
           </div>
 
-          <!-- Chart of response times -->
           <UptimeChart :id="siteId" />
 
-          <!-- Last Check -->
           <div class="card p-5" v-if="lastResult">
             <h3 class="text-md font-semibold mb-3">Last Check</h3>
             <div class="flex flex-col gap-2 text-sm">
@@ -206,7 +201,6 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
             </div>
           </div>
 
-          <!-- Block SSL (horizontal metrics) -->
           <div class="card p-5" v-if="lastSSL">
             <h3 class="text-md font-semibold mb-3">SSL Certificate</h3>
             <div class="stackedwrap gap-3 text-sm">
@@ -231,7 +225,6 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
             </div>
           </div>
 
-          <!-- Block Performance (horizontal metrics) -->
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
             <div class="stackedwrap gap-3 gap-y-2 text-sm">
@@ -243,10 +236,8 @@ const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 d
             </div>
           </div>
 
-          <!-- Load Time Trend (if data is available) -->
           <SpeedChart :id="siteId" />
 
-          <!-- AI Anomaly Detection -->
           <AnomalyChart :id="siteId" />
         </div>
       </div>

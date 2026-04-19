@@ -43,7 +43,6 @@ export async function checkSiteUnified(
       requestCount++;
     };
 
-    /** Сумма Content-Length по заголовкам — без чтения тел (раньше тащили каждый байт в память). */
     const onResponse = (response: Response) => {
       try {
         const raw = response.headers()["content-length"];
@@ -51,9 +50,7 @@ export async function checkSiteUnified(
           const n = parseInt(raw, 10);
           if (!Number.isNaN(n)) totalPageSize += n;
         }
-      } catch {
-        /* ignore */
-      }
+      } catch {}
     };
 
     page.on("request", onRequest);

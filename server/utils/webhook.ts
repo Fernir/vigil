@@ -1,6 +1,6 @@
 import { isWebhookUrlSafeForSend } from '~~/server/utils/safeWebhookUrl';
 
-export async function sendWebhook(url: string, payload: unknown): Promise<boolean> {
+export async function sendWebhook(url: string, payload: Record<string, unknown>): Promise<boolean> {
   if (!isWebhookUrlSafeForSend(url)) {
     console.error('[webhook] skipped: URL failed SSRF safety checks');
     return false;

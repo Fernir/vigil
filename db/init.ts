@@ -1,14 +1,12 @@
 import { execSync } from 'child_process';
-import { PrismaClient, Prisma } from '@prisma/client'; // Импортируем пространство имен Prisma
+import { PrismaClient, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import 'dotenv/config';
 
-// Используем Prisma.PromiseReturnType или просто Promise<unknown> для экшена
 async function safeDelete(modelName: string, action: () => Promise<unknown>): Promise<void> {
   try {
     await action();
   } catch (error: unknown) {
-    // Проверяем, является ли ошибка известной ошибкой Prisma
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2021') {
         console.log(`Table ${modelName} does not exist, skipping delete`);
@@ -30,7 +28,6 @@ async function initDatabase(): Promise<void> {
 
     console.log('Clearing existing data...');
 
-    // Теперь используем функции без any
     await safeDelete('speed_results', () => prisma.speed_results.deleteMany());
     await safeDelete('screenshots', () => prisma.screenshots.deleteMany());
     await safeDelete('ssl_results', () => prisma.ssl_results.deleteMany());
@@ -73,7 +70,6 @@ async function initDatabase(): Promise<void> {
   }
 }
 
-// Запуск с обработкой ошибок верхнего уровня
 initDatabase().catch((err) => {
   console.error(err);
   process.exit(1);

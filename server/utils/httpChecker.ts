@@ -50,7 +50,6 @@ export async function checkSite(
 
     const responseTime = Date.now() - startTime;
 
-    // Base check for HTTP status
     let status: "up" | "down" | "degraded" = "up";
     if (response.status >= 500) {
       status = "down";
@@ -58,7 +57,6 @@ export async function checkSite(
       status = "degraded";
     }
 
-    // If expected text is specified, check for it in the response body
     if (expectedText) {
       const text = await readResponseTextLimited(
         response,

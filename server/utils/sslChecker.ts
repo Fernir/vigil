@@ -13,7 +13,6 @@ export interface SSLInfoInterface {
 
 export async function checkSSL(domain: string): Promise<SSLInfoInterface> {
   try {
-    // Clean URL from protocol and paths
     const hostname = domain.replace(/^https?:\/\//, "").split("/")?.[0] ?? "";
 
     const certInfo = await getCertificateInfo(hostname, { timeout: 10000 });

@@ -1,4 +1,3 @@
-// Types for tables
 export interface UserInterface {
   id: number;
   email: string;

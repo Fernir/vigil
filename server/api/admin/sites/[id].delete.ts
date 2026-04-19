@@ -6,7 +6,6 @@ export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params?.id || '0');
   if (!id) throw createError({ statusCode: 400, message: 'Invalid user ID' });
 
-  // 1. Delete all sites for the user
   await prisma.sites.deleteMany({
     where: { id },
   });

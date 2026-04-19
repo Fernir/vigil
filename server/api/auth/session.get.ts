@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get the token from the cookie
     const token = getCookie(event, "auth_token");
 
     if (!token) {

@@ -1,65 +1,51 @@
 # Vigil
 
-<div align="center">
-  <h3>Beautiful, real-time status page for your services</h3>
-  <p>
-    <strong>Real-time updates</strong> •
-    <strong>Beautiful charts</strong> •
-    <strong>Dark mode</strong> •
-    <strong>Webhook notifications</strong>
-  </p>
-</div>
+Self-hosted status page: HTTP checks, live updates, charts, webhooks, SSL and performance metrics, and optional full-page screenshots. You keep the data on your own server.
 
-## Features
+## What you get
 
-- **Real-time monitoring** via Server-Sent Events
-- **Interactive charts** with response time history
-- **Dark/light mode** with system preference detection
-- **Webhooks notifications** when services go down
-- **Public status page** for transparency
-- **Admin dashboard** for managing services
-- **Self-hosted** - you own your data
-- **SSL certificate monitoring** with expiration alerts
-- **Performance tracking** with load time, TTFB, and page size metrics
-- **Screenshot capture** for visual verification
-- **Custom text checks** to verify page content
-- **Optimization advisor** with actionable recommendations
+- **Real-time updates** through Server-Sent Events (no polling for the UI)
+- **Charts** for response time history
+- **Light and dark** themes, including system preference
+- **Webhooks** when a service goes down, recovers, or when an SSL certificate is close to expiry
+- **Public status** view and a **signed-in** dashboard to manage sites
+- **SSL** monitoring and **Playwright**-based **screenshots** and page metrics
+- **Text checks** (optional) to assert that the body contains (or does not contain) a string
+- **Heuristics** (e.g. response-time spikes) to surface unusual behavior
 
-## Quick Start
+## Requirements
+
+- **Node.js** 24.x (see `package.json` `engines`)
+- **Yarn** (or use npm / pnpm with equivalent commands)
+
+## Quick start
 
 ```bash
-# Clone repository
 git clone https://github.com/Fernir/vigil.git
 cd vigil
-
-# Install dependencies
 yarn
-
-# Setup database
 yarn db:init
-
-# Start development server
 yarn dev
 ```
 
-## Environment Variables
+Open [http://localhost:3000](http://localhost:3000).
 
-Modify a .env file in the root (see .env.example):
+## Configuration
 
-```
+Add a `.env` file in the project root, for example:
+
+```env
 DATABASE_URL="file:./db/data.sqlite3"
-JWT_SECRET=your-super-secret-key
-ADMIN_EMAIL=admin@admin.com
-ADMIN_PASSWORD=111111
+JWT_SECRET=your-long-random-secret
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me
 ```
 
-Open http://localhost:3000
+`yarn db:init` runs migrations and seeds an admin user from `ADMIN_*` when the database is empty. Adjust `JWT_SECRET` for any non-local deployment.
 
-## Webhook notifications
+## Webhook payload
 
-You can receive alerts when a site goes down or recovers. Just set a webhook URL in your settings.
-
-**Example payload:**
+If you set a webhook URL in settings, the app can POST JSON when something changes. Example shape:
 
 ```json
 {
@@ -73,45 +59,35 @@ You can receive alerts when a site goes down or recovers. Just set a webhook URL
   "responseTime": 1234,
   "statusCode": 500,
   "error": "connect ECONNREFUSED",
-  "timestamp": "2025-03-18T12:34:56Z"
+  "timestamp": "2025-03-18T12:34:56.000Z"
 }
 ```
 
-## Optimization Advisor
+## Database
 
-Vigil analyzes your site metrics and provides actionable recommendations:
+| Command        | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `yarn db:reset`  | Reset DB (destructive) and re-run seed path  |
+| `yarn db:studio` | Open Prisma Studio (visual data browser)     |
 
-- **Performance tips** when load times exceed thresholds
-- **SSL alerts** before certificates expire
-- **Availability insights** for uptime issues
-- **Security suggestions** for HTTPS and configuration
+## Tech stack
 
-## Database Management
-
-```bash
-# Reset database (clears all data)
-yarn db:reset
-
-# Open Prisma Studio (visual database editor)
-yarn prisma:studio
-```
-
-## Built with
-
-- [Nuxt 3](https://nuxt.com/) – Vue framework with SSR
-- [Nuxt UI](https://ui.nuxt.com/) – beautiful components
-- [Tailwind CSS](https://tailwindcss.com/) – styling
-- [Chart.js](https://www.chartjs.org/) – interactive charts
-- [Prisma](https://www.prisma.io/) – type-safe ORM
-- [SQLite](https://www.sqlite.org/) – database
-- [JSON Web Tokens](https://jwt.io/) – authentication via httpOnly cookies
-- [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) – real‑time updates
-- [Puppeteer](https://pptr.dev/) – screenshot capture and performance metrics
+| Area        | Choice |
+| ----------- | ------ |
+| App         | [Nuxt 3](https://nuxt.com/), [Vue 3](https://vuejs.org/) |
+| Styling     | [Tailwind CSS](https://tailwindcss.com/) via [@nuxtjs/tailwindcss](https://tailwindcss.nuxtjs.org/) |
+| Components  | [shadcn-nuxt](https://www.shadcn-vue.com/docs/installation/nuxt), [Reka UI](https://reka-ui.com/) |
+| Charts      | [Chart.js](https://www.chartjs.org/), [vue-chartjs](https://vue-chartjs.org/) |
+| Data        | [Prisma](https://www.prisma.io/), [SQLite](https://www.sqlite.org/) |
+| Auth        | [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken), httpOnly cookie |
+| Browser CI  | [Playwright](https://playwright.dev/) |
+| Validation  | [Zod](https://zod.dev/) |
+| Images      | [@nuxt/image](https://image.nuxt.com/) (e.g. static assets in `public/`) |
 
 ## Contributing
 
-We welcome contributions!
+Pull requests and issues are welcome.
 
 ## License
 
-MIT © Fernir
+MIT. See `package.json` for the author line and full `license` field.

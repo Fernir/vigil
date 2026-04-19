@@ -4,7 +4,7 @@ import { z } from "zod";
 export const siteSchema = z.object({
   name: z.string().min(1).max(100),
   url: z.string().url(),
-  checkInterval: z.number().min(30).max(3600).default(60), // 30 sec to 1 hour
+  checkInterval: z.number().min(30).max(3600).default(60),
   isActive: z.boolean().default(true),
   check_type: z.enum(["http", "text"]).default("http"),
   expected_text: z.string().optional().nullable(),
@@ -20,7 +20,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, message: "Unauthorized" });
     }
 
-    // Check site limit
     const siteCount = await prisma.sites.count({
       where: { userId: auth.userId },
     });

@@ -18,6 +18,5 @@ export default defineEventHandler(async (event) => {
 
   if (!screenshot) return null;
 
-  // Convert BLOB to base64 for sending to the client
   return screenshot?.image_data;
 });

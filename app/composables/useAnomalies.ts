@@ -31,10 +31,8 @@ export const useAnomalies = (siteId: number) => {
     }
   };
 
-  // Real-time anomalies from SSE
   const realtimeAnomalies = computed(() => anomalyResults.value[siteId] || []);
 
-  // Auto-fetch on mount if siteId provided
   if (process.server) {
     if (siteId) {
       fetchAnomalies(siteId);

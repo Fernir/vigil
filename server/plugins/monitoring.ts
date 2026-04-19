@@ -57,12 +57,11 @@ export default defineNitroPlugin(() => {
             siteUrl: site.url,
           });
 
-          // AI Anomaly Detection
           try {
             const recentResults = await prisma.check_results.findMany({
               where: { siteId: site.id },
               orderBy: { checked_at: 'desc' },
-              take: 100, // Last 100 checks for analysis
+              take: 100,
               select: { responseTime: true },
             });
 
@@ -89,9 +88,7 @@ export default defineNitroPlugin(() => {
                 });
               }
             }
-          } catch (error) {
-            // Silent fail for anomaly detection
-          }
+          } catch (error) {}
 
           if (httpResult.status === 'down' && prevStatus !== 'down' && site.users?.webhook_url) {
             await sendWebhook(site.users.webhook_url, {
@@ -116,7 +113,6 @@ export default defineNitroPlugin(() => {
             });
           }
 
-          // 2. SSL check
           try {
             const sslInfo = await checkSSL(site.url);
 
@@ -152,7 +148,6 @@ export default defineNitroPlugin(() => {
             }
           } catch (error) {}
 
-          // 3. Unified browser check (speed + screenshot)
           try {
             const unifiedResult = await checkSiteUnified(site.url, {
               viewportWidth: 1280,
@@ -216,8 +211,6 @@ export default defineNitroPlugin(() => {
           console.error(`Error processing site ${site.url}:`, error);
         }
       }
-
-      // Cleanup old records
 
       const allSites = await prisma.sites.findMany({
         where: { isActive: true },

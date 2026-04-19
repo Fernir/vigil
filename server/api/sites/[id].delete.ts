@@ -12,7 +12,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
 
-  // Check existence of the site and its owner
   const site = await prisma.sites.findUnique({
     where: { id: id },
   });
@@ -21,7 +20,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: "Site not found" });
   }
 
-  // Check permissions: either owner or admin can delete
   const user = await prisma.users.findUnique({
     where: { id: userId },
     select: { is_admin: true },
@@ -34,7 +32,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Delete site (screenshots will be deleted cascaded in DB)
   await prisma.sites.delete({
     where: { id: id },
   });

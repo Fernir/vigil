@@ -23,9 +23,6 @@ function guessImageContentType(buf: Buffer): string {
   return "application/octet-stream";
 }
 
-/**
- * Прокси favicon с целевого origin: в браузер не идут запросы к Google s2 (и их cookie).
- */
 export default defineEventHandler(async (event) => {
   const q = getQuery(event);
   const host = typeof q.host === "string" ? q.host : typeof q.domain === "string" ? q.domain : "";
@@ -76,9 +73,7 @@ export default defineEventHandler(async (event) => {
       setHeader(event, "Content-Type", ct);
       setHeader(event, "Cache-Control", "public, max-age=86400");
       return buf;
-    } catch {
-      /* try next */
-    }
+    } catch {}
   }
 
   throw createError({ statusCode: 404, message: "No favicon" });

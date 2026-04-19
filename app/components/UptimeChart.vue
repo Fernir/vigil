@@ -23,7 +23,6 @@ const { results } = useMonitoring();
 
 const data = computed(() => (results.value[siteId] || []).slice().reverse());
 
-/** Линия — нейтральный зелёный тренд; точки по статусу проверки */
 const LINE = 'rgb(34 197 94)';
 const LINE_FILL = 'rgba(34, 197, 94, 0.08)';
 const PT_UP = 'rgb(22 163 74)';
