@@ -1,6 +1,7 @@
+import type { H3Event } from "h3";
 import prisma from "~~/lib/prisma";
 
-export async function checkAdmin(event: any) {
+export async function checkAdmin(event: H3Event) {
   const userId = event.context.auth?.userId;
 
   if (!userId)

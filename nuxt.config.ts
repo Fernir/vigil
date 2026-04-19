@@ -1,34 +1,54 @@
+import { fileURLToPath } from "node:url";
+
 export default defineNuxtConfig({
+  alias: {
+    "@": fileURLToPath(new URL("./app", import.meta.url)),
+  },
+
   future: {
     compatibilityVersion: 4,
   },
 
   devtools: { enabled: false },
 
-  modules: ['@nuxt/ui', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@pinia/nuxt'],
+  modules: [
+    "shadcn-nuxt",
+    "@nuxtjs/tailwindcss",
+    "@nuxtjs/color-mode",
+    "@vueuse/nuxt",
+    "@nuxt/image",
+  ],
 
-  colorMode: {
-    preference: 'system',
-    fallback: 'dark',
-    storageKey: 'color-mode',
-    storage: 'cookie',
+  shadcn: {
+    prefix: "",
+    componentDir: "./app/components/ui",
   },
 
-  css: ['~/assets/css/main.css'],
+  colorMode: {
+    preference: "system",
+    fallback: "dark",
+    storageKey: "color-mode",
+    storage: "cookie",
+    classSuffix: "",
+  },
+
+  css: ["~/assets/css/main.css"],
 
   runtimeConfig: {
-    jwtSecret: process.env.JWT_SECRET || 'default-secret-change-me',
+    jwtSecret: process.env.JWT_SECRET || "default-secret-change-me",
     public: {
-      siteName: process.env.SITE_NAME || 'Vigil',
-      apiBaseUrl: process.env.API_BASE_URL || '/api',
+      siteName: process.env.SITE_NAME || "Vigil",
+      apiBaseUrl: process.env.API_BASE_URL || "/api",
     },
   },
 
   app: {
     head: {
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      ],
     },
   },
 
-  compatibilityDate: '2025-02-19',
+  compatibilityDate: "2025-02-19",
 });

@@ -1,7 +1,10 @@
 import type { AnomalyResult } from '~~/types';
-import { FetchError } from 'ofetch'; // Импортируем тип ошибки
+import { FetchError } from 'ofetch';
+import { useMonitoring } from './useMonitoring';
 
 export const useAnomalies = (siteId: number) => {
+  const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
+
   const anomalies = ref<AnomalyResult | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -15,7 +18,10 @@ export const useAnomalies = (siteId: number) => {
     error.value = null;
 
     try {
-      const data = await $fetch<AnomalyResult>(`/api/sites/${siteId}/anomalies`);
+      const data = await $fetch<AnomalyResult>(`/api/sites/${siteId}/anomalies`, {
+        headers,
+        credentials: 'include',
+      });
       anomalies.value = data;
     } catch (e: unknown) {
       error.value = e instanceof FetchError ? e.message : 'Failed to fetch anomalies';

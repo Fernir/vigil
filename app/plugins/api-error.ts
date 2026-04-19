@@ -1,23 +1,16 @@
-export default defineNuxtPlugin(() => {
-  const toast = useToast();
+import { toast } from "vue-sonner";
 
+export default defineNuxtPlugin(() => {
   globalThis.$fetch = globalThis.$fetch.create({
     onResponseError({ response }) {
+      if (response.status === 401) return;
+
+      const message = response._data?.message || "Something went wrong";
+
       if (response.status >= 500) {
-        toast.add({
-          title: 'Server error',
-          description: response._data?.message || 'Something went wrong',
-          color: 'red',
-        });
-      } else if (response.status === 401) {
-        // Ignore auth checks here (middleware handles redirects)
-        return;
+        toast.error("Server error", { description: message });
       } else if (response.status >= 400) {
-        toast.add({
-          title: 'Error',
-          description: response._data?.message || 'Request failed',
-          color: 'yellow',
-        });
+        toast.warning("Error", { description: message });
       }
     },
   });

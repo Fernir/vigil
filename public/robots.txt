@@ -1,0 +1,9 @@
+# Публичная главная и общие страницы разрешены; ЛК/API — нет
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /admin
+Disallow: /auth/
+Disallow: /settings
+Disallow: /sites/

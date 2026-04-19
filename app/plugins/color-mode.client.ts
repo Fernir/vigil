@@ -2,6 +2,7 @@ import { defineNuxtPlugin, useCookie } from '#app';
 
 export default defineNuxtPlugin(() => {
   const colorMode = useColorMode();
+
   const cookie = useCookie('color-mode', {
     maxAge: 60 * 60 * 24 * 365,
     path: '/',

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft, Loader2, Trash2, X } from 'lucide-vue-next';
 import type { SiteInterface } from '~~/types';
 
 definePageMeta({ middleware: 'auth' });
@@ -85,20 +86,37 @@ const handleSubmit = async (form: SiteInterface) => {
 };
 
 const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScreenshot.value?.hash ? `?hash=${lastScreenshot.value.hash}` : ''}`);
+
+const lastCheckStatusClass = computed(() => {
+  const s = lastResult.value?.status;
+  if (s === 'up') return 'text-success-600 dark:text-success-400';
+  if (s === 'down') return 'text-error-600 dark:text-error-400';
+  if (s === 'degraded') return 'text-warning-600 dark:text-warning-400';
+  return 'text-muted-foreground';
+});
+
+const sslValidClass = computed(() => (lastSSL.value?.valid ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'));
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-6">
+  <div class="min-h-screen bg-background py-6">
     <div class="md:max-w-7xl mx-auto md:p-6 p-2 lg:px-8 max-w-[100dvw] overflow-hidden">
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
+        <Button variant="ghost" class="gap-2" as-child>
+          <NuxtLink to="/">
+            <ArrowLeft class="size-4" />
+            Back
+          </NuxtLink>
+        </Button>
       </div>
 
       <template v-if="siteNotFound">
         <div class="card p-6">
           <h2 class="text-lg font-semibold mb-2">Site not found</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-300">We could not find a site with this ID. Please go back to the dashboard.</p>
-          <UButton to="/" class="mt-4" color="primary" size="sm"> Go to dashboard </UButton>
+          <p class="text-sm text-muted-foreground">We could not find a site with this ID. Please go back to the dashboard.</p>
+          <Button variant="default" class="mt-4" as-child>
+            <NuxtLink to="/">Go to dashboard</NuxtLink>
+          </Button>
         </div>
       </template>
 
@@ -108,13 +126,21 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
           <div class="card p-5">
             <h2 class="text-lg font-semibold mb-4">Settings</h2>
             <SiteForm :initial-data="site" @submit="handleSubmit" :loading="isLoading">
-              <div class="flex gap-2 pt-2 justify-between">
-                <div>
-                  <UButton type="submit" color="primary" :loading="loading" size="sm"> Save </UButton>
-                  <UButton color="gray" variant="ghost" to="/" size="sm"> Cancel </UButton>
+              <div class="flex justify-between gap-2 pt-2">
+                <div class="flex gap-2">
+                  <Button type="submit" variant="default" :disabled="loading">
+                    <Loader2 v-if="loading" class="mr-1 size-3.5 animate-spin" />
+                    Save
+                  </Button>
+                  <Button variant="ghost" as-child>
+                    <NuxtLink to="/">Cancel</NuxtLink>
+                  </Button>
                 </div>
 
-                <UButton color="red" variant="soft" icon="heroicons:trash-20-solid" size="sm" @click="handleDelete">Delete</UButton>
+                <Button variant="destructive" class="gap-1" @click="handleDelete">
+                  <Trash2 class="size-3.5" />
+                  Delete
+                </Button>
               </div>
             </SiteForm>
           </div>
@@ -131,17 +157,26 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
               :src="screenshotUrl"
               alt="Website screenshot"
               class="w-full max-h-64 object-cover border rounded-lg shadow-sm cursor-pointer"
+              loading="lazy"
+              decoding="async"
               @click="showModal = true"
             />
 
-            <p class="text-xs text-gray-500 mt-2 text-center">Click to enlarge</p>
+            <p class="mt-2 text-center text-xs text-muted-foreground">Click to enlarge</p>
             <!-- Modal window for enlarged view -->
-            <UModal v-model="showModal" centered :ui="{ width: 'w-fit sm:max-w-none' }">
-              <UButton variant="link" color="white" size="lg" class="fixed top-4 right-4" icon="heroicons:x-mark-solid" @click.stop="showModal = false" />
-              <div class="p-4 flex items-center justify-center h-full">
-                <img :src="screenshotUrl" class="max-h-full rounded-lg" />
-              </div>
-            </UModal>
+            <Dialog v-model:open="showModal">
+              <DialogContent class="max-h-[95vh] max-w-[95vw] border-0 bg-transparent p-0 shadow-none">
+                <DialogHeader class="sr-only">
+                  <DialogTitle>Screenshot preview</DialogTitle>
+                </DialogHeader>
+                <Button variant="secondary" size="icon" class="absolute right-4 top-4 z-50" @click="showModal = false">
+                  <X class="size-5" />
+                </Button>
+                <div class="flex items-center justify-center p-4">
+                  <img :src="screenshotUrl" class="max-h-[85vh] rounded-lg" alt="Screenshot enlarged" decoding="async" />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <!-- Chart of response times -->
@@ -152,27 +187,20 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
             <h3 class="text-md font-semibold mb-3">Last Check</h3>
             <div class="flex flex-col gap-2 text-sm">
               <div class="flex justify-between">
-                <span class="text-gray-500">Status</span>
-                <span
-                  :class="{
-                    'text-green-600': lastResult.status === 'up',
-                    'text-yellow-600': lastResult.status === 'degraded',
-                    'text-red-600': lastResult.status === 'down',
-                  }"
-                  >{{ lastResult.status }}</span
-                >
+                <span class="text-muted-foreground">Status</span>
+                <span class="font-medium capitalize" :class="lastCheckStatusClass">{{ lastResult.status }}</span>
               </div>
-              <div v-if="lastResult.errorMessage" class="text-red-500 text-sm">Error: {{ lastResult.errorMessage }}</div>
+              <div v-if="lastResult.errorMessage" class="text-sm text-muted-foreground">Error: {{ lastResult.errorMessage }}</div>
               <div class="flex justify-between">
-                <span class="text-gray-500">Response Time</span>
+                <span class="text-muted-foreground">Response Time</span>
                 <span>{{ lastResult.responseTime }} ms</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500">Status Code</span>
+                <span class="text-muted-foreground">Status Code</span>
                 <span>{{ lastResult.statusCode || '—' }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500">Checked at</span>
+                <span class="text-muted-foreground">Checked at</span>
                 <span>{{ formatDateTime(lastResult.checked_at) }}</span>
               </div>
             </div>
@@ -183,28 +211,21 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
             <h3 class="text-md font-semibold mb-3">SSL Certificate</h3>
             <div class="stackedwrap gap-3 text-sm">
               <div>
-                <span class="text-gray-500 block">Status</span>
-                <span :class="lastSSL.valid ? 'text-green-600' : 'text-red-600'">
+                <span class="block text-muted-foreground">Status</span>
+                <span class="font-medium" :class="sslValidClass">
                   {{ lastSSL.valid ? 'Valid' : 'Invalid' }}
                 </span>
               </div>
               <div>
-                <span class="text-gray-500 block">Days left</span>
-                <span
-                  :class="{
-                    'text-green-600': lastSSL.daysLeft > 30,
-                    'text-yellow-600': lastSSL.daysLeft <= 30 && lastSSL.daysLeft > 7,
-                    'text-red-600': lastSSL.daysLeft <= 7,
-                  }"
-                  >{{ lastSSL.daysLeft }}</span
-                >
+                <span class="block text-muted-foreground">Days left</span>
+                <span class="font-medium tabular-nums text-foreground">{{ lastSSL.daysLeft }}</span>
               </div>
               <div>
-                <span class="text-gray-500 block">Issuer</span>
+                <span class="block text-muted-foreground">Issuer</span>
                 <span class="truncate">{{ lastSSL.issuer || '—' }}</span>
               </div>
               <div>
-                <span class="text-gray-500 block">Expires</span>
+                <span class="block text-muted-foreground">Expires</span>
                 <span>{{ formatDateTime(lastSSL.validTo).split(' ')[0] }}</span>
               </div>
             </div>
@@ -214,11 +235,11 @@ const screenshotUrl = computed(() => `/api/sites/${siteId}/screenshot${lastScree
           <div class="card p-5" v-if="lastSpeed">
             <h3 class="text-md font-semibold mb-3">Performance</h3>
             <div class="stackedwrap gap-3 gap-y-2 text-sm">
-              <div><span class="text-gray-500 block">Load</span>{{ lastSpeed.loadTime }}ms</div>
-              <div><span class="text-gray-500 block">TTFB</span>{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms</div>
-              <div><span class="text-gray-500 block">DOM</span>{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms</div>
-              <div><span class="text-gray-500 block">Size</span>{{ ((lastSpeed?.pageSize ?? 0) / 1024).toFixed(0) }} KB</div>
-              <div><span class="text-gray-500 block">Req</span>{{ lastSpeed?.requestCount }}</div>
+              <div><span class="block text-muted-foreground">Load</span>{{ lastSpeed.loadTime }}ms</div>
+              <div><span class="block text-muted-foreground">TTFB</span>{{ lastSpeed?.ttfb?.toFixed?.(0) }} ms</div>
+              <div><span class="block text-muted-foreground">DOM</span>{{ lastSpeed?.domContentLoaded?.toFixed?.(0) }} ms</div>
+              <div><span class="block text-muted-foreground">Size</span>{{ ((lastSpeed?.pageSize ?? 0) / 1024).toFixed(0) }} KB</div>
+              <div><span class="block text-muted-foreground">Req</span>{{ lastSpeed?.requestCount }}</div>
             </div>
           </div>
 

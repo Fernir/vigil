@@ -5,6 +5,35 @@ export interface CheckResultDataInterface {
   errorMessage?: string;
 }
 
+const BODY_SCAN_LIMIT_BYTES = 256 * 1024;
+
+async function readResponseTextLimited(
+  response: Response,
+  maxBytes: number,
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const text = await response.text();
+    return text.slice(0, maxBytes);
+  }
+
+  const decoder = new TextDecoder();
+  let out = "";
+  let received = 0;
+
+  while (received < maxBytes) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    out += decoder.decode(value, { stream: true });
+    if (out.length >= maxBytes) {
+      return out.slice(0, maxBytes);
+    }
+  }
+
+  return out;
+}
+
 export async function checkSite(
   url: string,
   expectedText?: string | null,
@@ -13,16 +42,12 @@ export async function checkSite(
   const startTime = Date.now();
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
     const response = await fetch(url, {
       method: "GET",
-      signal: controller.signal,
+      signal: AbortSignal.timeout(10_000),
       headers: { "User-Agent": "Vigil-Monitor/1.0" },
     });
 
-    clearTimeout(timeoutId);
     const responseTime = Date.now() - startTime;
 
     // Base check for HTTP status
@@ -35,7 +60,10 @@ export async function checkSite(
 
     // If expected text is specified, check for it in the response body
     if (expectedText) {
-      const text = await response.text();
+      const text = await readResponseTextLimited(
+        response,
+        BODY_SCAN_LIMIT_BYTES,
+      );
 
       const textExists = text.includes(expectedText);
       const conditionMet = condition === "contains" ? textExists : !textExists;
@@ -51,12 +79,13 @@ export async function checkSite(
     }
 
     return { status, responseTime, statusCode: response.status };
-  } catch (error: any) {
-    console.error(`Error checking ${url}:`, error.message);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`Error checking ${url}:`, msg);
     return {
       status: "down",
       responseTime: Date.now() - startTime,
-      errorMessage: error.message,
+      errorMessage: msg,
     };
   }
 }

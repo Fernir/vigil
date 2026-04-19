@@ -1,5 +1,5 @@
 import type { SiteInterface } from '~~/types';
-import { FetchError } from 'ofetch'; // Импортируем тип ошибки
+import { FetchError } from 'ofetch';
 
 export const useSites = () => {
   const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
@@ -18,7 +18,6 @@ export const useSites = () => {
           credentials: 'include',
         });
       } catch (e: unknown) {
-        // Проверяем, является ли ошибка объектом FetchError
         if (e instanceof FetchError && e.status === 401) {
           return [];
         }
@@ -37,7 +36,6 @@ export const useSites = () => {
     await refresh();
   };
 
-  // Вспомогательная функция для обработки ошибок в методах
   const handleError = (e: unknown, defaultMsg: string): never => {
     if (e instanceof FetchError) {
       throw new Error(e.data?.message || e.message || defaultMsg);

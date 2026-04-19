@@ -1,56 +1,76 @@
 <script setup lang="ts">
+import { ArrowLeft, Pencil } from "lucide-vue-next";
+
 definePageMeta({
-  middleware: 'admin',
+  middleware: "admin",
 });
 
-useHead({ title: 'Admin Dashboard' });
+useHead({ title: "Admin Dashboard" });
 
-const { data: users } = await useFetch('/api/admin/users');
-
-// Columns definition
-const columns = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'max_sites', label: 'Max Sites', sortable: true },
-  {
-    key: 'banned_at',
-    label: 'Banned',
-    sortable: true,
-  },
-  {
-    key: 'is_admin',
-    label: 'Admin',
-    sortable: true,
-  },
-  { key: 'actions', label: 'Actions', sortable: false },
-];
+const { data: users } = await useFetch<
+  Array<{
+    id: number;
+    email: string;
+    max_sites: number | null;
+    banned_at: string | null;
+    is_admin: boolean | null;
+  }>
+>("/api/admin/users");
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Admin Dashboard</h1>
+  <div class="min-h-screen bg-background py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h1 class="mb-8 text-3xl font-bold text-foreground">Admin Dashboard</h1>
       <div class="mb-4">
-        <UButton to="/" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
+        <Button variant="ghost" class="gap-2" as-child>
+          <NuxtLink to="/">
+            <ArrowLeft class="size-4" />
+            Back
+          </NuxtLink>
+        </Button>
       </div>
       <div class="card p-6">
-        <h2 class="text-xl font-semibold mb-4">Users</h2>
+        <h2 class="mb-4 text-xl font-semibold">Users</h2>
 
-        <UTable :rows="users" :columns="columns">
-          <template #banned_at-data="{ row }">
-            <UBadge :color="row.banned_at ? 'red' : 'green'" variant="soft">
-              {{ row.banned_at ? 'Yes' : 'No' }}
-            </UBadge>
-          </template>
-          <template #is_admin-data="{ row }">
-            <UBadge :color="row.is_admin ? 'green' : 'red'" variant="soft">
-              {{ row.is_admin ? 'Yes' : 'No' }}
-            </UBadge>
-          </template>
-          <template #actions-data="{ row }">
-            <UButton color="gray" variant="ghost" data-test="Edit User" icon="heroicons:pencil-square-20-solid" :to="`/admin/users/${row.id}`" size="xs" />
-          </template>
-        </UTable>
+        <div class="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Max Sites</TableHead>
+                <TableHead>Banned</TableHead>
+                <TableHead>Admin</TableHead>
+                <TableHead class="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="row in users || []" :key="row.id">
+                <TableCell>{{ row.id }}</TableCell>
+                <TableCell>{{ row.email }}</TableCell>
+                <TableCell>{{ row.max_sites }}</TableCell>
+                <TableCell>
+                  <Badge :variant="row.banned_at ? 'destructive' : 'secondary'">
+                    {{ row.banned_at ? "Yes" : "No" }}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge :variant="row.is_admin ? 'default' : 'outline'">
+                    {{ row.is_admin ? "Yes" : "No" }}
+                  </Badge>
+                </TableCell>
+                <TableCell class="text-right">
+                  <Button variant="ghost" size="icon" data-test="Edit User" as-child>
+                    <NuxtLink :to="`/admin/users/${row.id}`">
+                      <Pencil class="size-3.5" />
+                    </NuxtLink>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   </div>

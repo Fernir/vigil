@@ -1,11 +1,10 @@
 import { computed } from 'vue';
 import { navigateTo } from '#app';
 import type { UserInterface } from '~~/types';
-import { FetchError } from 'ofetch'; // Импортируем тип ошибки
+import { FetchError } from 'ofetch';
 
 interface LoginResponse {
   user: UserInterface;
-  token?: string;
 }
 
 interface SessionResponse {
@@ -84,7 +83,12 @@ export const useUserSession = () => {
       await $fetch('/api/auth/register', {
         method: 'POST',
         body: { email, password },
+        credentials: 'include',
       });
+
+      await refresh();
+
+      await navigateTo('/');
 
       return { success: true };
     } catch (e: unknown) {

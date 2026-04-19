@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { Line } from 'vue-chartjs';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, type ChartOptions } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+  type ChartOptions,
+} from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -11,6 +22,13 @@ const siteId = Number(props.id);
 const { speedResults } = useMonitoring();
 
 const data = computed(() => (speedResults.value[siteId] || []).slice().reverse());
+
+const G1 = 'rgb(22 163 74)';
+const G2 = 'rgb(245 158 11)';
+const G3 = 'rgb(239 68 68)';
+const F1 = 'rgba(34, 197, 94, 0.06)';
+const F2 = 'rgba(245, 158, 11, 0.06)';
+const F3 = 'rgba(239, 68, 68, 0.06)';
 
 const defaultSettings = {
   borderWidth: 2,
@@ -25,32 +43,32 @@ const chartData = computed(() => ({
   labels: data.value.map((d) => {
     const date = new Date(d.checked_at as string);
 
-    return `${date.getDate()}.${date.getMonth() + 1}`; // short format "DD.MM"
+    return `${date.getDate()}.${date.getMonth() + 1}`;
   }),
   datasets: [
     {
       ...defaultSettings,
       label: 'DOM loading time (ms)',
       data: data.value.map((d) => d.domContentLoaded ?? 0),
-      borderColor: 'rgb(14, 165, 233)',
-      backgroundColor: 'rgba(14, 165, 233, 0.05)',
-      pointBackgroundColor: 'rgb(14, 165, 233)',
+      borderColor: G1,
+      backgroundColor: F1,
+      pointBackgroundColor: G1,
     },
     {
       ...defaultSettings,
       label: 'TTFB (ms)',
       data: data.value.map((d) => d.ttfb ?? 0),
-      borderColor: 'orange',
-      backgroundColor: 'rgba(14, 165, 233, 0.05)',
-      pointBackgroundColor: 'orange',
+      borderColor: G2,
+      backgroundColor: F2,
+      pointBackgroundColor: G2,
     },
     {
       ...defaultSettings,
       label: 'Load time (ms)',
       data: data.value.map((d) => d.loadTime ?? 0),
-      borderColor: 'orangered',
-      backgroundColor: 'rgba(14, 165, 233, 0.05)',
-      pointBackgroundColor: 'orangered',
+      borderColor: G3,
+      backgroundColor: F3,
+      pointBackgroundColor: G3,
     },
   ],
 }));
@@ -59,14 +77,14 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: true, position: 'bottom' },
+    legend: { display: true, position: 'bottom', labels: { color: '#71717a', usePointStyle: true } },
     tooltip: {
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      titleColor: '#fff',
-      bodyColor: '#ddd',
+      backgroundColor: 'rgba(24, 24, 27, 0.92)',
+      titleColor: '#fafafa',
+      bodyColor: '#e4e4e7',
       padding: 8,
       cornerRadius: 4,
-      displayColors: false,
+      displayColors: true,
       callbacks: {
         label: (ctx) => `${ctx.raw} ms`,
       },
@@ -79,31 +97,30 @@ const chartOptions = {
         maxRotation: 0,
         autoSkip: true,
         maxTicksLimit: 6,
-        color: '#6b7280', // gray-500
+        color: '#71717a',
       },
     },
     y: {
       beginAtZero: true,
-      grid: { color: 'rgba(0,0,0,0.05)' },
+      grid: { color: 'rgba(0,0,0,0.06)' },
       ticks: {
         callback: (val: number) => `${val}ms`,
-        color: '#6b7280',
+        color: '#71717a',
       },
     },
-  },
-  elements: {
-    line: { borderJoinStyle: 'round' },
   },
 } as ChartOptions<'line'>;
 </script>
 
 <template>
   <div class="card p-5">
-    <h3 class="text-md font-semibold mb-3">Speed Trend</h3>
+    <h3 class="text-md mb-3 font-semibold">Performance History</h3>
     <ClientOnly>
-      <div class="w-full h-32 md:h-52">
-        <Line v-if="data?.length" :data="chartData" :options="chartOptions" />
-        <div v-else class="h-full flex items-center justify-center text-gray-500">No data available</div>
+      <div class="h-32 w-full md:h-52">
+        <Line v-if="data.length" :data="chartData" :options="chartOptions" />
+        <div v-else class="flex h-full items-center justify-center text-muted-foreground">
+          No data available
+        </div>
       </div>
     </ClientOnly>
   </div>

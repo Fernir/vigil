@@ -1,4 +1,5 @@
 import prisma from "~~/lib/prisma";
+import { requireSiteOwner } from "~~/server/utils/requireSiteOwner";
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params?.id || "0");
@@ -11,6 +12,8 @@ export default defineEventHandler(async (event) => {
       message: "Invalid site ID",
     });
   }
+
+  await requireSiteOwner(event, id);
 
   const results = await prisma.check_results.findMany({
     where: {

@@ -8,6 +8,8 @@ const maxRetries = 5;
 const subscriberCount = ref(0);
 
 export const useMonitoring = () => {
+  const headers = process.server ? useRequestHeaders(['cookie']) : undefined;
+
   // HTTP results
   const results = useState<Record<number, CheckResultInterface[]>>('monitoring-results', () => ({}));
   const latestResults = useState<Record<number, CheckResultInterface>>('monitoring-latest-results', () => ({}));
@@ -127,7 +129,10 @@ export const useMonitoring = () => {
   const fetchSiteHistory = async (siteId: number, days = 10) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<CheckResultInterface[]>(`/api/sites/${siteId}/stats?days=${days}`);
+      const data = await $fetch<CheckResultInterface[]>(`/api/sites/${siteId}/stats?days=${days}`, {
+        headers,
+        credentials: 'include',
+      });
       if (data) {
         results.value = { ...results.value, [siteId]: data };
         if (data[0]) {
@@ -143,7 +148,10 @@ export const useMonitoring = () => {
   const fetchSpeedHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<SpeedResultInterface[]>(`/api/sites/${siteId}/speed`);
+      const data = await $fetch<SpeedResultInterface[]>(`/api/sites/${siteId}/speed`, {
+        headers,
+        credentials: 'include',
+      });
       if (data) {
         speedResults.value = { ...speedResults.value, [siteId]: data };
         if (data[0]) {
@@ -162,7 +170,10 @@ export const useMonitoring = () => {
   const fetchSSLHistory = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<SSLResultInterface[]>(`/api/sites/${siteId}/ssl`);
+      const data = await $fetch<SSLResultInterface[]>(`/api/sites/${siteId}/ssl`, {
+        headers,
+        credentials: 'include',
+      });
       if (data) {
         sslResults.value = { ...sslResults.value, [siteId]: data };
         if (data[0]) {
@@ -181,7 +192,10 @@ export const useMonitoring = () => {
   const fetchScreenshotData = async (siteId: number) => {
     if (!siteId) return;
     try {
-      const data = await $fetch<ScreenshotResultInterface>(`/api/sites/${siteId}/screenshot`);
+      const data = await $fetch<ScreenshotResultInterface>(`/api/sites/${siteId}/screenshot`, {
+        headers,
+        credentials: 'include',
+      });
       if (data) {
         screenshotResults.value = {
           ...screenshotResults.value,

@@ -1,48 +1,57 @@
 <script setup lang="ts">
-const { loggedIn, logout, user } = useUserSession();
+import { ShieldCheck, UserCircle } from 'lucide-vue-next';
 
-const userMenuItems = [
-  [
-    {
-      label: 'Settings',
-      icon: 'heroicons:cog-20-solid',
-      to: '/settings',
-    },
-  ],
-  [
-    {
-      label: 'Sign Out',
-      icon: 'heroicons:arrow-left-on-rectangle-20-solid',
-      click: () => logout(),
-    },
-  ],
-];
+const { loggedIn, logout, user } = useUserSession();
 </script>
 
 <template>
-  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between">
-      <div class="flex justify-between items-center h-16 w-full">
-        <!-- Logo (always leads to the main page) -->
+  <header class="border-b border-border bg-card">
+    <div class="mx-auto flex max-w-7xl justify-between px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 w-full items-center justify-between">
         <NuxtLink to="/" class="flex items-center gap-2">
-          <img src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
-          <span class="text-xl font-bold text-gray-900 dark:text-white">Vigil</span>
+          <NuxtImg src="/logo.svg" alt="Vigil" class="h-8 w-auto" />
+          <span class="text-xl font-bold text-foreground">Vigil</span>
         </NuxtLink>
 
-        <!-- Right side: theme + sign in/sign out buttons -->
         <div class="flex items-center gap-2">
-          <UTooltip text="Account">
-            <UButton v-if="!loggedIn" color="primary" variant="solid" to="/auth/login"> Sign In </UButton>
+          <template v-if="!loggedIn">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="default" as-child>
+                  <NuxtLink to="/auth/login">Sign In</NuxtLink>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Account</TooltipContent>
+            </Tooltip>
+          </template>
 
-            <UDropdown v-else :items="userMenuItems">
-              <UButton color="gray" variant="ghost" icon="heroicons:user-circle-20-solid">Profile</UButton>
-            </UDropdown>
-          </UTooltip>
+          <DropdownMenu v-else>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" class="gap-2">
+                <UserCircle class="size-4" />
+                Profile
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-48">
+              <DropdownMenuItem as-child>
+                <NuxtLink to="/settings" class="cursor-pointer"> Settings </NuxtLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem class="cursor-pointer" @click="logout()"> Sign Out </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <template v-if="loggedIn && user?.is_admin">
-            <UTooltip text="Admin Dashboard">
-              <UButton color="gray" variant="ghost" to="/admin" icon="heroicons:shield-check-20-solid">Admin</UButton>
-            </UTooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" class="gap-2" as-child>
+                  <NuxtLink to="/admin">
+                    <ShieldCheck class="size-4" />
+                    Admin
+                  </NuxtLink>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Admin Dashboard</TooltipContent>
+            </Tooltip>
           </template>
 
           <ThemeToggle />

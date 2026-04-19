@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Moon, Sun } from "lucide-vue-next";
+
 const colorMode = useColorMode();
-const cookie = useCookie('color-mode');
+const cookie = useCookie("color-mode");
 const isHydrated = ref(false);
 
 onMounted(() => {
@@ -9,20 +11,12 @@ onMounted(() => {
 
 const isDark = computed({
   get: () => {
-    if (cookie.value) return cookie.value === 'dark';
-    return colorMode.value === 'dark';
+    if (cookie.value) return cookie.value === "dark";
+    return colorMode.value === "dark";
   },
   set: (value: boolean) => {
-    colorMode.preference = value ? 'dark' : 'light';
+    colorMode.preference = value ? "dark" : "light";
   },
-});
-
-const icon = computed(() => {
-  if (!isHydrated.value) {
-    // Keep server + client initial render stable for hydration
-    return 'heroicons:sun-20-solid';
-  }
-  return isDark.value ? 'heroicons:moon-20-solid' : 'heroicons:sun-20-solid';
 });
 
 const toggleTheme = () => {
@@ -31,5 +25,9 @@ const toggleTheme = () => {
 </script>
 
 <template>
-  <UButton :icon="icon" color="gray" variant="ghost" @click="toggleTheme" />
+  <Button variant="ghost" size="icon" aria-label="Toggle theme" @click="toggleTheme">
+    <Sun v-if="isHydrated && !isDark" class="size-4" />
+    <Moon v-else-if="isHydrated" class="size-4" />
+    <Sun v-else class="size-4 opacity-60" />
+  </Button>
 </template>

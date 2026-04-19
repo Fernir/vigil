@@ -1,37 +1,95 @@
+@import "@fontsource-variable/geist/wght.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Нейтральная база + семантика зелёный/красный/янтарь для статусов и действий */
 @layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 240 6% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
+    /* Кнопки и акцент — тёмно-серый, не чистый чёрный */
+    --primary: 240 5.9% 22%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 6% 18%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 240 5% 92%;
+    --accent-foreground: 240 6% 18%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 88%;
+    --input: 240 6% 88%;
+    --ring: 240 5% 52%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 6% 8%;
+    --foreground: 0 0% 96%;
+    --card: 240 5% 11%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 5% 11%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 94%;
+    --primary-foreground: 240 6% 10%;
+    --secondary: 240 4% 18%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 4% 18%;
+    --muted-foreground: 240 5% 58%;
+    --accent: 240 4% 20%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 240 4% 22%;
+    --input: 240 4% 22%;
+    --ring: 240 5% 46%;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  /* Ссылки без «синего браузера» по умолчанию */
+  a:not([class]) {
+    @apply text-foreground underline decoration-border underline-offset-4 transition-colors hover:text-muted-foreground;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+    @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
   }
 
   .status-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 
   .status-badge-up {
-    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+    @apply bg-success-100 text-success-800 ring-1 ring-success-200 dark:bg-success-950/55 dark:text-success-300 dark:ring-success-800;
   }
 
   .status-badge-down {
-    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+    @apply bg-error-100 text-error-800 ring-1 ring-error-200 dark:bg-error-950/55 dark:text-error-300 dark:ring-error-800;
   }
 
   .status-badge-degraded {
-    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+    @apply bg-warning-100 text-warning-800 ring-1 ring-warning-200 dark:bg-warning-950/55 dark:text-warning-300 dark:ring-warning-800;
   }
 
   .stacked {

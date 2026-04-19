@@ -1,6 +1,7 @@
 import prisma from "~~/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -31,6 +32,20 @@ export default defineEventHandler(async (event) => {
         email: validated.email,
         password: hashedPassword,
       },
+    });
+
+    const token = jwt.sign(
+      { userId: result.id, email: result.email },
+      useRuntimeConfig().jwtSecret,
+      { expiresIn: "7d" },
+    );
+
+    setCookie(event, "auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
     });
 
     return {

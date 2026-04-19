@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
   const path = event.path;
-  const method = event.method;
 
   // Fully public routes that don't require authentication
   const publicRoutes = [
@@ -14,11 +13,6 @@ export default defineEventHandler(async (event) => {
   ];
 
   if (publicRoutes.some((route) => path.startsWith(route))) {
-    return;
-  }
-
-  // For /api/sites we allow GET without authentication to let the homepage load, but other methods require auth
-  if (path.startsWith("/api/sites") && method === "GET") {
     return;
   }
 

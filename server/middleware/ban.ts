@@ -1,3 +1,4 @@
+import { deleteCookie } from 'h3';
 import prisma from '~~/lib/prisma';
 
 export default defineEventHandler(async (event) => {
@@ -15,8 +16,9 @@ export default defineEventHandler(async (event) => {
   });
 
   if (user?.banned_at) {
+    deleteCookie(event, 'auth_token', { path: '/' });
     throw createError({
-      statusCode: 200,
+      statusCode: 403,
       message: 'Your account has been banned',
     });
   }

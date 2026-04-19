@@ -17,6 +17,44 @@ export default defineEventHandler(async () => {
     },
   });
 
+  if (sites.length === 0) {
+    return {
+      total: 0,
+      operational: 0,
+      degraded: 0,
+      down: 0,
+      overallUptime: 100,
+    };
+  }
+
+  const siteIds = sites.map((s) => s.id);
+
+  const grouped = await prisma.check_results.groupBy({
+    by: ['siteId', 'status'],
+    where: {
+      siteId: { in: siteIds },
+      checked_at: { gte: thirtyDaysAgo },
+    },
+    _count: { _all: true },
+  });
+
+  type Counts = { total: number; up: number };
+  const counts = new Map<number, Counts>();
+  for (const id of siteIds) {
+    counts.set(id, { total: 0, up: 0 });
+  }
+
+  for (const row of grouped) {
+    if (row.siteId == null) continue;
+    const c = counts.get(row.siteId);
+    if (!c) continue;
+    const n = row._count._all;
+    c.total += n;
+    if (row.status === 'up') {
+      c.up += n;
+    }
+  }
+
   let operational = 0;
   let degraded = 0;
   let down = 0;
@@ -39,29 +77,15 @@ export default defineEventHandler(async () => {
       }
     }
 
-    const allChecks = await prisma.check_results.count({
-      where: {
-        siteId: site.id,
-        checked_at: { gte: thirtyDaysAgo },
-      },
-    });
-
-    const upChecks = await prisma.check_results.count({
-      where: {
-        siteId: site.id,
-        checked_at: { gte: thirtyDaysAgo },
-        status: 'up',
-      },
-    });
-
-    if (allChecks > 0) {
-      const uptime = (upChecks / allChecks) * 100;
-      totalUptimeSum += uptime;
+    const c = counts.get(site.id);
+    if (c && c.total > 0) {
+      totalUptimeSum += (c.up / c.total) * 100;
       sitesWithData++;
     }
   }
 
-  const overallUptime = sitesWithData > 0 ? Math.round(totalUptimeSum / sitesWithData) : 100;
+  const overallUptime =
+    sitesWithData > 0 ? Math.round(totalUptimeSum / sitesWithData) : 100;
 
   return {
     total: sites.length,

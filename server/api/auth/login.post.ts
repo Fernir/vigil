@@ -55,7 +55,6 @@ export default defineEventHandler(async (event) => {
 
     return {
       user: userWithoutPassword,
-      token,
     };
   } catch (error) {
     // Check if the error is from Zod

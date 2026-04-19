@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type { SiteInterface } from '~~/types';
+import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
+import type { SiteInterface } from "~~/types";
 
-definePageMeta({ middleware: 'admin' });
+definePageMeta({ middleware: "admin" });
 
 const isLoading = ref(false);
 
 const route = useRoute();
 const router = useRouter();
 const siteId = Number(route.params.id);
-const toast = useToast();
 
 const { data: site } = await useFetch<Partial<SiteInterface>>(`/api/admin/sites/${siteId}`);
 
@@ -17,13 +18,13 @@ const save = async (form: SiteInterface) => {
 
   try {
     await $fetch(`/api/admin/sites/${siteId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: form,
     });
-    toast.add({ title: 'Site updated', color: 'green' });
+    toast.success("Site updated");
     await router.push(`/admin/users/${form.userId}`);
   } catch (e) {
-    toast.add({ title: 'Failed to update site', color: 'red' });
+    toast.error("Failed to update site");
   } finally {
     isLoading.value = false;
   }
@@ -31,20 +32,27 @@ const save = async (form: SiteInterface) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-background py-8">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton :to="`/admin/users/${site?.userId}`" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
+        <Button variant="ghost" class="gap-2" as-child>
+          <NuxtLink :to="`/admin/users/${site?.userId}`">
+            <ArrowLeft class="size-4" />
+            Back
+          </NuxtLink>
+        </Button>
       </div>
 
       <div class="card p-6">
-        <h1 class="text-2xl font-bold mb-6">Edit Site: {{ site?.name }}</h1>
+        <h1 class="mb-6 text-2xl font-bold">Edit Site: {{ site?.name }}</h1>
 
-        <SiteForm @submit="save" :initial-data="site" :loading="isLoading">
+        <SiteForm :initial-data="site" :loading="isLoading" @submit="save">
           <template #default="{ form }">
             <div class="flex gap-2 pt-4">
-              <UButton type="submit" color="primary">Save Changes</UButton>
-              <UButton color="gray" variant="ghost" :to="`/admin/users/${form.userId}`">Cancel</UButton>
+              <Button type="submit" variant="default">Save Changes</Button>
+              <Button variant="ghost" as-child>
+                <NuxtLink :to="`/admin/users/${form.userId}`">Cancel</NuxtLink>
+              </Button>
             </div>
           </template>
         </SiteForm>

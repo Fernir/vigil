@@ -1,4 +1,5 @@
 import prisma from "~~/lib/prisma";
+import { requireSiteOwner } from "~~/server/utils/requireSiteOwner";
 
 interface AnomalyPoint {
   timestamp: string;
@@ -20,6 +21,8 @@ interface AnomalyResult {
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params?.id || "0");
   if (!id) throw createError({ statusCode: 400, message: "Invalid site ID" });
+
+  await requireSiteOwner(event, id);
 
   // Get last 7 days of data
   const sevenDaysAgo = new Date();

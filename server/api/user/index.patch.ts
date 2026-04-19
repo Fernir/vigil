@@ -1,4 +1,5 @@
 import prisma from "~~/lib/prisma";
+import { assertSafeWebhookUrl } from "~~/server/utils/safeWebhookUrl";
 import { z } from "zod";
 
 const updateUserSchema = z.object({
@@ -13,6 +14,10 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
   const validated = updateUserSchema.parse(body);
+
+  if (validated.webhook_url) {
+    assertSafeWebhookUrl(validated.webhook_url);
+  }
 
   await prisma.users.update({
     where: { id: auth.userId },

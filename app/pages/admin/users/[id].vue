@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { UserInterface, SiteInterface } from '~~/types';
+import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-vue-next";
+import { toast } from "vue-sonner";
+import type { UserInterface, SiteInterface } from "~~/types";
 
-definePageMeta({ middleware: 'admin' });
+definePageMeta({ middleware: "admin" });
 
 const route = useRoute();
-const toast = useToast();
 const { ask } = useConfirm();
 
 const userId = Number(route.params.id);
@@ -28,13 +29,13 @@ const save = async () => {
   isLoading.value = true;
   try {
     await $fetch(`/api/admin/users/${userId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: form,
     });
-    toast.add({ title: 'User updated', color: 'green' });
+    toast.success("User updated");
     await refreshUser();
   } catch (e) {
-    toast.add({ title: 'Failed to update user', color: 'red' });
+    toast.error("Failed to update user");
   } finally {
     isLoading.value = false;
   }
@@ -50,19 +51,19 @@ const unban = () => {
 
 const deleteSite = async (siteId: number) => {
   const confirmed = await ask({
-    title: 'Delete site?',
-    description: 'Are you sure you want to delete this site? This action cannot be undone.',
+    title: "Delete site?",
+    description: "Are you sure you want to delete this site? This action cannot be undone.",
   });
 
   if (!confirmed) return;
 
   isLoading.value = true;
   try {
-    await $fetch(`/api/admin/sites/${siteId}`, { method: 'DELETE' });
-    toast.add({ title: 'Site deleted', color: 'green' });
+    await $fetch(`/api/admin/sites/${siteId}`, { method: "DELETE" });
+    toast.success("Site deleted");
     await refreshSites();
   } catch (e) {
-    toast.add({ title: 'Failed to delete site', color: 'red' });
+    toast.error("Failed to delete site");
   } finally {
     isLoading.value = false;
   }
@@ -71,18 +72,18 @@ const deleteSite = async (siteId: number) => {
 const addSite = async (newSiteForm: SiteInterface) => {
   isLoading.value = true;
   try {
-    await $fetch('/api/admin/sites', {
-      method: 'POST',
+    await $fetch("/api/admin/sites", {
+      method: "POST",
       body: {
         ...newSiteForm,
         userId,
       },
     });
-    toast.add({ title: 'Site added', color: 'green' });
+    toast.success("Site added");
     showAddSiteModal.value = false;
     await refreshSites();
   } catch (e) {
-    toast.add({ title: 'Failed to add site', color: 'red' });
+    toast.error("Failed to add site");
   } finally {
     isLoading.value = false;
   }
@@ -90,68 +91,97 @@ const addSite = async (newSiteForm: SiteInterface) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-background py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mb-4">
-        <UButton to="/admin" variant="ghost" icon="heroicons:arrow-left">Back</UButton>
+        <Button variant="ghost" class="gap-2" as-child>
+          <NuxtLink to="/admin">
+            <ArrowLeft class="size-4" />
+            Back
+          </NuxtLink>
+        </Button>
       </div>
 
       <div class="stacked gap-6">
-        <!-- Левая колонка: информация о пользователе -->
         <div class="lg:col-span-1">
           <div class="card p-6">
-            <h1 class="text-2xl font-bold mb-6">Edit User: {{ user?.email }}</h1>
+            <h1 class="mb-6 text-2xl font-bold">Edit User: {{ user?.email }}</h1>
 
-            <form @submit.prevent="save" class="space-y-4">
+            <form class="space-y-4" @submit.prevent="save">
               <div>
-                <label class="block text-sm font-medium mb-2">Max Sites</label>
-                <UInput placeholder="Max Sites" v-model.number="form.max_sites" type="number" min="1" max="100" />
+                <Label class="mb-2 block text-sm font-medium" for="max-sites">Max Sites</Label>
+                <Input id="max-sites" v-model.number="form.max_sites" type="number" min="1" max="100" placeholder="Max Sites" />
               </div>
 
               <div class="flex items-center gap-2">
-                <UToggle :model-value="!!form.is_admin" @update:model-value="form.is_admin = $event" />
-                <span>Is Admin</span>
+                <Switch id="is-admin" :checked="!!form.is_admin" @update:checked="(v: boolean) => (form.is_admin = v)" />
+                <Label for="is-admin">Is Admin</Label>
               </div>
 
               <div class="flex gap-2">
-                <UButton v-if="!form.banned_at" color="red" variant="soft" @click="ban">Ban User</UButton>
-                <UButton v-else color="green" variant="soft" @click="unban">Unban User</UButton>
+                <Button v-if="!form.banned_at" variant="destructive" type="button" @click="ban">
+                  Ban User
+                </Button>
+                <Button v-else variant="secondary" type="button" @click="unban">Unban User</Button>
               </div>
 
               <div class="flex gap-2 pt-4">
-                <UButton type="submit" color="primary" :loading="isLoading">Save Changes</UButton>
+                <Button type="submit" variant="default" :disabled="isLoading">
+                  Save Changes
+                </Button>
               </div>
             </form>
           </div>
         </div>
 
-        <!-- Правая колонка: сайты пользователя -->
         <div class="lg:col-span-2">
           <div class="card p-6">
-            <div class="flex justify-between items-center mb-4">
+            <div class="mb-4 flex items-center justify-between">
               <h2 class="text-xl font-semibold">User Sites</h2>
-              <UButton color="primary" icon="heroicons:plus-20-solid" @click="showAddSiteModal = true">Add Site</UButton>
+              <Button variant="default" class="gap-2" @click="showAddSiteModal = true">
+                <Plus class="size-4" />
+                Add Site
+              </Button>
             </div>
 
-            <div v-if="!sites?.length" class="text-center py-8 text-gray-500">No sites for this user</div>
+            <div v-if="!sites?.length" class="py-8 text-center text-muted-foreground">No sites for this user</div>
 
             <div v-else class="space-y-4">
-              <div v-for="site in sites" :key="site.id" class="border dark:border-gray-700 rounded-lg p-4">
-                <div class="flex justify-between items-start">
+              <div v-for="site in sites" :key="site.id" class="rounded-lg border border-border p-4">
+                <div class="flex items-start justify-between">
                   <div>
                     <h3 class="font-semibold">{{ site.name }}</h3>
-                    <a :href="site.url" target="_blank" class="text-sm text-gray-500 hover:text-primary-600">{{ site.url }}</a>
-                    <div class="flex gap-2 mt-2 text-xs">
-                      <span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Interval: {{ site.checkInterval }}m</span>
-                      <span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Type: {{ site.check_type }}</span>
-                      <span :class="site.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'" class="px-2 py-1 rounded">
-                        {{ site.isActive ? 'Active' : 'Paused' }}
+                    <a
+                      :href="site.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-sm text-foreground underline decoration-border underline-offset-4 hover:text-muted-foreground"
+                      >{{ site.url }}</a
+                    >
+                    <div class="mt-2 flex gap-2 text-xs">
+                      <span class="rounded bg-muted px-2 py-1">Interval: {{ site.checkInterval }}m</span>
+                      <span class="rounded bg-muted px-2 py-1">Type: {{ site.check_type }}</span>
+                      <span
+                        :class="
+                          site.isActive
+                            ? 'bg-secondary text-foreground ring-1 ring-border'
+                            : 'bg-muted text-muted-foreground'
+                        "
+                        class="rounded px-2 py-1"
+                      >
+                        {{ site.isActive ? "Active" : "Paused" }}
                       </span>
                     </div>
                   </div>
                   <div class="flex gap-1">
-                    <UButton color="gray" variant="ghost" icon="heroicons:pencil-square-20-solid" :to="`/admin/sites/${site.id}`" size="xs" />
-                    <UButton color="red" variant="ghost" icon="heroicons:trash-20-solid" @click="deleteSite(site.id)" size="xs" />
+                    <Button variant="ghost" size="icon" as-child>
+                      <NuxtLink :to="`/admin/sites/${site.id}`">
+                        <Pencil class="size-3.5" />
+                      </NuxtLink>
+                    </Button>
+                    <Button variant="ghost" size="icon" @click="deleteSite(site.id)">
+                      <Trash2 class="size-3.5 text-destructive" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -160,18 +190,19 @@ const addSite = async (newSiteForm: SiteInterface) => {
         </div>
       </div>
 
-      <!-- Модалка добавления сайта -->
-      <UModal v-model="showAddSiteModal">
-        <div class="p-6">
-          <h3 class="text-lg font-semibold mb-4">Add Site for {{ user?.email }}</h3>
-          <SiteForm @submit="addSite" class="space-y-4" :loading="isLoading">
+      <Dialog v-model:open="showAddSiteModal">
+        <DialogContent class="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Site for {{ user?.email }}</DialogTitle>
+          </DialogHeader>
+          <SiteForm class="space-y-4" :loading="isLoading" @submit="addSite">
             <div class="flex gap-2 pt-4">
-              <UButton type="submit" color="primary">Add Site</UButton>
-              <UButton color="gray" variant="ghost" @click="showAddSiteModal = false">Cancel</UButton>
+              <Button type="submit" variant="default">Add Site</Button>
+              <Button variant="ghost" type="button" @click="showAddSiteModal = false"> Cancel </Button>
             </div>
           </SiteForm>
-        </div>
-      </UModal>
+        </DialogContent>
+      </Dialog>
     </div>
   </div>
 </template>

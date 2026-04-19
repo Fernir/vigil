@@ -43,15 +43,21 @@ export async function checkSiteUnified(
       requestCount++;
     };
 
-    const onResponse = async (response: Response) => {
+    /** Сумма Content-Length по заголовкам — без чтения тел (раньше тащили каждый байт в память). */
+    const onResponse = (response: Response) => {
       try {
-        const body = await response.body();
-        totalPageSize += body.length;
-      } catch {}
+        const raw = response.headers()["content-length"];
+        if (raw) {
+          const n = parseInt(raw, 10);
+          if (!Number.isNaN(n)) totalPageSize += n;
+        }
+      } catch {
+        /* ignore */
+      }
     };
 
-    page.on('request', onRequest);
-    page.on('response', onResponse);
+    page.on("request", onRequest);
+    page.on("response", onResponse);
 
     const navigationStart = Date.now();
 
@@ -79,8 +85,8 @@ export async function checkSiteUnified(
       type: 'png',
     });
 
-    page.off('request', onRequest);
-    page.off('response', onResponse);
+    page.off("request", onRequest);
+    page.off("response", onResponse);
 
     return {
       loadTime,

@@ -5,12 +5,19 @@ const isClient = ref(false);
 onMounted(() => {
   isClient.value = true;
 });
+
+const dotClass = computed(() => {
+  if (!isClient.value) return 'bg-muted-foreground/50';
+
+  // «Live» — зелёный; обрыв — янтарь (как предупреждение), не нейтральный серый
+  return sseConnected.value ? 'bg-success-500' : 'bg-warning-500';
+});
 </script>
 
 <template>
   <div class="flex items-center gap-2 text-sm">
-    <div class="w-2 h-2 rounded-full" :class="isClient ? (sseConnected ? 'bg-green-500' : 'bg-red-500') : 'bg-gray-400'" />
-    <span class="text-gray-600 dark:text-gray-400">
+    <div class="h-2 w-2 rounded-full transition-colors" :class="dotClass" />
+    <span class="text-muted-foreground">
       {{ isClient ? (sseConnected ? 'Live updates connected' : 'Reconnecting...') : 'Connecting...' }}
     </span>
   </div>
